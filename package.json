@@ -1,0 +1,35 @@
+{
+  "name": "scanner",
+  "version": "1.0.0",
+  "description": "scanner for target domain",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/damnboy/scanner.git"
+  },
+  "keywords": [
+    "scanner",
+    "domain",
+    "banner"
+  ],
+  "author": "cb0y",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/damnboy/scanner/issues"
+  },
+  "homepage": "https://github.com/damnboy/scanner#readme",
+  "dependencies": {
+    "async": "^2.5.0",
+    "bluebird": "^3.5.0",
+    "cheerio": "^1.0.0-rc.2",
+    "co": "^4.6.0",
+    "dns-packet": "git://github.com/damnboy/dns-packet.git",
+    "dns-socket": "^1.6.2",
+    "lodash": "^4.17.4",
+    "request": "^2.81.0",
+    "requests": "^0.2.2"
+  }
+}
