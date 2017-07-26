@@ -289,8 +289,10 @@ DNSProber.prototype.autoProbe = function(target, dict){
                     return arr;
                 },[])
 
-                trace.push(nameservers);
-
+                if(nameservers.length > 0){
+                    trace.push(nameservers);
+                }
+                
                 _self.emit('trace', trace);
 
                 if(nameservers.length > 0){

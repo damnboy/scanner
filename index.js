@@ -5,14 +5,14 @@ var _ = require('lodash');
 
 var banner = require('./libs/http/banner');
 
-    banner.on('job_done', function(job){
-        console.log('[%d]%s\t%s', job.statusCode, job.request.uri, job.title);
-    })
+banner.on('job_done', function(job){
+    console.log('[%d]%s\t%s', job.statusCode, job.request.uri, job.title);
+})
 
-    banner.on('job_error', function(job){
+banner.on('job_error', function(job){
 
-    })
-    
+})
+
 var dns_prober = new dns.DNSProber();
 dns_prober.on('error', function(error){
   console.log('error', error);
@@ -26,11 +26,6 @@ dns_prober.on('trace', function(trace){
     })
      console.log('------')
   })
-})
-
-dns_prober.on('failed', function(trace){
-  console.log('dns probe failed, got dns trace information from target domain\r\n');
-  //dns.DNSProber.emit('trace',trace);
 })
 
 dns_prober.on('info', function(info){
@@ -93,7 +88,19 @@ dns_prober.on('finish', function(summary, public, cname, private, wildcard){
 
 })
 
+
 dict.getTxtDict('./libs/dns/dicts/dns-top3000')
 .then(function(dict){
-    dns_prober.autoProbe('github.com', dict);
+
+    var target = 'github.com';
+
+    dns_prober.on('failed', function(trace){
+      console.log('dns probe failed, try last dns trace stack records as authority nameservers\r\n');
+      var nameservers = trace[trace.length - 1].map(function(record){
+        return record.ip;
+      })
+      dns_prober.manualProbe(target, nameservers, dict)
+    })
+
+    dns_prober.autoProbe(target, dict);
 });
