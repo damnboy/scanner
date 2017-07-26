@@ -3,17 +3,41 @@ var banner = require('./libs/http/banner');
 var util = require('util');
 var _ = require('lodash');
 
-generator.on('job', function(job){
-    job.ports = ['80'];
-    banner.emit('job', job);
-})
+module.exports.command = 'netblock'
 
-banner.on('job_done', function(job){
-    console.log('[%d]%s\t%s', job.statusCode, job.request.uri, job.title);
-})
+module.exports.describe = 'Scanning specifical netblock.'
 
-banner.on('job_error', function(job){
+module.exports.builder = function(yargs) {
+  return yargs
+    .strict()
+    .option('netblock', {
+      alias: 'b'
+    , describe: 'netblock'
+    , type: 'string'
+    , demand: true
+    })
+    .option('ports', {
+      alias: 'p'
+    , describe: 'ports'
+    , type: 'string'
+    , demand: false
+    })
+}
 
-})
+module.exports.handler = function(argvs){
 
-generator.parse('127.0.0.1/24');
+    generator.on('job', function(job){
+        job.ports = argvs.ports ? argvs.ports.split(',') : ['80']
+        banner.emit('job', job);
+    })
+
+    banner.on('job_done', function(job){
+        console.log('[%d]%s\t%s', job.statusCode, job.request.uri, job.title);
+    })
+
+    banner.on('job_error', function(job){
+
+    })
+
+    generator.parse(argvs.netblock);
+}

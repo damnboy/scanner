@@ -30,6 +30,7 @@
     "dns-socket": "^1.6.2",
     "lodash": "^4.17.4",
     "request": "^2.81.0",
-    "requests": "^0.2.2"
+    "requests": "^0.2.2",
+    "yargs": "^8.0.2"
   }
 }

@@ -164,7 +164,6 @@ DNSProber.prototype._probe = function(target, nameservers){
 
 }
 
-
 DNSProber.prototype.manualProbe = function(target, nameservers, dict){
     var _self = this;
     function startBuster(){
