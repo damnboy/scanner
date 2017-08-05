@@ -1,10 +1,11 @@
 var ip = require('ip');
 var _ = require('lodash')
-var request = require('request');
+
 var async = require('async');
 var cheerio = require('cheerio');   //https://github.com/cheeriojs/cheerio
 var util = require('util');
 var events = require('events');
+var WebPage = require('./page.js');
 
 function _request(options){
    return new Promise(function(resolve, reject){
@@ -25,81 +26,67 @@ function WebApplicationBanner(){
     this.hosts = [];
     var self = this;
     this.works = async.queue(function(job, done){
-        _request(job.request)
+        var page = new WebPage();
+        page.request(job.request)
         .then(function(response){
             
-            var headers = response.headers;
             var body = response.body;
             const $ = cheerio.load(response.body);
-            job.headers = response.headers;
+            job.encoding = page.encoding;
             job.title = $('title').text();
             job.statusCode = response.statusCode;
             self.emit('job_done', job)
-            //console.log(options.uri, $('title').text());
+
             done();
         })
         .catch(function(err){
-            //console.log(options.uri, err.code)
+
             job.err = err;
             self.emit('job_error', job);
-            /*
-            var acceptableErrors = [
-                'ECONNREFUSED',
-                'ECONNRESET',
-                'ENETUNREACH',
-                'ETIMEDOUT',
-                'ESOCKETTIMEDOUT',
-                'EHOSTUNREACH'
-            ];
-            var is = acceptableErrors.reduce(function(cnt, errCode){
-                if(err.code === errCode){
-                    cnt = cnt + 1;
-                }
-                return cnt;
-            }, 0);
-            if(is === 0){
-                console.log(err.name);
-                console.log(options);
-            }
-            */
+
             done();
         });
-    }, 32);
+    }, 64);
 
     this.works.drain = function() {
         console.log('finished');
-        /*
-        self.hosts.forEach(function(host){
-            console.log(host)
-        })
-        */
+
     };
+
 }
 
 util.inherits(WebApplicationBanner, events.EventEmitter);//使这个类继承EventEmitter
 
 var banner = new WebApplicationBanner();
 
-banner.on('job', function(job){
+banner.on('job.host', function(job){
     if(job.hosts){
         banner.hosts = banner.hosts.concat(job.hosts);
         
         job.hosts.forEach(function(host){
             job.ports.forEach(function(port){
-                banner.works.push({
-                    'id' : job.id,
-                    'description' : job.description,
-                    'request' :{
-                        'method' : 'GET',
-                        'uri' : util.format('http://%s:%s',host, port),
-                        'timeout' : 5000
-                    }
-                })
+                job.url = util.format('http://%s:%s',host, port);
+                banner.emit('job.url', job);
             })
         })
         
     }
 })
+
+banner.on('job.url', function(url){
+    this.hosts.push(url);
+
+    banner.works.push({
+        'id' : this.hosts.length,
+        'description' : url,
+        'request' :{
+            'method' : 'GET',
+            'uri' : url,
+            'timeout' : 10000,
+            'encoding' : null
+        }
+    });
+});
 
 module.exports = banner;
 

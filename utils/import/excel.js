@@ -53,7 +53,7 @@ ExcelReader.prototype.readFile = function(filename){
     });
 };
 
-
+/*
 function ExcelFile(){
     events.EventEmitter.call(this);
 }
@@ -66,6 +66,6 @@ ExcelFile.prototype.parse = function(filename, sheetname, sheetProcess){
     excel.on(sheetname, sheetProcess);
     excel.readFile(filename);
 }
-
-module.exports = new ExcelFile();
+*/
+module.exports = ExcelReader
 //module.exports = ExcelReader;

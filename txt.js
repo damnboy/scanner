@@ -3,31 +3,27 @@ var banner = require('./libs/http/banner');
 var util = require('util');
 var _ = require('lodash');
 
-module.exports = function(options){
-    generator.on('job', function(job){
-        job.ports = ['80'];
-        //console.log(job);
-        banner.emit('job', job);
+function TXT(options){
+    generator.on('line', function(line){
+        banner.emit('job.url', line);
     })
 
     banner.on('job_done', function(job){
-        console.log('\r\n------%s--------\r\n', job.description)
-        console.log('[%d]%s\t%s\r\n', job.statusCode, job.request.uri, job.title);
-        Object.keys(job.headers).forEach(function(tag){
-            console.log('%s:%s', tag, job.headers[tag]);
-        })
-        console.log('\r\n--------------\r\n')
-        if(job.urls.length !== 0){
-        job.urls.forEach(function(url){
-            console.log(url);
-        })
-        console.log('\r\n--------------\r\n')
-        }
+        
+        //console.log('[%d] [%d][%s]%s \t%s', job.id, job.statusCode,  job.encoding, job.request.uri, job.title);
+        job.title = job.title.replace(/\n/g,'');
+        console.log(' [%s]%s \t %s [%d]',  job.encoding.toLowerCase(), job.request.uri, job.title,  job.id);
+
     })
 
     banner.on('job_error', function(job){
-
+        console.log('[%s]%s [%d] ',  job.err.message, job.request.uri, job.id)
+        
     })
 
     generator.parse(options.file);
 }
+
+module.exports = TXT;
+
+TXT({"file" : './test/url.txt'})

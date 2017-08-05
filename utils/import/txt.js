@@ -13,12 +13,9 @@ util.inherits(TxtFile, events.EventEmitter);//使这个类继承EventEmitter
 TxtFile.prototype.parse = function(filename){
     var _self = this;
     fs.readFile(filename, function(err, data){
-        data.toString().split('\n').map(function(host){
-            if(host.length !== 0){
-                _self.emit('job', {
-                    'description' : host,
-                    'hosts' : [host.replace(/\s+/g, '')]
-                })
+        data.toString().split('\n').map(function(line){
+            if(line.length !== 0){
+                _self.emit('line', line);
             }
             
         })
