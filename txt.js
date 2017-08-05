@@ -26,4 +26,4 @@ function TXT(options){
 
 module.exports = TXT;
 
-TXT({"file" : './test/url.txt'})
+TXT({"file" : './test/testurl.txt'})

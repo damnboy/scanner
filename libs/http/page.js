@@ -37,7 +37,7 @@ WebPage.prototype.request = function(options){
 WebPage.prototype._detectEncoding = function(headers, body){
     var e = null;
     if(headers['content-type']){
-        e = headers['content-type'].match(/charset=([\w\W]+)/);
+        e = headers['content-type'].match(/charset=([\w\d-]*)$/i);
     }
 
     if(e === null){
