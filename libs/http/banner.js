@@ -83,7 +83,7 @@ banner.on('job.url', function(url){
         'request' :{
             'method' : 'GET',
             'uri' : url,
-            'timeout' : 10000,
+            'timeout' : banner.timeout,
             'encoding' : null
         }
     });

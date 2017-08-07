@@ -22,10 +22,19 @@ module.exports.builder = function(yargs) {
     , type: 'string'
     , demand: false
     })
+    .option('timeout', {
+      alias: 't'
+    , describe: 'timeout'
+    , type: 'number'
+    , demand: false
+    , default: 10000
+    })
 }
 
 module.exports.handler = function(argvs){
 
+    banner.timeout = argvs.timeout;
+    console.log('Global timeout set to: %dms', banner.timeout);
     generator.on('hosts', function(hosts){
         banner.emit('job.host', {
             "hosts": hosts,
