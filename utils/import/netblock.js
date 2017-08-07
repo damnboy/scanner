@@ -14,10 +14,7 @@ NetworkBlock.prototype.parse = function(network_block){
     var subnet = ip.cidrSubnet(network_block)
     var networkRange = _.range(ip.toLong(subnet.firstAddress), ip.toLong(subnet.lastAddress) + 1);
     networkRange.forEach(function(host){
-        _self.emit('job', {
-            'description' : ip.fromLong(host),
-            'hosts' : [ip.fromLong(host)]
-        }) 
+        _self.emit('hosts', [ip.fromLong(host)]) 
     })
 }
 

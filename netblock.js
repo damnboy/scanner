@@ -26,9 +26,11 @@ module.exports.builder = function(yargs) {
 
 module.exports.handler = function(argvs){
 
-    generator.on('job', function(job){
-        job.ports = argvs.ports ? argvs.ports.split(',') : ['80']
-        banner.emit('job', job);
+    generator.on('hosts', function(hosts){
+        banner.emit('job.host', {
+            "hosts": hosts,
+            "ports" : argvs.ports ? argvs.ports.split(',') : ['80']
+        });
     })
 
     banner.on('job_done', function(job){

@@ -65,8 +65,8 @@ banner.on('job.host', function(job){
         
         job.hosts.forEach(function(host){
             job.ports.forEach(function(port){
-                job.url = util.format('http://%s:%s',host, port);
-                banner.emit('job.url', job);
+                var url = util.format('http://%s:%s',host, port); 
+                banner.emit('job.url', url);
             })
         })
         
@@ -74,6 +74,7 @@ banner.on('job.host', function(job){
 })
 
 banner.on('job.url', function(url){
+
     this.hosts.push(url);
 
     banner.works.push({
