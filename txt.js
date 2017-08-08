@@ -25,8 +25,8 @@ module.exports.builder = function(yargs) {
     .option('ports', {
       alias: 'p'
     , describe: 'ports'
-    , type: 'array'
-    , default: [80]
+    , type: 'string'
+    , default: '80'
     , demand: false
     })
     .option('timeout', {
@@ -39,18 +39,17 @@ module.exports.builder = function(yargs) {
 }
 
 module.exports.handler = function(argvs){
-
     banner.timeout = argvs.timeout;
 
      generator.on('line', function(line){
          if(argvs.type === 'url'){
             banner.emit('job.url', line);
          }
-
+        
          if(argvs.type === 'ip'){
             banner.emit('job.host', {
                 "hosts": [line],
-                "ports" : argvs.ports
+                "ports" : argvs.ports.split(',')
             });
          }
          /*
@@ -69,7 +68,7 @@ module.exports.handler = function(argvs){
     })
 
     banner.on('job_error', function(job){
-        console.log('[%s]%s [%d] ',  job.err.message, job.request.uri, job.id)
+//        console.log('[%s]%s [%d] ',  job.err.message, job.request.uri, job.id)
         
     })
 
