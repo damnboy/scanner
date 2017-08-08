@@ -3,9 +3,61 @@ var banner = require('./libs/http/banner');
 var util = require('util');
 var _ = require('lodash');
 
-function TXT(options){
-    generator.on('line', function(line){
-        banner.emit('job.url', line);
+module.exports.command = 'txt'
+
+module.exports.describe = 'Scan specify txtfile.'
+
+module.exports.builder = function(yargs) {
+  return yargs
+    .strict()
+    .option('file', {
+      alias: 'f'
+    , describe: 'filename'
+    , type: 'string'
+    , demand: true
+    })
+    .option('type', {
+      alias: 't'
+    , describe: 'file type'
+    , type: 'string'
+    , demand: true
+    })
+    .option('ports', {
+      alias: 'p'
+    , describe: 'ports'
+    , type: 'array'
+    , default: [80]
+    , demand: false
+    })
+    .option('timeout', {
+      alias: 'x'
+    , describe: 'timeout'
+    , type: 'number'
+    , demand: false
+    , default: 10000
+    })
+}
+
+module.exports.handler = function(argvs){
+
+    banner.timeout = argvs.timeout;
+
+     generator.on('line', function(line){
+         if(argvs.type === 'url'){
+            banner.emit('job.url', line);
+         }
+
+         if(argvs.type === 'ip'){
+            banner.emit('job.host', {
+                "hosts": [line],
+                "ports" : argvs.ports
+            });
+         }
+         /*
+         if(argvs.type === 'netblock'){
+             require('./netblock').handler(argvs);
+         }
+        */
     })
 
     banner.on('job_done', function(job){
@@ -21,9 +73,6 @@ function TXT(options){
         
     })
 
-    generator.parse(options.file);
+    generator.parse(argvs.file);
+
 }
-
-module.exports = TXT;
-
-TXT({"file" : './test/testurl.txt'})

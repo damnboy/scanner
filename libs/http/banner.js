@@ -83,8 +83,8 @@ banner.on('job.url', function(url){
         'request' :{
             'method' : 'GET',
             'uri' : url,
-            'timeout' : banner.timeout,
-            'encoding' : null
+            'timeout' : banner.timeout
+            ,  'encoding' : null
         }
     });
 });

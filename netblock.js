@@ -5,7 +5,7 @@ var _ = require('lodash');
 
 module.exports.command = 'netblock'
 
-module.exports.describe = 'Scanning specifical netblock.'
+module.exports.describe = 'Scan specify netblock.'
 
 module.exports.builder = function(yargs) {
   return yargs
@@ -23,7 +23,7 @@ module.exports.builder = function(yargs) {
     , demand: false
     })
     .option('timeout', {
-      alias: 't'
+      alias: 'x'
     , describe: 'timeout'
     , type: 'number'
     , demand: false

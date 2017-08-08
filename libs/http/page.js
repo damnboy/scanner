@@ -44,8 +44,7 @@ WebPage.prototype._detectEncoding = function(headers, body){
         ///<meta\s*(http-equiv="*content-type"*)(content="text\/html; charset=([\w\d-]*)")[\s\/]*>/i
         ///content="text\/html; charset=([\w\d-]*)"/i
         body = body.toString('utf-8')
-        e = body.match(/charset="*([\w\d-]*)"*[\w\s]*/i);
-
+        e = body.match(/charset=['"]*([\w\d-]*)['"]*[\w\s]*/i);
     }
 
     if(e === null){
