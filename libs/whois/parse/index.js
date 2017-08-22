@@ -3,6 +3,9 @@ module.exports = (function(){
     return {
         'whois.arin.net' : function(data){
             var infos = data.match(/#\s*start([\w\W]*?)#\s*end/g);
+            if(infos === null){
+                infos = [data];
+            }
             if(infos){
                 /*
                     NetRange:       8.0.0.0 - 8.255.255.255
