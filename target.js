@@ -20,6 +20,15 @@ module.exports.handler = function(argvs){
   var dict = require('./utils/dict');
   var dns = require('./libs/dns');
   var banner = require('./libs/http/banner');
+  var IPWhois = require('./libs/whois')
+
+  var whois = new IPWhois();
+  whois.on('result', function(data){
+    data.forEach(function(i){
+      console.log('%s\t%s', i.netname, i.netblock);
+    })
+    
+  })
 
   banner.on('job_done', function(job){
       console.log('[%d]%s\t%s', job.statusCode, job.request.uri, job.title);
@@ -94,10 +103,13 @@ module.exports.handler = function(argvs){
     }).sort();
     _.uniq(ip_addr).forEach(function(addr){
 
-      banner.emit('job', {
-          "hosts" : [addr],
-          "ports" : ['80', '8981','8071','8080']
-      })
+      banner.emit('job.host', {
+            "hosts" : [addr],
+            "ports" : ['80']
+      });
+      
+      whois.whois(addr);
+
       console.log(addr)
     })
     console.log('----- IP ------ \r\n');

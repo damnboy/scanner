@@ -8,47 +8,53 @@ function ExcelReader() {//新建一个类
 
 util.inherits(ExcelReader, events.EventEmitter);//使这个类继承EventEmitter
 
-ExcelReader.prototype.readFile = function(filename){
+ExcelReader.prototype.readFile = function(filename, interest_sheets){
     var _self = this;
     var p = sheet.readFile(filename, {});
     p.SheetNames.forEach(function(name){
-        var sheetRouter = new events.EventEmitter();
-        _self.emit(name, sheetRouter);
-        //_self.emit('sheet', name);
-        /*
-            两种类型对象
-            cell addess {c,r}
-            cell range {s,e}
-            !margins
-            !merges
-            [e{0,10},s{0,1}]
-            [e{0,23},s{0,11}]合并单元格的范围，range对象
-            !ref
-            A1:L24
-        */
-        var sheet = p.Sheets[name];
-        if(sheet['!ref']){
-            var edge = {
-                'horizontal' : {
-                    'start' : sheet['!ref'].split(':')[0].substring(0,1),
-                    'end' : sheet['!ref'].split(':')[1].substring(0,1)
-                },
-                'vertical' : {
-                    'start' : sheet['!ref'].split(':')[0].substring(1),
-                    'end': sheet['!ref'].split(':')[1].substring(1)
-                }
-            };
+        var c = interest_sheets.filter(function(sheet){
+            return sheet === name
+        }).length;
 
-            for(var row_index = parseInt(edge['vertical']['start']); row_index <= parseInt(edge['vertical']['end']); row_index++){
-                var row = {};
-                for(var col_index = edge['horizontal']['start'].charCodeAt(); col_index <= edge['horizontal']['end'].charCodeAt(); col_index++){
-                    var localtion = util.format('%s%d', String.fromCharCode(col_index), row_index);
-                    sheetRouter.emit('cell', localtion, sheet[localtion]);
-                    row[localtion] = sheet[localtion];
+        if(c > 0){
+            var sheetRouter = new events.EventEmitter();
+            _self.emit(name, sheetRouter);
+            //_self.emit('sheet', name);
+            /*
+                两种类型对象
+                cell addess {c,r}
+                cell range {s,e}
+                !margins
+                !merges
+                [e{0,10},s{0,1}]
+                [e{0,23},s{0,11}]合并单元格的范围，range对象
+                !ref
+                A1:L24
+            */
+            var sheet = p.Sheets[name];
+            if(sheet['!ref']){
+                var edge = {
+                    'horizontal' : {
+                        'start' : sheet['!ref'].split(':')[0].substring(0,1),
+                        'end' : sheet['!ref'].split(':')[1].substring(0,1)
+                    },
+                    'vertical' : {
+                        'start' : sheet['!ref'].split(':')[0].substring(1),
+                        'end': sheet['!ref'].split(':')[1].substring(1)
+                    }
+                };
+
+                for(var row_index = parseInt(edge['vertical']['start']); row_index <= parseInt(edge['vertical']['end']); row_index++){
+                    var row = {};
+                    for(var col_index = edge['horizontal']['start'].charCodeAt(); col_index <= edge['horizontal']['end'].charCodeAt(); col_index++){
+                        var localtion = util.format('%s%d', String.fromCharCode(col_index), row_index);
+                        sheetRouter.emit('cell', localtion, sheet[localtion]);
+                        row[localtion] = sheet[localtion];
+                    }
+                    sheetRouter.emit('row', row_index, row);
                 }
-                sheetRouter.emit('row', row_index, row);
+                
             }
-            
         }
     });
 };

@@ -17,7 +17,7 @@ function getXMLContent(file){
     })
 }
 
-getXMLContent('')
+getXMLContent(process.argv[2])
 .then(function(xml){
     return new Promise(function(resolve, reject){
         var parse = new xml2sj.Parser()
@@ -33,18 +33,39 @@ getXMLContent('')
 })
 .then(function(object){
     object.nmaprun.host.forEach(function(host){
-        /*
-        host.address.forEach(function(addr){
+        
+
+    /*
+        var windows = false;
+        if(host.os !== undefined){
+            host.os.forEach(function(os){
+                if(os.osmatch !== undefined){
+                    os.osmatch.forEach(function(name){
+                        //console.log(name.$.name.match(/windows/i))
+                        if(name.$.name.match(/windows/i) !== null){
+                            windows = true;
+                        }
+                    })
+                }
+                
+            })
+        }
+    */
+
+         host.address.forEach(function(addr){
             console.log(addr.$.addr)
         })
-        */
+        
+        
         host.ports.forEach(function(result){
             result.port.forEach(function(port){
                 console.log(port.$.portid)
             })
         })
+        
     })
 })
+
 /*
 getXMLContent(process.argv[2])
 .then(function(xml){
