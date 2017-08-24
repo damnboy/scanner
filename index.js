@@ -5,6 +5,7 @@ var _argv = yargs.usage('Usage: $0 <command> [options]')
   .command(require('./target'))
   .command(require('./netblock'))
   .command(require('./txt'))
+  .command(require('./whois'))
   .demandCommand(1, 'Must provide a valid command.')
   .help('h', 'Show help.')
   .argv
