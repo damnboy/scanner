@@ -24,7 +24,7 @@ function Queue(paralles){
 
     //当前队列为空时触发该回调
     this.works.drain = function() {
-        
+        self.emit('finish');
     };
 }
 

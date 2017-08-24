@@ -32,13 +32,13 @@ c段http指纹识别
 手动：某些域名没有配置ns服务器，或者ns服务器配置有误，手工指定dns服务器。
 
 
-###TODO
+### TODO
     自定义字典支持
     custom dict support
     
     暂时不支持手动类型的爆破，对于无法获取到ns服务器的域名，尝试使用递归目标域名所获取到的最后一级ns服务器作为权威ns服务器来进行解析。
 
-###COMMAND
+### COMMAND
     node . target -d github.com
     
     

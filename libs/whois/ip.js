@@ -12,18 +12,34 @@ function IPWhois(){
     EventEmitter.call(this);
 
     var self = this;
+    this.summary = {}
 
     this.queue = new Queue(8);
     this.queue.on('done', function(response){
         var p = parse[response.server];
         if(p){
-            response['detail'] = p(response.data);
-            self.emit('done', response)
+            var detail = p(response.data);
+            logger.info('%s [%s]', response.ip, response.server);
+            detail.forEach(function(i){
+                if(self.summary[i.netname] === undefined){
+                    self.summary[i.netname] = []
+                }
+                logger.info('%s  %s', i.netname, i.netblock)
+
+                self.summary[i.netname].push(i.netblock)
+            })
         }
     })
 
     this.queue.on('error', function(error){
-        self.emit('error', error)
+        logger.error(error)
+    })
+
+    this.queue.on('finish', function(){
+        Object.keys(self.summary).forEach(function(k){
+            self.summary[k] = _.uniq(self.summary[k])
+        })
+        self.emit('finish' , self.summary)
     })
 }
 

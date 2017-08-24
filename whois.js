@@ -35,10 +35,10 @@ module.exports.handler = function(argvs){
 
     var whois = new IPWhois();
 
-    whois.on('done', function(response){
-        console.log('\r\n%s [%s]', response.ip, response.server);
-        response.detail.forEach(function(i){
-            console.log('%s\r\n  %s', i.netname, i.netblock)
+
+    whois.on('finish', function(summary){
+        Object.keys(summary).forEach(function(k){
+            console.log(k, summary[k])
         })
     })
 
