@@ -52,7 +52,7 @@ IPWhois.prototype._whois = function(ip, whois_server){
         whois.lookup(whois_server === 'whois.arin.net' ? 'z + ' + ip : ip, 
             {"server" : whois_server, "follow" : 0}, function(err, data){
             if(err){
-                reject(err);
+                return reject(err);
             }
 
             var match = data.match(/ReferralServer:\s*whois:\/\/([\w\.]*)/i)
