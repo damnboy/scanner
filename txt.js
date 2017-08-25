@@ -1,5 +1,5 @@
 var generator = require('./utils/import/txt.js');
-var banner = require('./libs/http/banner');
+var WebBanner = require('./libs/http/banner');
 var util = require('util');
 var _ = require('lodash');
 
@@ -39,18 +39,18 @@ module.exports.builder = function(yargs) {
 }
 
 module.exports.handler = function(argvs){
+    var banner = new WebBanner();
     banner.timeout = argvs.timeout;
 
      generator.on('line', function(line){
          if(argvs.type === 'url'){
-            banner.emit('job.url', line);
+            banner.url(line);
          }
         
          if(argvs.type === 'ip'){
-            banner.emit('job.host', {
-                "hosts": [line],
-                "ports" : argvs.ports.split(',')
-            });
+            argvs.ports.split(',').forEach(function(port){
+                banner.host(line, port)
+            })
          }
          /*
          if(argvs.type === 'netblock'){

@@ -19,25 +19,11 @@ module.exports.handler = function(argvs){
   var _ = require('lodash');
   var dict = require('./utils/dict');
   var dns = require('./libs/dns');
-  var banner = require('./libs/http/banner');
+  var WebBanner = require('./libs/http/banner');
   var IPWhois = require('./libs/whois')
 
   var whois = new IPWhois();
-  whois.on('result', function(data){
-    data.forEach(function(i){
-      console.log('%s\t%s', i.netname, i.netblock);
-    })
-    
-  })
-
-  banner.on('job_done', function(job){
-      console.log('[%d]%s\t%s', job.statusCode, job.request.uri, job.title);
-  })
-
-  banner.on('job_error', function(job){
-
-  })
-
+  var banner = new WebBanner();
   var dns_prober = new dns.DNSProber();
   dns_prober.on('error', function(error){
     console.log('error', error);
@@ -72,10 +58,6 @@ module.exports.handler = function(argvs){
     console.log('----- Public ------ \r\n');
     public.forEach(function(record){
       console.log(record)
-      banner.emit('job', {
-          "hosts" : [record.domain],
-          "ports" : ['80', '8080']
-      })
     })
     console.log('----- Public ------ \r\n');
 
@@ -103,11 +85,7 @@ module.exports.handler = function(argvs){
     }).sort();
     _.uniq(ip_addr).forEach(function(addr){
 
-      banner.emit('job.host', {
-            "hosts" : [addr],
-            "ports" : ['80']
-      });
-      
+      banner.host(addr, 80)      
       whois.whois(addr);
 
       console.log(addr)

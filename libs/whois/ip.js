@@ -3,7 +3,7 @@ var util = require('util');
 var whois = require('whois');
 var parse = require('./parse')
 var log = require('../../utils/logger.js');
-var logger = log.createLogger('whois-ip');
+var logger = log.createLogger('[WHOIS-IP]');
 var Queue = require('../../utils/queue.js');
 var _ = require('lodash')
 

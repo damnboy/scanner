@@ -1,5 +1,5 @@
 var generator = require('./utils/import/netblock.js');
-var banner = require('./libs/http/banner');
+var WebBanner = require('./libs/http/banner');
 var util = require('util');
 var _ = require('lodash');
 
@@ -33,22 +33,18 @@ module.exports.builder = function(yargs) {
 
 module.exports.handler = function(argvs){
 
+    var banner = new WebBanner();
     banner.timeout = argvs.timeout;
     console.log('Global timeout set to: %dms', banner.timeout);
     generator.on('hosts', function(hosts){
-        banner.emit('job.host', {
-            "hosts": hosts,
-            "ports" : argvs.ports ? argvs.ports.split(',') : ['80']
-        });
+        var ports = argvs.ports ? argvs.ports.split(',') : ['80'];
+        ports.forEach(function(port){
+            hosts.forEach(function(host){
+                banner.host(host, port)
+            })
+        })
     })
 
-    banner.on('job_done', function(job){
-        console.log('[%d]%s\t%s', job.statusCode, job.request.uri, job.title);
-    })
-
-    banner.on('job_error', function(job){
-
-    })
 
     generator.parse(argvs.netblock);
 }

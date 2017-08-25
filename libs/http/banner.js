@@ -6,59 +6,74 @@ var cheerio = require('cheerio');   //https://github.com/cheeriojs/cheerio
 var util = require('util');
 var events = require('events');
 var WebPage = require('./page.js');
-
-function _request(options){
-   return new Promise(function(resolve, reject){
-       request(options, function(err, response, body){
-           if(err){
-               reject(err)
-           }
-           else{
-               resolve(response)
-           }   
-       })
-   })
-}
+var Queue = require('../../utils/queue.js');
+var log = require('../../utils/logger.js');
+var logger = log.createLogger('[WEBAPP-BANNER]');
 
 function WebApplicationBanner(){
 
     events.EventEmitter.call(this);
     this.hosts = [];
     var self = this;
-    this.works = async.queue(function(job, done){
-        var page = new WebPage();
-        page.request(job.request)
-        .then(function(response){
-            
-            var body = response.body;
-            const $ = cheerio.load(response.body);
-            job.encoding = page.encoding;
-            job.title = $('title').text();
-            job.statusCode = response.statusCode;
-            self.emit('job_done', job)
+    this.timeout = 5000;
+    this.queue = new Queue(8);
 
-            done();
-        })
-        .catch(function(err){
+    this.queue.on('done', function(response){
+        logger.info('[%s/%s] %s - %s', 
+            response.statusCode, response.encoding, response.url, response.title)
+    })
 
-            job.err = err;
-            self.emit('job_error', job);
+    this.queue.on('error', function(error){
+        logger.error('%s - %s', error.url, error.message)
+    })  
 
-            done();
-        });
-    }, 64);
-
-    this.works.drain = function() {
-        console.log('finished');
-
-    };
+    this.queue.on('finish', function(){
+        //console.log('finished')
+    })
 
 }
 
 util.inherits(WebApplicationBanner, events.EventEmitter);//使这个类继承EventEmitter
 
-var banner = new WebApplicationBanner();
 
+WebApplicationBanner.prototype.host = function(host, port){
+    return this.url(util.format('http://%s:%s', host, port));
+}
+
+WebApplicationBanner.prototype.url = function(url){
+    var self = this;
+    this.queue.enqueue(function(){
+        return new Promise(function(resolve, reject){
+            var page = new WebPage();
+            return page.request({
+                'method' : 'GET',
+                'uri' : url,
+                'timeout' : self.timeout,  
+                'encoding' : null
+            })
+            .then(function(response){
+                var body = response.body;
+                const $ = cheerio.load(response.body);
+
+                resolve( {
+                    'url' : url,
+                    'encoding' : page.encoding,
+                    'title' : $('title').text(),
+                    'statusCode' : response.statusCode
+                })
+            })
+            .catch(function(error){
+                error.url = url;
+                reject(error)
+            })
+        })
+
+    })
+}
+
+module.exports = WebApplicationBanner;
+
+/*
 banner.on('job.host', function(job){
     if(job.hosts){
         banner.hosts = banner.hosts.concat(job.hosts);
@@ -88,8 +103,8 @@ banner.on('job.url', function(url){
         }
     });
 });
+*/
 
-module.exports = banner;
 
 
 /*
