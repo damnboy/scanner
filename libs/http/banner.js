@@ -13,7 +13,7 @@ var logger = log.createLogger('[WEBAPP-BANNER]');
 function WebApplicationBanner(){
 
     events.EventEmitter.call(this);
-    this.hosts = [];
+    this.summary = [];
     var self = this;
     this.timeout = 5000;
     this.queue = new Queue(8);
@@ -21,6 +21,8 @@ function WebApplicationBanner(){
     this.queue.on('done', function(response){
         logger.info('[%s/%s] %s - %s', 
             response.statusCode, response.encoding, response.url, response.title)
+        
+        self.summary.push(response)
     })
 
     this.queue.on('error', function(error){
@@ -28,6 +30,7 @@ function WebApplicationBanner(){
     })  
 
     this.queue.on('finish', function(){
+        self.emit('finish', self.summary)
         //console.log('finished')
     })
 

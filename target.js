@@ -23,7 +23,25 @@ module.exports.handler = function(argvs){
   var IPWhois = require('./libs/whois')
 
   var whois = new IPWhois();
+  whois.on('finish', function(summary){
+    console.log('------------- Whois Report ---------------------')
+    Object.keys(summary).forEach(function(k){
+      console.log(k);
+      summary[k].forEach(function(i){
+        console.log(i)
+      })
+    })
+    console.log('------------- Whois Report ---------------------')
+  })
   var banner = new WebBanner();
+  banner.on('finish', function(summary){
+    console.log('------------- Web Application Banner Report ---------------------')
+    summary.forEach(function(i){
+      console.log(i.url, i.title)
+    })
+    console.log('------------- Web Application Banner Report ---------------------')
+  })
+
   var dns_prober = new dns.DNSProber();
   dns_prober.on('error', function(error){
     console.log('error', error);
