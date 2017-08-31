@@ -32,7 +32,7 @@ function IPWhois(){
     })
 
     this.queue.on('error', function(error){
-        logger.error(error)
+        logger.error(error.ip, error)
     })
 
     this.queue.on('finish', function(){
@@ -52,6 +52,7 @@ IPWhois.prototype._whois = function(ip, whois_server){
         whois.lookup(whois_server === 'whois.arin.net' ? 'z + ' + ip : ip, 
             {"server" : whois_server, "follow" : 0}, function(err, data){
             if(err){
+                err.ip = ip;
                 return reject(err);
             }
 

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en" ng-app="probeApp">
+  <head>
+    <meta charset="utf-8">
+    <title>Probe</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js"></script>
+    <script src="bower_components/angular/angular.js"></script>
+    <script src="app.js"></script>
+    <script src="modules/dns/module.js"></script>
+    <script src="modules/dns/component.js"></script>
+    <script src="modules/debug/module.js"></script>
+    <script src="modules/debug/component.js"></script>
+    <script src="modules/whois/module.js"></script>
+    <script src="modules/whois/component.js"></script>
+    <script src="modules/webserver/module.js"></script>
+    <script src="modules/webserver/component.js"></script>
+    <script src="services/socket/module.js"></script>
+    <script src="services/socket/service.js"></script>
+  </head>
+  <body>
+
+    <!-- Use a custom component to render a list of phones -->
+    <dns-list></dns-list>
+    <debug-list></debug-list>
+  </body>
+</html>
