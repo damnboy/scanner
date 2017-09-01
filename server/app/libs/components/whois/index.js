@@ -1,3 +1,4 @@
+module.exports = 
 angular.module('whoisModule',[])
 .component('whoisRecords',{
     require : {

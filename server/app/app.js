@@ -3,7 +3,7 @@
 // Define the `phonecatApp` module
 angular.module('probeApp', [
   // ...which depends on the `phoneList` module
-  'dnsModule',
+  '`dnsModule`',
   'webServerModule',
   'whoisModule',
   'debugModule',
