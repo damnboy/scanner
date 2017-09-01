@@ -1,8 +1,10 @@
 var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
-var dns = require('./libs/dns');
-var dict = require('./utils/dict');
+var dns = require('../libs/dns');
+var dict = require('../utils/dict');
+var log = require('../utils/logger.js');
+var logger = log.createLogger('[PROBE-SERVER]');
 
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/index.html');
@@ -11,34 +13,39 @@ app.get('/', function(req, res){
 io.on('connection', function(socket){
 
     var dns_prober = new dns.DNSProber();
+    dns_prober.on('trace', function(trace){
+        
+      })
+    
     dns_prober.on('error', function(error){
         console.log(error)
     })
 
-    dns_prober.on('response', function(response){
-        console.log(response)
-        socket.emit('dns.record', response)
+    dns_prober.on('record.a', function(record){
+        socket.emit('dns.record.a', record);
     })
 
-    dns_prober.on('failed', function(trace){
-        console.log('dns probe failed, try last dns trace stack records as authority nameservers\r\n');
-        var nameservers = trace[trace.length - 1].map(function(record){
-          return record.ip;
-        })
-        dns_prober.manualProbe(target, nameservers, dict)
+    dns_prober.on('record.cname', function(record){
+        socket.emit('dns.record.cname', record);
+    })
+    
+    dns_prober.on('finish', function(summary){
+        socket.emit('dns.finish', summary);
     })
 
     socket.on('dns.probe', function(target){
+        
         dict.getTxtDict('./libs/dns/dicts/dns-top3000')
         .then(function(dict){
-    
+
             dns_prober.on('failed', function(trace){
-              console.log('dns probe failed, try last dns trace stack records as authority nameservers\r\n');
+              
               var nameservers = trace[trace.length - 1].map(function(record){
                 return record.ip;
               })
               dns_prober.manualProbe(target, nameservers, dict)
             })
+
             dns_prober.autoProbe(target, dict);
         });
     })

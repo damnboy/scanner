@@ -7,7 +7,8 @@ var dns = require('dns-socket')
 var bluebird = require('bluebird');
 var _ = require('lodash');
 var ip = require('ip');
-
+var log = require('../../utils/logger.js');
+var logger = log.createLogger('[DNS]');
 //https://technet.microsoft.com/en-us/library/dd197470%28v=ws.10%29.aspx
 
 var RESPONSE_CODE = {
@@ -206,10 +207,13 @@ DNSProber.prototype.manualProbe = function(target, nameservers, dict){
                             };
                             if(record.type === 'CNAME'){
                                 cname.push(r);
+                                _self.emit('record.cname', r);
                             }
                             if(record.type ==='A'){
                                 public.push(r);
+                                _self.emit('record.a', r);
                             }
+                            logger.info(r);
                             _self.emit("response", r);
                         });
                     }
@@ -249,7 +253,7 @@ DNSProber.prototype.autoProbe = function(target, dict){
             if(response.additionals.length > 0){
                 nameservers = response.additionals.reduce(function(curr, record){
                     if(record.type === 'A'){
-                    curr.push({'name':record.name, 'ip':record.data})
+                        curr.push({'name':record.name, 'ip':record.data})
                     }
                     return curr;
                 }, []);
@@ -277,7 +281,7 @@ DNSProber.prototype.autoProbe = function(target, dict){
                     step(response)
                 })
                 .catch(function(err){
-                    _self.emit('error', new Error('error occurs while request ns records' + err.message));
+                    _self.emit('error', new Error('error occurs while request ns records ' + err.message));
                 })
             }
             else{
@@ -292,6 +296,13 @@ DNSProber.prototype.autoProbe = function(target, dict){
                     trace.push(nameservers);
                 }
                 
+                trace.forEach(function(level){
+                    logger.info('------')
+                    level.forEach(function(ns){
+                        logger.info(ns);
+                    })
+                    logger.info('------')
+                })
                 _self.emit('trace', trace);
 
                 if(nameservers.length > 0){
@@ -337,6 +348,7 @@ DNSProber.prototype.autoProbe = function(target, dict){
                     });
                 }
                 else{
+                    logger.warn('dns probe failed, try last dns trace stack records as authority nameservers');
                     _self.emit('failed', trace);
                 }
             }
@@ -358,7 +370,7 @@ util.inherits(DNSBurster, events.EventEmitter);//使这个类继承EventEmitter
 DNSBurster.prototype.wildcard = function(){
     var nameservers = this.options.nameservers;
     var target = this.options.target;
-    console.log('Detecting wildcard record on target domain...');
+    logger.info('Detecting wildcard record on target domain...');
     return bluebird.map(['7e420e12','a35517d','334948b'], function(ns){
         return getAuthorityAnswers(util.format('%s.%s', ns, target), nameservers)
         .catch(function(err){
@@ -381,11 +393,11 @@ DNSBurster.prototype.wildcard = function(){
 
         wildcard_addresses =  _.uniq(wildcard_addresses);
         if(wildcard_addresses.length > 0){
-            console.log('wildcard addresses detected...', wildcard_addresses);
+            logger.warn('wildcard addresses detected...', wildcard_addresses);
         }
 
         else{
-            console.log('wildcard addresses not found...');
+            logger.info('wildcard addresses not found...');
         }
         return wildcard_addresses;
     });
@@ -431,6 +443,10 @@ DNSBurster.prototype.burst = function(dict){
       }, 16);
 
       work.drain = function() {
+        Object.keys(responses_summary).forEach(function(key){
+            logger.info('%s : %s' ,key, responses_summary[key]);
+        })
+
         _self.emit('finish', responses_summary);
       };
 

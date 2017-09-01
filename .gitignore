@@ -4,3 +4,4 @@ node_modules
 .vscode
 test
 server/app/bower_components
+server/layoutit

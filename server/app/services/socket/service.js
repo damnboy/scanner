@@ -1,4 +1,5 @@
 //https://cdnjs.com/libraries/socket.io
+//https://github.com/openstf/stf/blob/master/res/app/components/stf/socket/socket-service.js
 angular
 .module('socketModule')
 .factory('socket', [function(){
