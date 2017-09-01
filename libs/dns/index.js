@@ -31,6 +31,7 @@ var RESPONSE_CODE = {
   2.ns记录与目标域名的记录不不属于同一个顶级域，没有additions（接续办法：直接取authority中的主机名）
 */
 function dns_request(domain, type, nameserver, port){
+  
   return new Promise(function(resolve, reject){
     var socket = dns({
         retries : 3,
@@ -67,6 +68,7 @@ function dns_request(domain, type, nameserver, port){
 }
 
 function dns_request_ns(domain, nameserver, port){
+  logger.info('digging %s on %s', domain, nameserver);
   return dns_request(domain, 'NS', nameserver, port)
 }
 function dns_request_a(domain, nameserver, port){
@@ -75,7 +77,7 @@ function dns_request_a(domain, nameserver, port){
 
 
 var tld = [
-    {'name':'a.root-servers.net', 'ip' : '198.41.0.4' }/*,  
+    {'name':'a.root-servers.net', 'ip' : ['198.41.0.4'] }/*,  
     {'name':'b.root-servers.net', 'ip' : '192.228.79.201'},
     {'name':'c.root-servers.net', 'ip' : '192.33.4.12'},
     {'name':'d.root-servers.net', 'ip' : '199.7.91.13'},
@@ -100,9 +102,9 @@ var getAuthorityAnswers = function(target, custom_nameservers){
         var response;
         var nameservers = custom_nameservers === undefined ? tld : custom_nameservers;
         do{
-            //console.log(nameservers);
-            var random_ns = nameservers[Math.round(Math.random()*10) % nameservers.length].ip;
-            response = yield dns_request_a(target, random_ns, 53);
+            var random_ns = nameservers[Math.round(Math.random()*10) % nameservers.length];
+            var random_ns_ip = random_ns.ip[Math.round(Math.random()*10) % random_ns.ip.length];
+            response = yield dns_request_a(target, random_ns_ip, 53);
             
             if(response._flags.rcode !== RESPONSE_CODE['NOERROR'] || response._flags.aa === 0x01)
             {
@@ -116,7 +118,7 @@ var getAuthorityAnswers = function(target, custom_nameservers){
             if(response.additionals.length > 0){
                 nameservers = response.additionals.reduce(function(curr, record){
                     if(record.type === 'A'){
-                    curr.push({'name':record.name, 'ip':record.data})
+                    curr.push({'name':record.name, 'ip' : [record.data]})
                     }
                     return curr;
                 }, []);
@@ -124,7 +126,7 @@ var getAuthorityAnswers = function(target, custom_nameservers){
             else{
                 nameservers = response.authorities.reduce(function(curr, record){
                 if(record.type === 'NS'){
-                    curr.push({'name':record.data, 'ip': record.data})
+                    curr.push({'name':record.data, 'ip' : [record.data]})
                 }
                 return curr;
                 },[]);
@@ -230,6 +232,7 @@ DNSProber.prototype.manualProbe = function(target, nameservers, dict){
             });
         }
         else{
+            logger.error('no ns records');
             _self.emit('error', new Error('no ns records'));
         }
     }
@@ -243,8 +246,10 @@ DNSProber.prototype.autoProbe = function(target, dict){
         var response;
         var nameservers = tld;
         do{
-            var ns = nameservers[Math.round(Math.random()*10) % nameservers.length].ip;
-            response = yield dns_request_ns(target, ns, 53);
+            var random_ns = nameservers[Math.round(Math.random()*10) % nameservers.length];
+            var random_ns_ip = random_ns.ip[Math.round(Math.random()*10) % random_ns.ip.length];
+            
+            response = yield dns_request_ns(target, random_ns_ip, 53);
             
             if(response._flags.rcode !== RESPONSE_CODE['NOERROR'] || response._flags.aa === 0x01){
                 return response;
@@ -253,7 +258,7 @@ DNSProber.prototype.autoProbe = function(target, dict){
             if(response.additionals.length > 0){
                 nameservers = response.additionals.reduce(function(curr, record){
                     if(record.type === 'A'){
-                        curr.push({'name':record.name, 'ip':record.data})
+                        curr.push({'name':record.name, 'ip':[record.data]})
                     }
                     return curr;
                 }, []);
@@ -261,11 +266,18 @@ DNSProber.prototype.autoProbe = function(target, dict){
             else{
                 nameservers = response.authorities.reduce(function(curr, record){
                     if(record.type === 'NS'){
-                        curr.push({'name':record.data, 'ip': record.data})
+                        curr.push({'name':record.data, 'ip': [record.data]})
                     }
                     return curr;
                 },[]);
             }
+
+            logger.info('------')
+            nameservers.forEach(function(ns){
+                logger.info(ns);
+            })
+            logger.info('------')
+
             trace.push(nameservers);
         }
         while(true);
@@ -293,19 +305,6 @@ DNSProber.prototype.autoProbe = function(target, dict){
                 },[])
 
                 if(nameservers.length > 0){
-                    trace.push(nameservers);
-                }
-                
-                trace.forEach(function(level){
-                    logger.info('------')
-                    level.forEach(function(ns){
-                        logger.info(ns);
-                    })
-                    logger.info('------')
-                })
-                _self.emit('trace', trace);
-
-                if(nameservers.length > 0){
                     var invalid_nameservers = [];
                     bluebird.filter(nameservers.map(function(ns){
                         var ip = /^(\d+)\.(\d+)\.(\d+)\.(\d+)$/;
@@ -320,16 +319,30 @@ DNSProber.prototype.autoProbe = function(target, dict){
                         return answers !== undefined;
                     })
                     .then(function(responses){
-                        var nameservers =  responses.reduce(function(curr, response){
+                        var nameservers =  responses.map(function(response){
                             var addresses = response.answers.reduce(function(r, answer){
                                 if(answer.type === 'A'){
-                                    r.push(answer.data)
+                                    if(ip.isPrivate(answer.data)){
+                                        logger.warn('detect private address %s on authority nameservers %s', answer.data, response.questions[0].name);
+                                    }
+                                    if(ip.isPublic(answer.data)){
+                                        r.push(answer.data)
+                                    }
                                 }
                                 return r;
                             },[])
-                            return curr.concat(addresses);
-                        }, []);
+                            return {
+                                'name': response.questions[0].name,
+                                'ip': addresses
+                            }
+                        });
 
+
+                        logger.info('------')
+                        nameservers.forEach(function(ns){
+                            logger.info(ns);
+                        })
+                        logger.info('------')
 
                         if(invalid_nameservers.length > 0){
                             _self.emit('info', {
@@ -340,8 +353,15 @@ DNSProber.prototype.autoProbe = function(target, dict){
                                 }, util.format('There nameserver of target seem down...\r\n'))
                             })
                         }   
+                        trace.push(nameservers);
 
-                        _self.manualProbe(target, nameservers, dict);
+                        _self.emit('trace', trace);
+
+                        var ns = nameservers.reduce(function(curr, ns){
+                            return curr.concat(ns.ip);
+                        },[]);
+
+                        _self.manualProbe(target, ns, dict);
                     })
                     .catch(function(err){
                         _self.emit('error', err);
@@ -361,7 +381,7 @@ function DNSBurster(options) {//新建一个类
     events.EventEmitter.call(this);
     this.options = options;
     this.options.nameservers = this.options.nameservers.map(function(ns){
-        return {"ip": ns};
+        return {"ip": [ns]};
     })
 }
 

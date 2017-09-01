@@ -18,6 +18,11 @@ function IPWhois(){
     this.queue.on('done', function(response){
         var p = parse[response.server];
         if(p){
+            var record = {
+                'ip' : response.ip,
+                'server' : response.server,
+                'detail' : []
+            };
             var detail = p(response.data);
             logger.info('%s [%s]', response.ip, response.server);
             detail.forEach(function(i){
@@ -25,9 +30,14 @@ function IPWhois(){
                     self.summary[i.netname] = []
                 }
                 logger.info('%s  %s', i.netname, i.netblock)
-
+                record.detail.push({
+                    'netname' : i.netname,
+                    'netblock' : i.netblock
+                });
                 self.summary[i.netname].push(i.netblock)
             })
+
+            self.emit('record', record);
         }
     })
 

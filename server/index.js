@@ -2,6 +2,7 @@ var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var dns = require('../libs/dns');
+var IPWhois = require('../libs/whois');
 var dict = require('../utils/dict');
 var log = require('../utils/logger.js');
 var logger = log.createLogger('[PROBE-SERVER]');
@@ -13,9 +14,15 @@ app.get('/', function(req, res){
 io.on('connection', function(socket){
 
     var dns_prober = new dns.DNSProber();
+    var whois = new IPWhois();
+    
+    whois.on('record', function(data){
+        socket.emit('whois.record', data);
+    })
+    
     dns_prober.on('trace', function(trace){
         
-      })
+    })
     
     dns_prober.on('error', function(error){
         console.log(error)
@@ -50,6 +57,12 @@ io.on('connection', function(socket){
         });
     })
     
+
+    socket.on('whois.ip', function(data){
+        data.forEach(function(public){
+            whois.whois(public.ip);
+        })
+    })
     /*
     var cnt = 1;
     setInterval(function(){
