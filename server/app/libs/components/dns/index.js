@@ -1,80 +1,11 @@
 var _ = require('lodash')
+
 module.exports = 
 angular.module('dnsModule',[
 ])
-.component('dnsARecords',{
-    require : {
-        dnsList : '^dnsList'
-    },
-    transclude: true,
-    template :
-    '<div class="col-md-4">'+
-      '<table class="table table-hover table-striped">'+
-        '<thead>'+
-          '<tr>'+
-            '<th>domain({{$ctrl.dnsList.records.a.length}})</th>'+
-            '<th>ip</th>'+
-          '</tr>'+
-        '</thead>'+
-        '<tbody>'+
-        '<tr ng-repeat="record in $ctrl.dnsList.records.a">' +
-            '<td>{{record.domain}}</td><td>{{record.data}}</td>'+
-        '</tbody>'+
-      '</table>'+
-    '</div>',
-    controller : function dnsARecordsController(){
+.component('dnsRecordsA', require('./records/a/'))
+.component('dnsRecordsCname', require('./records/cname/'))
 
-    }
-})
-.component('dnsCnameRecords',{
-    require : {
-        dnsList : '^dnsList'
-    },
-    transclude: true,
-    template :
-    '<div class="col-md-4">'+
-      '<table class="table table-hover table-striped">'+
-        '<thead>'+
-          '<tr>'+
-            '<th>domain({{$ctrl.dnsList.records.cname.length}})</th>'+
-            '<th>cname</th>'+
-          '</tr>'+
-        '</thead>'+
-        '<tbody>'+
-        '<tr ng-repeat="record in $ctrl.dnsList.records.cname">' +
-            '<td>{{record.domain}}</td><td>{{record.data}}</td>'+
-        '</tbody>'+
-      '</table>'+
-    '</div>',
-    controller : function DnsCnameRecordsController(){
-    }
-})
-.component('publicRecords',{
-    require : {
-        dnsList : '^dnsList'
-    },
-    transclude: true,
-    template :
-    '<div class="col-md-4">'+
-      '<table class="table table-hover table-striped">'+
-        '<thead>'+
-          '<tr>'+
-            '<th>ipv4({{$ctrl.dnsList.public.length}})</th>'+
-            '<th><button ng-click="$ctrl.dnsList.onWhois()">whois</button></th>'+
-          '</tr>'+
-        '</thead>'+
-        '<tbody>'+
-        '<tr ng-repeat="record in $ctrl.dnsList.public">' +
-            '<td>{{record.ip}}</td>'+
-            '<td>{{record.detail[0].netname}}</td>'+
-            '<td>{{record.detail[0].netblock}}</td>'+
-        '</tbody>'+
-      '</table>'+
-    '</div>',
-    controller : function publicRecordsController(){
-        var ctrl = this;
-    }
-})
 .component('dnsList', {
     transclude: true,
     template : 
@@ -83,19 +14,17 @@ angular.module('dnsModule',[
     '<button ng-click="$ctrl.onProbe()">probe</button>'+
     '<div class="container-fluid">' + 
     '<div class="row">' + 
-      '<dns-a-records></dns-a-records>'+
-      '<dns-cname-records></dns-cname-records>'+
-      '<public-records></public-records>'+
+      '<dns-records-a></dns-records-a>'+
+      '<dns-records-cname></dns-records-cname>'+
     '</div>'+
     '</div>',
-    controller : function dnsListController($timeout, socket)
+    controller : function dnsListController($timeout, socket, fakeDatabase)
     {
         var ctrl = this;
 
         this.target = '';
         
         function init(){
-            ctrl.public = [];
             ctrl.records = {
                 'a' : [],
                 'cname' : []
@@ -108,17 +37,6 @@ angular.module('dnsModule',[
             socket.emit('dns.probe', this.target);
         }
     
-        ctrl.onWhois = function(){
-            socket.emit('whois.ip', ctrl.public);
-            ctrl.public = [];
-        }
-
-        socket.on('whois.record', function(record){
-            $timeout(function(){
-                ctrl.public.push(record)
-            },0);
-        })
-
         socket.on('dns.record.a', function(record){
             $timeout(function(){
                 ctrl.records.a.push(record);
@@ -133,15 +51,9 @@ angular.module('dnsModule',[
 
         socket.on('dns.finish', function(summary){
           $timeout(function(){
-            var public = ctrl.records.a.map(function(i){
-                return i.data;
-            });
-            ctrl.public = _.uniq(public.sort()).map(function(ip){
-                return {
-                    'ip' : ip
-                }
-            });
             ctrl.status = 'done!';
+
+            fakeDatabase['records'] = ctrl.records;
           },0)
         })
 

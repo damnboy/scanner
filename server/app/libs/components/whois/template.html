@@ -1,0 +1,26 @@
+<div class="container-fluid">
+        <div class="row">
+            <div class="col-md-4">
+                <br/>
+                <div class="panel-group" >
+                    <uib-accordion>
+                        <div ng-repeat="record in $ctrl.whois" uib-accordion-group class="panel-default" heading="{{record}} ({{$ctrl.items[record].length}})">
+                            <p>The body of the uib-accordion group grows to fit the contents</p>
+                            <div ng-repeat="item in $ctrl.items[record]">{{item}}</div>
+                        </div>
+                    </uib-accordion>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <h2>
+                    Heading
+                </h2>
+                <p>
+                    Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui.
+                </p>
+                <p>
+                    <a class="btn" href="#">View details »</a>
+                </p>
+            </div>
+        </div>
+    </div>

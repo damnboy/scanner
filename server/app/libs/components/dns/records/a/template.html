@@ -1,0 +1,14 @@
+<div class="col-md-6">
+<table class="table table-hover table-striped">
+  <thead>
+    <tr>
+      <th>domain({{$ctrl.dnsList.records.a.length}})</th>
+      <th>ip</th>
+    </tr>
+  </thead>
+  <tbody>
+  <tr ng-repeat="record in $ctrl.dnsList.records.a"> 
+      <td>{{record.domain}}</td><td>{{record.data}}</td>
+  </tbody>
+</table>
+</div>
