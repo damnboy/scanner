@@ -104,11 +104,13 @@ module.exports = (function(){
                 var ret = {
                     'detail' : i
                 }
-                var netname = i.match(/netname:\s*([^\n]*)/)
-                var inetnum = i.match(/inetnum:\s*([^\n]*)/)
+                var netname = i.match(/netname:\s*([^\n]*)/);
+                var inetnum = i.match(/inetnum:\s*([^\n]*)/);
+                
                 if(netname !== null && inetnum !== null){
                     //logger.info('%s\t%s', netname[1], inetnum[1])
                     ret['netname'] = netname[1];
+                 
                     ret['netblock'] = inetnum[1];
                 }
                 return ret;

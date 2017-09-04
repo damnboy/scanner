@@ -2,8 +2,32 @@ module.exports = {
     templateUrl : './libs/components/whois/template.html',
     controller : function whoisRecordsController($timeout, fakeDatabase, socket){
         var ctrl = this;
+        var records = [];
+        ctrl.items = {
+            
+        };
 
+        ctrl.selectedNetblock;
+
+        ctrl.onNetblock = function(netblock){
+            var record = records.filter(function(i){
+                var x = i.detail.filter(function(ii){
+                    return ii.netblock === netblock;
+                })
+
+                return x.length != 0;
+            })
+
+            
+            if(record.length != 0){
+                ctrl.selectedNetblock = record[0];
+                console.log(ctrl.selectedNetblock);
+            }
+            
+        }
         socket.on('whois.record', function(record){
+            records.push(record);
+
             $timeout(function(){
                 record.detail.forEach(function(r){
                     if(ctrl.items[r.netname] === undefined){
@@ -20,29 +44,8 @@ module.exports = {
             },0);
         })
 
-        ctrl.$onInit = function init(){
-            var public = fakeDatabase.records.a.map(function(i){
-                return i.data;
-            });
-    
-            public = _.uniq(public.sort()).map(function(ip){
-                return {
-                    'ip' : ip
-                }
-            });
-
-            socket.emit('whois.ip', public);
-        }
-
         
-        ctrl.items = {
-
-        };
-
-        ctrl.whois = Object.keys(ctrl.items);
-
     }
-
 }
 /*
 .component('whoisList',{
