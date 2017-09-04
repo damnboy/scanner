@@ -8,16 +8,19 @@ angular.module('dnsModule',[
 
 .component('dnsList', {
     transclude: true,
+    /*
     template : 
     '<p>{{$ctrl.records.a.length + $ctrl.records.cname.length}} subdomain of {{$ctrl.target}} {{$ctrl.status}} </p>' +
-    '<input type="text" ng-model=$ctrl.target></input>'+
-    '<button ng-click="$ctrl.onProbe()">probe</button>'+
+    '<input type="text" class="form-control"  ng-model=$ctrl.target placeholder="target domain" aria-describedby="basic-addon1">'+
+    '<button type="button" class="btn btn-primary" ng-click="$ctrl.onProbe()">probe</button>'+
     '<div class="container-fluid">' + 
     '<div class="row">' + 
       '<dns-records-a></dns-records-a>'+
       '<dns-records-cname></dns-records-cname>'+
     '</div>'+
     '</div>',
+    */
+    templateUrl : './libs/components/dns/template.html',
     controller : function dnsListController($timeout, socket, fakeDatabase)
     {
         var ctrl = this;

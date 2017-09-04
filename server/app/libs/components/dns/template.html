@@ -1,0 +1,18 @@
+<div class="container-fluid">
+    	<div class="row">
+                <div class="col-md-4">
+                    {{$ctrl.records.a.length + $ctrl.records.cname.length}} subdomain of  {{$ctrl.status}} 
+                    <input type="text" ng-model=$ctrl.target placeholder="target domain">
+                    <button type="button" class="btn btn-default btn-xs" ng-click="$ctrl.onProbe()">probe</button>
+                </div>
+                <div class="col-md-4">
+                </div>
+                <div class="col-md-4">
+                </div>
+            </div>
+
+        <div class="row">
+            <dns-records-a></dns-records-a>
+            <dns-records-cname></dns-records-cname>
+        </div>
+    </div>

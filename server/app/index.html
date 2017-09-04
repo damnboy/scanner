@@ -17,38 +17,17 @@
       <div class="container-fluid">
           <div class="row">
               <div class="col-md-12">
-                  <ul class="nav nav-tabs">
-                      <h1> HELLO WORLD</h1>
-                      <li class="active">
-                          <a href="#">Home</a>
-                      </li>
-                      <li>
-                          <a href="#!/dns">DNS</a>
-                      </li>
-                      <li >
-                          <a href="#!/whois">WHOIS</a>
-                      </li>
-                      <li class="dropdown pull-right">
-                           <a href="#" data-toggle="dropdown" class="dropdown-toggle">Settings<strong class="caret"></strong></a>
-                          <ul class="dropdown-menu">
-                              <li>
-                                  <a href="#">Action</a>
-                              </li>
-                              <li>
-                                  <a href="#">Another action</a>
-                              </li>
-                              <li>
-                                  <a href="#">Something else here</a>
-                              </li>
-                              <li class="divider">
-                              </li>
-                              <li>
-                                  <a href="#">Separated link</a>
-                              </li>
-                          </ul>
-                      </li>
-                  </ul>
-                  <div ng-view> </div>
+                  <h2> HELLO WORLD </h2>
+                <uib-tabset active="active">
+                    <uib-tab index="0" heading="DNS">
+                        <dns-list></dns-list>
+                    </uib-tab>
+                    <uib-tab index="1" heading="WHOIS">
+                        <whois-list></whois-list>
+                    </uib-tab>
+
+                  </uib-tabset>
+                  <!--<div ng-view> </div>-->
               </div>
           </div>
       </div>
