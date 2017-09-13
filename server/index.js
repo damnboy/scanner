@@ -47,10 +47,10 @@ io.on('connection', function(socket){
 
             dns_prober.on('failed', function(trace){
               
-                var nameservers = trace[trace.length - 1].map(function(record){
-                    return record.ip;
-                })
-                
+                var nameservers = trace[trace.length - 1].reduce(function(ret, record){
+                    return ret.concat(record.ip)
+                }, [])
+
                 dns_prober.manualProbe(target, nameservers, dict)
             })
 

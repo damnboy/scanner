@@ -120,9 +120,9 @@ module.exports.handler = function(argvs){
 
       dns_prober.on('failed', function(trace){
         console.log('dns probe failed, try last dns trace stack records as authority nameservers\r\n');
-        var nameservers = trace[trace.length - 1].map(function(record){
-          return record.ip;
-        })
+        var nameservers = trace[trace.length - 1].reduce(function(ret, record){
+            return ret.concat(record.ip)
+        }, [])
         dns_prober.manualProbe(target, nameservers, dict)
       })
       dns_prober.autoProbe(target, dict);
