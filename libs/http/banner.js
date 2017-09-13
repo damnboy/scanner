@@ -10,6 +10,11 @@ var Queue = require('../../utils/queue.js');
 var log = require('../../utils/logger.js');
 var logger = log.createLogger('[WEBAPP-BANNER]');
 
+/*
+TODO 
+https支持，需要处理的https错误信息
+
+*/
 function WebApplicationBanner(){
 
     events.EventEmitter.call(this);

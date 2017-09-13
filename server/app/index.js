@@ -2,7 +2,7 @@
 require('angular');
 require('angular-route');
 require('angular-ui-bootstrap');
-require('angular-ui-router');
+require('ui-router');
 
 angular
 .module('probeApp',[
