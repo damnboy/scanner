@@ -7,4 +7,5 @@ server/app/bower_components
 server/node_modules
 server/layoutit
 server/yarn.lock
-server/app/dist/*
+server/app/dist
+server/dist/bundle.js
