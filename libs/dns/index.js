@@ -92,10 +92,10 @@ var tld = [
     {'name':'m.root-servers.net', 'ip' : '202.12.27.33'}*/
 ]
 /*
-问题汇总
+    问题汇总
 
-1.某些ns，即便子域名不存在，也不会返回NXDOMAIN（rcode === 3）
-2.泛解析有时不返回aa标志, 只能根据是否返回 answer为判断
+    1.某些ns，即便子域名不存在，也不会返回NXDOMAIN（rcode === 3）
+    2.泛解析有时不返回aa标志, 只能根据是否返回 answer为判断
 */
 var getAuthorityAnswers = function(target, custom_nameservers){
     function *recursive(){
@@ -154,6 +154,20 @@ var getAuthorityAnswers = function(target, custom_nameservers){
         }
         step();
     })
+}
+
+function DNSBatch(options) {//新建一个类
+    events.EventEmitter.call(this);
+    this.options = options;
+    this.options.nameservers = this.options.nameservers.map(function(ns){
+        return {"ip": [ns]};
+    })
+}
+
+util.inherits(DNSBatch, events.EventEmitter);//使这个类继承EventEmitter
+
+DNSBatch.prototype.batch = function(domains){
+
 }
 
 function DNSProber(options){
@@ -423,7 +437,8 @@ DNSBurster.prototype.wildcard = function(){
     });
 }
 
-DNSBurster.prototype.burst = function(dict){
+DNSBurster.prototype.burstDomains = function(domains){
+
     var _self = this;
     var target = this.options.target;
     var nameservers = this.options.nameservers;
@@ -470,15 +485,23 @@ DNSBurster.prototype.burst = function(dict){
         _self.emit('finish', responses_summary);
       };
 
-      dict.forEach(function(subdomain){
+      domains.forEach(function(domain){
           work.push({
-            subdomain: [subdomain, target].join('.'),
+            subdomain: domain,
             ns: nameservers[Math.round(Math.random()*10) % nameservers.length]
           });
         });
     //});
 }
 
+DNSBurster.prototype.burst = function(dict){
+    var target = this.options.target;
+    return this.burstDomains(dict.map(function(subdomain){
+        return [subdomain, target].join('.')
+    }))
+}
+
 module.exports = {
-    "DNSProber" :  DNSProber
+    "DNSProber" :  DNSProber,
+    "DNSBurster" : DNSBurster
 }

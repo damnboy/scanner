@@ -1,0 +1,1 @@
+var dns = require('./index.js')
