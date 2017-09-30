@@ -6,6 +6,7 @@ var IPWhois = require('../whois');
 var dict = require('../../utils/dict');
 var log = require('../../utils/logger.js');
 var _ = require('lodash');
+var uuid = require('uuid/v1');
 
 var logger = log.createLogger('[SCAN-TASK]');
 
@@ -15,13 +16,18 @@ function ScanTask(){
 
 util.inherits(ScanTask, events.EventEmitter);//使这个类继承EventEmitter
 
-ScanTask.prototype._co = function(target){
+ScanTask.prototype.start = function(target){
+
     var self = this;
+    self.target = target;
+    self.id = uuid();
+
+    logger.info('Scan task(%s) on %s started...', self.id, self.target)
+
     return co(function *(){
         var dns_results = yield self.probeDNS(self.target);
         logger.info('probeDNS done~');
 
-        
         var ip_addresses = dns_results['records']['a'].map(function(i){
             return i.data;
         })
@@ -29,21 +35,11 @@ ScanTask.prototype._co = function(target){
         var whois_results = yield self.probeWhois(_.uniq(ip_addresses));
         logger.info('probeWhois done~');
     })
-} 
-
-ScanTask.prototype.start = function(target){
-
-    this.target = target;
-    this.id = '{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}';
-
-    logger.info('Scan task(%s) on %s started...', this.id, this.target)
-
-    return this._co(target);
-    
 }
 
 ScanTask.prototype.probeWhois = function(ip_addresses){
 
+    var self = this;
     var result = {
         'records' : []
     };
@@ -56,10 +52,12 @@ ScanTask.prototype.probeWhois = function(ip_addresses){
         })
 
         whois.on('record', function(data){
-           result['records'].push(data)
+            self.emit('whois.ip.record', data);
+            result['records'].push(data)
         })
 
         whois.on('error', function(err){
+            self.emit('whois.ip.error', data);
             reject(err)
         })
     
@@ -68,6 +66,7 @@ ScanTask.prototype.probeWhois = function(ip_addresses){
         })
     })
 }
+
 ScanTask.prototype.probeDNS = function(target){
     var result = {
         'records' : {
@@ -81,22 +80,26 @@ ScanTask.prototype.probeDNS = function(target){
         var dns_prober = new dns.DNSProber();
 
         dns_prober.on('trace', function(trace){
-        
+            self.emit('dns.trace', data);
         })
         
         dns_prober.on('error', function(error){
+            self.emit('dns.error', data);
             reject(error);
         })
 
         dns_prober.on('record.a', function(record){
+            self.emit('dns.record_a', data);
             result['records']['a'].push(record);
         })
 
         dns_prober.on('record.cname', function(record){
+            self.emit('dns.record_cname', data);
             result['records']['cname'].push(record);
         })
         
         dns_prober.on('finish', function(summary){
+            self.emit('dns.finish', data);
             result['summary'] = summary;
 
             resolve(result);
@@ -116,7 +119,6 @@ ScanTask.prototype.probeDNS = function(target){
 
             dns_prober.autoProbe(target, dict);
         });
-
     })
 }
 
