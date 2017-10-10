@@ -11,6 +11,12 @@ module.exports.builder = function(yargs) {
     , type: 'string'
     , demand: true
     })
+    .option('nameservers', {
+      alias: 'ns'
+      , describe: 'custom nameservers.'
+      , type: 'string'
+      , demand: false
+    })
 }
 
 module.exports.handler = function(argvs){
@@ -117,14 +123,20 @@ module.exports.handler = function(argvs){
   .then(function(dict){
 
       var target = argvs.target;
-
-      dns_prober.on('failed', function(trace){
-        console.log('dns probe failed, try last dns trace stack records as authority nameservers\r\n');
-        var nameservers = trace[trace.length - 1].reduce(function(ret, record){
-            return ret.concat(record.ip)
-        }, [])
-        dns_prober.manualProbe(target, nameservers, dict)
-      })
-      dns_prober.autoProbe(target, dict);
+      var nameservers = argvs.nameservers;
+      if(nameservers.length === undefined){
+        dns_prober.on('failed', function(trace){
+          console.log('dns probe failed, try last dns trace stack records as authority nameservers\r\n');
+          var nameservers = trace[trace.length - 1].reduce(function(ret, record){
+              return ret.concat(record.ip)
+          }, [])
+          dns_prober.manualProbe(target, nameservers, dict)
+        });
+  
+        dns_prober.autoProbe(target, dict);
+      }
+      else{
+        dns_prober.manualProbe(target, nameservers.split(','), dict);
+      }
   });
 }
