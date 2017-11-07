@@ -121,10 +121,11 @@ module.exports.handler = function(argvs){
 
   dict.getTxtDict('./libs/dns/dicts/dns-top3000')
   .then(function(dict){
-
+      
       var target = argvs.target;
       var nameservers = argvs.nameservers;
-      if(nameservers.length === undefined){
+      console.log(nameservers)
+      if(nameservers === undefined){
         dns_prober.on('failed', function(trace){
           console.log('dns probe failed, try last dns trace stack records as authority nameservers\r\n');
           var nameservers = trace[trace.length - 1].reduce(function(ret, record){
@@ -138,5 +139,6 @@ module.exports.handler = function(argvs){
       else{
         dns_prober.manualProbe(target, nameservers.split(','), dict);
       }
+
   });
 }
