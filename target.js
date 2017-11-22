@@ -119,7 +119,7 @@ module.exports.handler = function(argvs){
   })
 
 
-  dict.getTxtDict('./libs/dns/dicts/dns-top3000')
+  dict.getTxtDict('./libs/dns/dicts/dns-test')
   .then(function(dict){
       
       var target = argvs.target;
