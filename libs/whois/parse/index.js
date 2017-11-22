@@ -72,6 +72,24 @@
 module.exports = (function(){
 
     /*
+        INF/[WHOIS-IP] 4919 [*] 182.92.102.253 [whois.apnic.net]
+        INF/[WHOIS-IP] 4919 [*] ALISOFT  182.92.0.0 - 182.92.255.255
+        INF/[WHOIS-IP] 4919 [*] undefined  undefined
+        INF/[WHOIS-IP] 4919 [*] 36.110.216.67 [whois.apnic.net]
+        INF/[WHOIS-IP] 4919 [*] CHINANET-BJ  36.110.0.0 - 36.110.255.255
+        INF/[WHOIS-IP] 4919 [*] 101.198.186.169 [whois.apnic.net]
+        INF/[WHOIS-IP] 4919 [*] QIHOO  101.198.0.0 - 101.199.255.255
+        INF/[WHOIS-IP] 4919 [*] undefined  undefined
+        INF/[WHOIS-IP] 4919 [*] 218.246.4.24 [whois.apnic.net]
+        INF/[WHOIS-IP] 4919 [*] DRCSCNET  218.246.0.0 - 218.246.15.255
+        INF/[WHOIS-IP] 4919 [*] 221.192.133.62 [whois.apnic.net]
+        INF/[WHOIS-IP] 4919 [*] UNICOM-HE  221.192.0.0 - 221.195.255.255
+        INF/[WHOIS-IP] 4919 [*] undefined  undefined
+        INF/[WHOIS-IP] 4919 [*] 210.14.147.163 [whois.apnic.net]
+        INF/[WHOIS-IP] 4919 [*] SHUJUJIA  210.14.144.0 - 210.14.159.255
+        INF/[WHOIS-IP] 4919 [*] 218.246.4.3 [whois.apnic.net]
+        INF/[WHOIS-IP] 4919 [*] DRCSCNET  218.246.0.0 - 218.246.15.255
+
         部分whois信息会返回route而不是inetname与netname
 
         % Information related to '124.224.0.0/16AS4134'
@@ -100,6 +118,20 @@ module.exports = (function(){
                 inetnum:        218.85.0.0 - 218.86.127.255
                 netname:        CHINANET-FJ
             */
+
+            return infos.reduce(function(ret, i){
+                var netname = i.match(/netname:\s*([^\n]*)/);
+                var inetnum = i.match(/inetnum:\s*([^\n]*)/);
+                if(netname !== null && inetnum !== null){
+                    ret.push({
+                        'detail' : i,
+                        'netname' : netname[1],
+                        'netblock' : inetnum[1]
+                    })
+                }
+                return ret;
+            }, []);
+            /*
             return infos.map(function(i){
                 var ret = {
                     'detail' : i
@@ -115,6 +147,7 @@ module.exports = (function(){
                 }
                 return ret;
             })
+            */
     }
     return {
         'whois.arin.net' : function(data){

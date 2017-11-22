@@ -7,6 +7,7 @@ var logger = log.createLogger('[WHOIS-IP]');
 var Queue = require('../../utils/queue.js');
 var _ = require('lodash')
 
+
 function IPWhois(){
     
     EventEmitter.call(this);
@@ -29,15 +30,15 @@ function IPWhois(){
             detail.forEach(function(i){
                 logger.info('%s  %s', i.netname, i.netblock);
                 /*
-                if(self.summary[i.netname] === undefined){
-                    self.summary[i.netname] = []
-                }
-                
-                record.detail.push({
-                    'netname' : i.netname,
-                    'netblock' : i.netblock
-                });
-                self.summary[i.netname].push(i.netblock)
+                    if(self.summary[i.netname] === undefined){
+                        self.summary[i.netname] = []
+                    }
+                    
+                    record.detail.push({
+                        'netname' : i.netname,
+                        'netblock' : i.netblock
+                    });
+                    self.summary[i.netname].push(i.netblock)
                 */
             })
 
@@ -84,7 +85,7 @@ IPWhois.prototype._whois = function(ip, whois_server){
             if(match.length > 0){
                 var acc_whois_server = match[1];
                 //logger.info('%s not belongs to arin, redirecting whois request to %s', ip, acc_whois_server);
-                return resolve(self._whois(ip, acc_whois_server))
+                return resolve(self._whois(ip, acc_whois_server));
             }
         })
     })
