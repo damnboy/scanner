@@ -2,6 +2,7 @@ node_modules
 .bin
 .DS_Store
 .vscode
+todo
 test
 server/app/bower_components
 server/node_modules
