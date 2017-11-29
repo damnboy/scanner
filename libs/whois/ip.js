@@ -7,12 +7,13 @@ var logger = log.createLogger('[WHOIS-IP]');
 var Queue = require('../../utils/queue.js');
 var _ = require('lodash')
 
+
 function IPWhois(){
     
     EventEmitter.call(this);
 
     var self = this;
-    //this.summary = {}
+    this.summary = {}
 
     this.queue = new Queue(8);
     this.queue.on('done', function(response){
@@ -28,17 +29,17 @@ function IPWhois(){
             record.detail = detail;
             detail.forEach(function(i){
                 logger.info('%s  %s', i.netname, i.netblock);
-                /*
-                if(self.summary[i.netname] === undefined){
-                    self.summary[i.netname] = []
-                }
                 
-                record.detail.push({
-                    'netname' : i.netname,
-                    'netblock' : i.netblock
-                });
-                self.summary[i.netname].push(i.netblock)
-                */
+                    if(self.summary[i.netname] === undefined){
+                        self.summary[i.netname] = []
+                    }
+                    
+                    record.detail.push({
+                        'netname' : i.netname,
+                        'netblock' : i.netblock
+                    });
+                    self.summary[i.netname].push(i.netblock)
+                
             })
 
             self.emit('record', record);
@@ -50,12 +51,12 @@ function IPWhois(){
     })
 
     this.queue.on('finish', function(){
-        /*
+        
         Object.keys(self.summary).forEach(function(k){
             self.summary[k] = _.uniq(self.summary[k])
         })
-        */
-        self.emit('finish' /*, self.summary*/)
+        
+        self.emit('finish' , self.summary)
     })
 }
 
@@ -84,7 +85,7 @@ IPWhois.prototype._whois = function(ip, whois_server){
             if(match.length > 0){
                 var acc_whois_server = match[1];
                 //logger.info('%s not belongs to arin, redirecting whois request to %s', ip, acc_whois_server);
-                return resolve(self._whois(ip, acc_whois_server))
+                return resolve(self._whois(ip, acc_whois_server));
             }
         })
     })

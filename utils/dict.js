@@ -7,10 +7,12 @@ function getTxtDict(filename){
     return new Promise(function(resolve, reject){
         fs.readFile(filename, function(err, data){
             if(err){
-            reject(err);
+                reject(err);
             }
-            var string = data.toString('ascii');
-            resolve(string.split('\n'));
+            else{
+                var string = data.toString('ascii');
+                resolve(string.split('\n'));
+            }
         });
     });
 }

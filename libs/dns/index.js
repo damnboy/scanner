@@ -216,6 +216,22 @@ DNSProber.prototype.manualProbe = function(target, nameservers, dict){
                         return wildcard_addresses.indexOf(record.data) < 0 && ip.isPublic(record.data);
                     }); 
                     if(valid_records.length > 0){
+                        var resp = valid_records.reduce(function(ret, record){
+                            if(record.type === 'CNAME'){
+                                ret.cname.push(record.data)
+                            }
+                            if(record.type ==='A'){
+                                ret.a.push(record.data)
+                            }
+                            return ret
+                        },{
+                            'domain' : job.subdomain,
+                            'cname' : [],
+                            'a' : []
+                        });
+
+                        _self.emit('records', resp);
+
                         valid_records.forEach(function(record){
                             var r = {
                                 "domain" : job.subdomain,

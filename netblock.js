@@ -22,6 +22,12 @@ module.exports.builder = function(yargs) {
     , type: 'string'
     , demand: false
     })
+    .option('sslports', {
+        alias: 'P'
+      , describe: 'sslports'
+      , type: 'string'
+      , demand: false
+      })
     .option('timeout', {
       alias: 'x'
     , describe: 'timeout'
@@ -41,6 +47,13 @@ module.exports.handler = function(argvs){
         ports.forEach(function(port){
             hosts.forEach(function(host){
                 banner.host(host, port)
+            })
+        })
+
+        var sslports = argvs.sslports ? argvs.sslports.split(',') : ['443'];
+        sslports.forEach(function(port){
+            hosts.forEach(function(host){
+                banner.sslhost(host, port)
             })
         })
     })

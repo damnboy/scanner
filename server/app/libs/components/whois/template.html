@@ -15,7 +15,8 @@
                     {{$ctrl.selectedNetblock.server}}
                 </h2>
 
-                <p ng-repeat="item in $ctrl.selectedNetblock.detail" style="white-space: pre;">{{item.netblock}}<br/><br>{{item.netname}}<br/><br>{{item.detail}}<br/>
+                <p ng-repeat="item in $ctrl.selectedNetblock.detail" style="white-space: pre;">
+                    <br>{{item.detail}}<br/>
                 </p>
                 <p>
                     <a class="btn" href="#">View details »</a>

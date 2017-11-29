@@ -22,10 +22,10 @@ ScanTask.prototype.start = function(target){
     self.target = target;
     self.id = uuid();
 
-    logger.info('Scan task(%s) on %s started...', self.id, self.target)
+    logger.info('Scan task(%s) on %s started...', self.id, self.target);
 
     return co(function *(){
-        var dns_results = yield self.probeDNS(self.target);
+        var dns_results = yield self.probeDNS(self.target)
         logger.info('probeDNS done~');
 
         var ip_addresses = dns_results['records']['a'].map(function(i){
@@ -68,6 +68,7 @@ ScanTask.prototype.probeWhois = function(ip_addresses){
 }
 
 ScanTask.prototype.probeDNS = function(target){
+    var self = this;
     var result = {
         'records' : {
             'a' : [],
@@ -80,33 +81,32 @@ ScanTask.prototype.probeDNS = function(target){
         var dns_prober = new dns.DNSProber();
 
         dns_prober.on('trace', function(trace){
-            self.emit('dns.trace', data);
+            self.emit('dns.trace', trace);
         })
         
         dns_prober.on('error', function(error){
-            self.emit('dns.error', data);
+            self.emit('dns.error', error);
             reject(error);
         })
 
         dns_prober.on('record.a', function(record){
-            self.emit('dns.record_a', data);
+            self.emit('dns.record_a', record);
             result['records']['a'].push(record);
         })
 
         dns_prober.on('record.cname', function(record){
-            self.emit('dns.record_cname', data);
+            self.emit('dns.record_cname', record);
             result['records']['cname'].push(record);
         })
         
         dns_prober.on('finish', function(summary){
-            self.emit('dns.finish', data);
-            
+            self.emit('dns.finish', summary);
             result['summary'] = summary;
-
             resolve(result);
         })
 
-        dict.getTxtDict('/home/ponytail/Desktop/Project/scanner/libs/dns/dicts/dns-test')
+        logger.info();
+        dict.getTxtDict(__dirname + '/../dns/dicts/dns-test')
         .then(function(dict){
 
             dns_prober.on('failed', function(trace){
@@ -119,8 +119,15 @@ ScanTask.prototype.probeDNS = function(target){
             })
 
             dns_prober.autoProbe(target, dict);
-        });
+        })
+        .catch(function(err){
+            logger.info('Loading dict failed: ', err.message);
+        })
     })
+    .catch(function(err){
+        logger.info('probeDNS error~');
+        logger.info(err);
+    });
 }
 
 module.exports = ScanTask;

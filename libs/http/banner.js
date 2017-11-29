@@ -31,7 +31,7 @@ function WebApplicationBanner(){
     })
 
     this.queue.on('error', function(error){
-        logger.error('%s - %s', error.url, error.message)
+        //logger.error('%s - %s', error.url, error.message)
     })  
 
     this.queue.on('finish', function(){
@@ -48,6 +48,22 @@ WebApplicationBanner.prototype.host = function(host, port){
     return this.url(util.format('http://%s:%s', host, port));
 }
 
+/*
+    unable to verify the first certificate
+
+    Hostname/IP doesn't match certificate's altnames: "IP: 198.177.122.44 is not in the cert's list: 
+
+    certificate revoked
+
+    https://stackoverflow.com/questions/11091974/ssl-error-in-nodejs
+    https://stackoverflow.com/questions/20433287/node-js-request-cert-has-expired
+    https://stackoverflow.com/questions/10888610/ignore-invalid-self-signed-ssl-certificate-in-node-js-with-https-request
+
+*/
+WebApplicationBanner.prototype.sslhost = function(host, port){
+    return this.url(util.format('https://%s:%s', host, port));
+}
+
 WebApplicationBanner.prototype.url = function(url){
     var self = this;
     this.queue.enqueue(function(){
@@ -57,7 +73,10 @@ WebApplicationBanner.prototype.url = function(url){
                 'method' : 'GET',
                 'uri' : url,
                 'timeout' : self.timeout,  
-                'encoding' : null
+                'encoding' : null,
+                agentOptions: {
+                    rejectUnauthorized: false
+                }
             })
             .then(function(response){
                 var body = response.body;

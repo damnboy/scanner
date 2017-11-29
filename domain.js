@@ -1,4 +1,4 @@
-module.exports.command = 'target'
+module.exports.command = 'domain'
 
 module.exports.describe = 'Scanning target domain.'
 
@@ -7,10 +7,17 @@ module.exports.builder = function(yargs) {
     .strict()
     .option('target', {
       alias: 't'
-    , describe: 'target domain.'
+    , describe: 'target.'
     , type: 'string'
     , demand: true
     })
+    .option('dict', {
+        alias: 'd'
+      , describe: 'dict.'
+      , type: 'string'
+      , demand: true
+      , default : 'top3000'
+      })
     .option('nameservers', {
       alias: 'ns'
       , describe: 'custom nameservers.'
@@ -25,28 +32,7 @@ module.exports.handler = function(argvs){
   var _ = require('lodash');
   var dict = require('./utils/dict');
   var dns = require('./libs/dns');
-  var WebBanner = require('./libs/http/banner');
-  var IPWhois = require('./libs/whois')
-
-  var whois = new IPWhois();
-  whois.on('finish', function(summary){
-    console.log('------------- Whois Report ---------------------')
-    Object.keys(summary).forEach(function(k){
-      console.log(k);
-      summary[k].forEach(function(i){
-        console.log(i)
-      })
-    })
-    console.log('------------- Whois Report ---------------------')
-  })
-  var banner = new WebBanner();
-  banner.on('finish', function(summary){
-    console.log('------------- Web Application Banner Report ---------------------')
-    summary.forEach(function(i){
-      console.log(i.url, i.title)
-    })
-    console.log('------------- Web Application Banner Report ---------------------')
-  })
+  var db = require('./libs/db/els');
 
   var dns_prober = new dns.DNSProber();
   dns_prober.on('error', function(error){
@@ -64,11 +50,21 @@ module.exports.handler = function(argvs){
   })
 
   dns_prober.on('info', function(info){
-    console.log(info.message);
+      console.log(info.message);
   })
 
+      /*
+        schema 
+
+        lodash assign, extend, merge
+    */
+
+    dns_prober.on('records', function(response){
+        db.saveDNSRecord(response)
+        console.log(response);
+      })
   dns_prober.on('response', function(response){
-    console.log(response)
+    console.log(response);
   })
 
   dns_prober.on('finish', function(summary, public, cname, private, wildcard){
@@ -108,10 +104,6 @@ module.exports.handler = function(argvs){
       return record.data
     }).sort();
     _.uniq(ip_addr).forEach(function(addr){
-
-      banner.host(addr, 80)      
-      whois.whois(addr);
-
       console.log(addr)
     })
     console.log('----- IP ------ \r\n');
@@ -119,7 +111,7 @@ module.exports.handler = function(argvs){
   })
 
 
-  dict.getTxtDict('./libs/dns/dicts/top3000')
+  dict.getTxtDict('./libs/dns/dicts/'+argvs.dict)
   .then(function(dict){
       
       var target = argvs.target;
