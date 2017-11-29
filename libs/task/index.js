@@ -12,14 +12,16 @@ var logger = log.createLogger('[SCAN-TASK]');
 
 function ScanTask(){
     events.EventEmitter.call(this);
+
 }
 
 util.inherits(ScanTask, events.EventEmitter);//使这个类继承EventEmitter
 
-ScanTask.prototype.start = function(target){
+ScanTask.prototype.start = function(target, options){
 
     var self = this;
     self.target = target;
+    self.options = options;
     self.id = uuid();
 
     logger.info('Scan task(%s) on %s started...', self.id, self.target);
@@ -105,8 +107,8 @@ ScanTask.prototype.probeDNS = function(target){
             resolve(result);
         })
 
-        logger.info();
-        dict.getTxtDict(__dirname + '/../dns/dicts/dns-test')
+        //logger.info();
+        dict.getTxtDict(__dirname + '/../dns/dicts/' + self.options.dict)
         .then(function(dict){
 
             dns_prober.on('failed', function(trace){
