@@ -100,6 +100,7 @@ ScanTask.prototype.probeDNS = function(target){
         
         dns_prober.on('finish', function(summary){
             self.emit('dns.finish', data);
+            
             result['summary'] = summary;
 
             resolve(result);
