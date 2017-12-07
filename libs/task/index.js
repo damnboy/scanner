@@ -29,7 +29,7 @@ ScanTask.prototype.start = function(target, options){
     return co(function *(){
         var dns_results = yield self.probeDNS(self.target)
         logger.info('probeDNS done~');
-
+        console.log(dns_results)
         var ip_addresses = dns_results['records']['a'].map(function(i){
             return i.data;
         })
@@ -88,7 +88,7 @@ ScanTask.prototype.probeDNS = function(target){
         
         dns_prober.on('error', function(error){
             self.emit('dns.error', error);
-            reject(error);
+            //reject(error);
         })
 
         dns_prober.on('record.a', function(record){
@@ -123,12 +123,13 @@ ScanTask.prototype.probeDNS = function(target){
             dns_prober.autoProbe(target, dict);
         })
         .catch(function(err){
-            logger.info('Loading dict failed: ', err.message);
+            logger.error('Loading dict failed: ', err.message);
         })
+        
     })
     .catch(function(err){
         logger.info('probeDNS error~');
-        logger.info(err);
+        logger.error(err);
     });
 }
 

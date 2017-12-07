@@ -227,7 +227,8 @@ DNSProber.prototype.manualProbe = function(target, nameservers, dict){
                         },{
                             'domain' : job.subdomain,
                             'cname' : [],
-                            'a' : []
+                            'a' : [],
+                            "resolver" : job.ns.ip[0]
                         });
 
                         _self.emit('records', resp);
@@ -235,7 +236,7 @@ DNSProber.prototype.manualProbe = function(target, nameservers, dict){
                         valid_records.forEach(function(record){
                             var r = {
                                 "domain" : job.subdomain,
-                                "data":record.data
+                                "data" : record.data
                             };
                             if(record.type === 'CNAME'){
                                 cname.push(r);
