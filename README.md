@@ -142,4 +142,7 @@ c段http指纹识别
     [404]http://apis.google.com:80	Error 404 (Not Found)!!1
     [404]http://apis.google.com:80	Error 404 (Not Found)!!1
         
+
+# remark
+http://www.alolo.co/blog/2013/10/11/10-books-on-javascript
     

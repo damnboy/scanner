@@ -4,7 +4,10 @@
 */
 var record = {
     "mappings" : {
-        "record " : {
+        "record" : {
+            "_all": {
+                "enabled": true   
+            },
             "properties" : {
                 "domain" : {
                     "type" : "text",

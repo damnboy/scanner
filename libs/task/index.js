@@ -12,7 +12,6 @@ var logger = log.createLogger('[SCAN-TASK]');
 
 function ScanTask(){
     events.EventEmitter.call(this);
-
 }
 
 util.inherits(ScanTask, events.EventEmitter);//使这个类继承EventEmitter
@@ -27,9 +26,9 @@ ScanTask.prototype.start = function(target, options){
     logger.info('Scan task(%s) on %s started...', self.id, self.target);
 
     return co(function *(){
-        var dns_results = yield self.probeDNS(self.target)
+        var dns_results = yield self.probeDNS(self.target);
         logger.info('probeDNS done~');
-        console.log(dns_results)
+
         var ip_addresses = dns_results['records']['a'].map(function(i){
             return i.data;
         })

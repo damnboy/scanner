@@ -63,8 +63,6 @@ module.exports.handler = function(argvs){
 
 
       //schema & lodash assign, extend, merge
-
-
       dns_prober.on('records', function(response){
           db.saveDNSRecord(response)
           console.log(response);
@@ -113,7 +111,6 @@ module.exports.handler = function(argvs){
         console.log(addr)
       })
       console.log('----- IP ------ \r\n');
-
     })
 
 
