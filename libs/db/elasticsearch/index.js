@@ -5,7 +5,7 @@ var log = require('../../../utils/logger.js');
 var logger = log.createLogger('[DB-CLIENT-ELASTICSEARCH]');
 module.exports = function(options){
 
-    var dbClient = require('../fake');
+    var DBClient = require('../dbclient');
 
     return new Promise(function(resolve, reject){
         var elasticsearch = require('elasticsearch');
@@ -19,7 +19,7 @@ module.exports = function(options){
             if (error) {
                 client.close()
                 logger.error('elasticsearch db client is down using fake instead...')
-                resolve(new dbClient());
+                resolve(new DBClient());
             } else {
                 function server(){
                     var server = {
@@ -29,7 +29,7 @@ module.exports = function(options){
                     return util.format('http://%s:%d', server.host, server.port)
                 }
             
-                dbClient.prototype.analyzeDNSRecord = function (){
+                DBClient.prototype.analyzeDNSRecord = function (){
                     var DSL = {
                         "aggs": {
                             "all_address": {
@@ -49,7 +49,6 @@ module.exports = function(options){
                         else{
                             console.log(response.statusCode);
                             if(response.statusCode === 200){
-                                
                                 console.log(response.body.aggregations.all_address.buckets)
                             }
                             else{
@@ -58,7 +57,7 @@ module.exports = function(options){
                         }
                     })
                 }
-                dbClient.prototype.queryDNSRecord = function (domain){
+                DBClient.prototype.queryDNSRecord = function (domain){
                     var DSL_fulltext = {'query':{'match':{'domain':domain}}};
             
                     var DSL_fulltext_filter = {
@@ -122,7 +121,7 @@ module.exports = function(options){
                 搜索结果中包含权重值 "_score":         0.16273327, 
             
                 */
-                dbClient.prototype.saveDNSRecord =  function (record){
+                DBClient.prototype.saveDNSRecord =  function (record){
                     request.post({
                         'url' : server() + '/domain/record/',
                         'body' : _.assign(record , 
@@ -154,7 +153,7 @@ module.exports = function(options){
                 }
             
                 logger.info('elasticsearch client is ready')
-                resolve(new dbClient({
+                resolve(new DBClient({
                     'host' : options.host,
                     'port' : options.port
                 }));

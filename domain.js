@@ -114,7 +114,7 @@ module.exports.handler = function(argvs){
     })
 
 
-    dict.getTxtDict('./libs/dns/dicts/'+argvs.dict)
+    dict.getDNSDict(argvs.dict)
     .then(function(dict){
         
         var target = argvs.target;

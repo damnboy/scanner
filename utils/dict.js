@@ -1,4 +1,6 @@
 var fs = require('fs')
+var path = require("./path.js");
+
 function getTxtDict(filename){
     var dict = [];
     if(dict.length > 0){
@@ -16,6 +18,8 @@ function getTxtDict(filename){
         });
     });
 }
-module.exports = {
-   "getTxtDict" : getTxtDict
+
+module.exports.getDNSDict = function(dict){
+    return getTxtDict(path.dict("./dns/" + dict))
 }
+

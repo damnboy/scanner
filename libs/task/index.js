@@ -107,7 +107,7 @@ ScanTask.prototype.probeDNS = function(target){
         })
 
         //logger.info();
-        dict.getTxtDict(__dirname + '/../dns/dicts/' + self.options.dict)
+        dict.getDNSDict(self.options.dict)
         .then(function(dict){
 
             dns_prober.on('failed', function(trace){
