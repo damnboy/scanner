@@ -145,4 +145,7 @@ c段http指纹识别
 
 # remark
 http://www.alolo.co/blog/2013/10/11/10-books-on-javascript
-    
+
+# zeromq
+sudo yum install -y epel-release
+sudo yum install -y zeromq-devel

@@ -1,5 +1,6 @@
 var child_process = require("child_process");
 var log = require('./logger').createLogger('[util:procutil]')
+var util = require("util");
 
 module.exports.fork = function (script, args){
     return new Promise(function(resolve, reject){
@@ -29,12 +30,12 @@ module.exports.fork = function (script, args){
             */
 
             process.on('SIGINT', function() {
-                log.info("sending sigint signal to process("+proc.pid +")");
+                log.info("sending sigint signal to process("+ proc.pid +")");
                 proc.kill('SIGINT');
             });
 
             process.on('SIGTERM', function() {    
-                log.info("sending sigint signal to process("+proc.pid +")");
+                log.info("sending sigint signal to process("+ proc.pid +")");
                 proc.kill('SIGTERM');
             });
 
@@ -44,10 +45,13 @@ module.exports.fork = function (script, args){
             });
 
             proc.on('exit', function(code, signal){
+                log.info(util.format("child process exit code : %s, signal: %s", code, signal))
                 if (signal) {
-                    resolve(code)
+                    resolve(signal)
                 }
-                else if (code > 0 && code !== 130 && code !== 143) {
+                else if (code > 0 
+                    && code !== 130 //Script terminated by Control-C	Ctl-C	Control-C is fatal error signal 2, (130 = 128 + 2, see above)
+                    && code !== 143) {
                     reject(new ExitError(code))
                 }
                 else {
