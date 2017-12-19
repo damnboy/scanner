@@ -29,10 +29,12 @@ module.exports.fork = function (script, args){
             */
 
             process.on('SIGINT', function() {
+                log.info("sending sigint signal to process("+proc.pid +")");
                 proc.kill('SIGINT');
             });
 
             process.on('SIGTERM', function() {    
+                log.info("sending sigint signal to process("+proc.pid +")");
                 proc.kill('SIGTERM');
             });
 

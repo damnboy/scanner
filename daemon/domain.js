@@ -11,7 +11,20 @@ process.on("message", function(data){
     
 })
 
-process.on("exit", function(code, signal){
-    log.info("Process exit with: " + (code !== undefined ? code : signal));
+
+///////////////////////
+//process exit events
+///////////////////////
+process.on("exit", function(code){
+    log.info("Process exit with code: " + code);
 })
 
+process.on('SIGTERM', function(signal){
+    log.info("Process exit with signal: SIGTERM");
+    process.exit(0);
+})
+
+process.on('SIGINT', function(signal){
+    log.info("Process exit with signal: SIGINT");
+    process.exit(0);
+})

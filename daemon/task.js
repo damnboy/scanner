@@ -12,6 +12,6 @@ module.exports = function(options){
 
     return Promise.all(procs)
     .then(function(){
-        process.exit(0)
+        process.exit(0);
     })
 }
