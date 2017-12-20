@@ -20,10 +20,10 @@ module.exports.handler = function(argvs){
     }
     var procs = [
         fork(path.daemon("./index.js"), [
-            "task",
+            "task"/*,
             "--bind-pub" , options.taskBindPub,
             "--bind-pull" , options.taskBindPull,
-            "--bind-router" , options.taskBindRouter,
+            "--bind-router" , options.taskBindRouter,*/
         ]),
         fork(path.daemon("./index.js"), [
             "domain" ,

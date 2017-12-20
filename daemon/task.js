@@ -6,9 +6,9 @@ var uuid = require('uuid/v1');
 var zmq = require("zmq");
 var EventEmitter = require("events").EventEmitter;
 
-module.exports.command = 'task'
+module.exports.command = "task";
 
-module.exports.describe = 'task'
+module.exports.describe = "task";
 
 module.exports.builder = function(yargs) {
   return yargs
@@ -44,6 +44,28 @@ module.exports.handler = function(argvs){
     router.bindSync(argvs.bindRouter)
     log.info('ROUTER socket bound on', argvs.bindRouter)
 
+    var cmdRouter = new EventEmitter();
+    cmdRouter.on('CreateTask', function(){
+        var id = uuid();
+        pub.send([id, JSON.stringify({
+            "cmd" : "NewChannel",
+            "data" : {
+                "id" : id,
+                "dict" : "test"
+            }
+        })])
+
+    })
+
+    cmdRouter.on('ScanTarget', function(taskInfo){
+        router.send(["domain", JSON.stringify(taskInfo)])
+    })
+
+    pull.on("message", function(data){
+        let message = JSON.parse(data);
+        log.info("got cmd: " + message.cmd)
+        cmdRouter.emit(message.cmd, message.data);
+    })
 
     var innerRouter = new EventEmitter();
     router.on("message", function(source, data){
@@ -52,7 +74,15 @@ module.exports.handler = function(argvs){
 
     innerRouter.on("domain", function(data){
         let record = JSON.parse(data);
-        log.info(record)
+        var d = [
+            record.task_id,
+            JSON.stringify({
+                "cmd" : "Show",
+                "data" : record.record
+            })
+        ];
+        log.info(d)
+        pub.send(d);
     })
 
     innerRouter.on("service", function(data){
@@ -63,16 +93,7 @@ module.exports.handler = function(argvs){
 
     })
 
-    setTimeout(function(){
-        var taskInfo = {
-            "id" : uuid(),
-            "target_domain" : "qq.com",
-            "dict" : "test"
-        }
-        router.send(["domain", JSON.stringify(taskInfo)])
-    }, 2000)
     
-
     function closeSocket(){
         log.info("Closing sockets...");
         [pub, pull, router].forEach(function(socket){
