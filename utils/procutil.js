@@ -52,7 +52,7 @@ module.exports.fork = function (script, args){
                 else if (code > 0 
                     && code !== 130 //Script terminated by Control-C	Ctl-C	Control-C is fatal error signal 2, (130 = 128 + 2, see above)
                     && code !== 143) {
-                    reject(new ExitError(code))
+                    reject(code)
                 }
                 else {
                     resolve(code)

@@ -4,49 +4,93 @@ var log = require('../utils/logger').createLogger('[daemon:task]');
 var path = require("../utils/path.js");
 var uuid = require('uuid/v1');
 var zmq = require("zmq");
+var EventEmitter = require("events").EventEmitter;
 
-module.exports = function(options){
-    process.stdin.on("data", function(data){
-        var domain = data.toString('utf-8').replace('\n','').replace('\r','')
-        newTask(domain)
+module.exports.command = 'task'
+
+module.exports.describe = 'task'
+
+module.exports.builder = function(yargs) {
+  return yargs
+    .strict()
+    .option('bind-pub', {
+      describe: 'The address to bind the ZeroMQ PUB endpoint to.'
+        , type: 'string'
+        , default: 'tcp://*:7110'
     })
-    var procs = [
-        fork(path.daemon("./domain.js"), [
-            "--pub" , "tcp://127.0.0.1:9001", //bind
-            "--sub" , "tcp://127.0.0.1:9000"  //connect to
-        ]),
-        fork(path.daemon("./whois.js"), [
-            "--sub" , "tcp://127.0.0.1:9001"  //connect to
-        ]),
-        fork(path.daemon("./services.js"), [
-            "--sub" , "tcp://127.0.0.1:9001"  //connect to
-        ])
-    ];
+    .option('bind-pull', {
+        describe: 'The address to bind the ZeroMQ PULL endpoint to.'
+        , type: 'string'
+        , default: 'tcp://*:7111'
+      })
+    .option('bind-router', {
+         describe: 'The address to bind the ZeroMQ ROUTER endpoint to.'
+        , type: 'string'
+        , default: 'tcp://*:7112'
+    })
+}
 
-    pub = zmq.socket("pub");
+module.exports.handler = function(argvs){
 
-    pub.bind("tcp://127.0.0.1:9000", function(err){
-        log.info("Listening for zmq sub");
+    var pub = zmq.socket("pub");
+    pub.bindSync(argvs.bindPub)
+    log.info('PUB socket bound on', argvs.bindPub)
+
+    var pull = zmq.socket("pull");
+    pull.bindSync(argvs.bindPull)
+    log.info('PULL socket bound on', argvs.bindPull)
+
+    var router = zmq.socket("router");
+    router.bindSync(argvs.bindRouter)
+    log.info('ROUTER socket bound on', argvs.bindRouter)
+
+
+    var innerRouter = new EventEmitter();
+    router.on("message", function(source, data){
+        innerRouter.emit(source, data)
     })
 
-    function newTask(target){
-        var task_info = {
+    innerRouter.on("domain", function(data){
+        let record = JSON.parse(data);
+        log.info(record)
+    })
+
+    innerRouter.on("service", function(data){
+
+    })
+
+    innerRouter.on("whois", function(data){
+
+    })
+
+    setTimeout(function(){
+        var taskInfo = {
             "id" : uuid(),
-            "name" : target,
-            "target_domain" : target,
-            "description" : "",
-            "create_date" : Date.now(),
-            "dict" : "top3000"
+            "target_domain" : "qq.com",
+            "dict" : "test"
         }
-
-        log.info('Scan task(%s) on %s started...', task_info.id, task_info.target_domain);
-
-        //task 参数入库，完毕后分发task信息到域名，ip收集进程
-        pub.send(JSON.stringify(task_info))
-    }
+        router.send(["domain", JSON.stringify(taskInfo)])
+    }, 2000)
     
-    return Promise.all(procs)
-    .then(function(r){
-        process.exit(0);
+
+    function closeSocket(){
+        log.info("Closing sockets...");
+        [pub, pull, router].forEach(function(socket){
+            try{
+                socket.close();
+            }
+            catch(err){
+
+            }
+            
+        })
+    }
+
+    process.on("SIGINT", function(){
+        closeSocket();
+    })
+
+    process.on("SIGTERM", function(){
+        closeSocket();
     })
 }

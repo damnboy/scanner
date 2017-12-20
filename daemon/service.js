@@ -1,12 +1,11 @@
-var log = require('../utils/logger').createLogger('[daemon:whois]')
-var log = require('../utils/logger').createLogger('[daemon:services]')
+var log = require('../utils/logger').createLogger('[daemon:service]')
 var util = require("util");
 var zmq = require("zmq");
 
 
-module.exports.command = 'whois'
+module.exports.command = 'service'
 
-module.exports.describe = 'whois'
+module.exports.describe = 'service'
 
 module.exports.builder = function(yargs) {
   return yargs
@@ -21,10 +20,11 @@ module.exports.builder = function(yargs) {
 module.exports.handler = function(argvs){
 
     var dealer = zmq.socket("dealer");
-    dealer.identity = "services";
+    dealer.identity = "service";
     argvs.connectRouter.forEach(function(endpoint){
         dealer.connect(endpoint);
     })
+
 
     function closeSocket(){
         log.info("Closing sockets...");
@@ -47,7 +47,6 @@ module.exports.handler = function(argvs){
         closeSocket();
     })
 }
-
 
 ///////////////////////
 //DEBUG
