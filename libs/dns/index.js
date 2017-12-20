@@ -251,8 +251,14 @@ DNSProber.prototype.manualProbe = function(target, nameservers, dict){
                         });
                     }
                 }); 
-                burster.on('error', function(err){
-                    _self.emit('error', err);
+
+                burster.on('error', function(job, err){
+                    if(err.message === 'Query timed out'){
+                        _self.emit('timeout', job)
+                    }else{
+                        _self.emit('error', err);
+                    }
+                    
                 });
 
                 burster.on('finish', function(response){
@@ -324,7 +330,7 @@ DNSProber.prototype.autoProbe = function(target, dict){
                     step(response)
                 })
                 .catch(function(err){
-                    _self.emit('error', new Error('error occurs while request ns records ' + err.message));
+                    _self.emit('error', new Error(err.message + ' while request authority records about target domain: ' + target));
                 })
             }
             else{
@@ -487,7 +493,7 @@ DNSBurster.prototype.burstDomains = function(domains){
         })
         .catch(function(err){
             responses_summary['UNKNOWN'] += 1;
-            _self.emit('error', {'domain':job.subdomain,'error' :err.message});
+            _self.emit('error', job, err);
 
             done();
         });

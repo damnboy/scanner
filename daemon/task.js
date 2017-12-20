@@ -7,7 +7,8 @@ var zmq = require("zmq");
 
 module.exports = function(options){
     process.stdin.on("data", function(data){
-        newTask("189.cn")
+        var domain = data.toString('utf-8').replace('\n','').replace('\r','')
+        newTask(domain)
     })
     var procs = [
         fork(path.daemon("./domain.js"), [
@@ -29,13 +30,19 @@ module.exports = function(options){
     })
 
     function newTask(target){
-        var task_id = uuid();
-        log.info('Scan task(%s) on %s started...', task_id, target);
-        pub.send(JSON.stringify({
-            "task_id" : task_id,
-            "target" : target,
+        var task_info = {
+            "id" : uuid(),
+            "name" : target,
+            "target_domain" : target,
+            "description" : "",
+            "create_date" : Date.now(),
             "dict" : "top3000"
-        }))
+        }
+
+        log.info('Scan task(%s) on %s started...', task_info.id, task_info.target_domain);
+
+        //task 参数入库，完毕后分发task信息到域名，ip收集进程
+        pub.send(JSON.stringify(task_info))
     }
     
     return Promise.all(procs)

@@ -1,7 +1,12 @@
 var log = require('../utils/logger').createLogger('[daemon:services]')
+var zmq = require("zmq");
 
-process.on("message", function(data){
-    
+var sub = zmq.socket("sub");
+sub.subscribe("");
+sub.connect(process.argv[3])
+sub.on("message", function(data){
+    let message = JSON.parse(data);
+    //log.info(message)
 })
 
 
