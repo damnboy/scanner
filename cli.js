@@ -2,8 +2,9 @@ var zmq = require("zmq");
 var push = zmq.socket("push");
 var sub = zmq.socket("sub");
 var EventEmitter = require("events").EventEmitter;
-
-
+var wire = require("./daemon/wire");
+var wirerouter = require("./daemon/wire/router.js")
+var wireutil = require("./daemon/wire/util.js")
 
 var cmdRouter = new EventEmitter();
 cmdRouter.on("NewChannel", function(taskInfo){
@@ -38,6 +39,7 @@ sub.on("message", function(channel, data){
 sub.subscribe("");
 sub.connect("tcp://127.0.0.1:7110");
 push.connect("tcp://127.0.0.1:7111");
-push.send(JSON.stringify({
-    "cmd" : "CreateTask"
-}))
+
+push.send(["channel", wireutil.envelope(wire.CreateScanTask, {
+    "username" : "root", 
+    "email" : "root@localhost.com"})])  

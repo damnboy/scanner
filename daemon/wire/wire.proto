@@ -1,0 +1,23 @@
+enum MessageType {
+  Envelope = 1;
+  CreateScanTask  = 10;
+  ScanTaskInfo = 11;
+}
+
+message Envelope {
+  required MessageType type = 1;
+  required bytes message = 2;
+  optional string channel = 3;
+}
+
+message CreateScanTask {
+  required string username = 1;
+  required string email = 2;
+}
+
+message ScanTaskInfo {
+  required string id = 1;
+  required string description = 2;
+  required string target_domain = 3;
+  required double date = 4;
+}

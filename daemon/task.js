@@ -5,6 +5,8 @@ var path = require("../utils/path.js");
 var uuid = require('uuid/v1');
 var zmq = require("zmq");
 var EventEmitter = require("events").EventEmitter;
+var wire = require("./wire");
+var wirerouter = require("./wire/router.js")
 
 module.exports.command = "task";
 
@@ -44,28 +46,12 @@ module.exports.handler = function(argvs){
     router.bindSync(argvs.bindRouter)
     log.info('ROUTER socket bound on', argvs.bindRouter)
 
-    var cmdRouter = new EventEmitter();
-    cmdRouter.on('CreateTask', function(){
-        var id = uuid();
-        pub.send([id, JSON.stringify({
-            "cmd" : "NewChannel",
-            "data" : {
-                "id" : id,
-                "dict" : "test"
-            }
-        })])
-
-    })
-
-    cmdRouter.on('ScanTarget', function(taskInfo){
-        router.send(["domain", JSON.stringify(taskInfo)])
-    })
-
-    pull.on("message", function(data){
-        let message = JSON.parse(data);
-        log.info("got cmd: " + message.cmd)
-        cmdRouter.emit(message.cmd, message.data);
-    })
+    pull.on("message", wirerouter()
+        .on(wire.CreateScanTask, function(channel, message, data){
+            console.log(message)
+        })
+        .handler()
+    )
 
     var innerRouter = new EventEmitter();
     router.on("message", function(source, data){
