@@ -2,6 +2,11 @@ enum MessageType {
   Envelope = 1;
   CreateScanTask  = 10;
   ScanTaskInfo = 11;
+  DomainScanTaskInfo = 12;
+  Debugging = 1000;
+}
+message Debugging{
+  required string message = 1;
 }
 
 message Envelope {
@@ -15,9 +20,14 @@ message CreateScanTask {
   required string email = 2;
 }
 
+message DomainScanTaskInfo {
+  required ScanTaskInfo info =1;
+  required string targetDomain = 2;
+  required string dict = 3;
+}
+
 message ScanTaskInfo {
   required string id = 1;
   required string description = 2;
-  required string target_domain = 3;
-  required double date = 4;
+  required double date = 3;
 }

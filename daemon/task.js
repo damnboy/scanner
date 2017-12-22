@@ -7,6 +7,8 @@ var zmq = require("zmq");
 var EventEmitter = require("events").EventEmitter;
 var wire = require("./wire");
 var wirerouter = require("./wire/router.js")
+var wireutil = require("./wire/util.js")
+
 
 module.exports.command = "task";
 
@@ -25,8 +27,8 @@ module.exports.builder = function(yargs) {
         , type: 'string'
         , default: 'tcp://*:7111'
       })
-    .option('bind-router', {
-         describe: 'The address to bind the ZeroMQ ROUTER endpoint to.'
+    .option('bind-sub', {
+         describe: 'The address to bind the ZeroMQ SUB endpoint to.'
         , type: 'string'
         , default: 'tcp://*:7112'
     })
@@ -42,47 +44,57 @@ module.exports.handler = function(argvs){
     pull.bindSync(argvs.bindPull)
     log.info('PULL socket bound on', argvs.bindPull)
 
-    var router = zmq.socket("router");
-    router.bindSync(argvs.bindRouter)
-    log.info('ROUTER socket bound on', argvs.bindRouter)
+    var sub = zmq.socket("sub");
+    sub.subscribe("");
+    sub.bindSync(argvs.bindSub)
+    log.info('SUB socket bound on', argvs.bindSub)
 
     pull.on("message", wirerouter()
         .on(wire.CreateScanTask, function(channel, message, data){
-            console.log(message)
+
+            var taskInfo =  {
+                "id" : uuid(),
+                "description" : "todo",
+                "targetDomain" : "unknown",
+                "dict" : "top3000",
+                "date" : Date.now()
+            };
+
+            pub.send([taskInfo.id, wireutil.envelope(wire.ScanTaskInfo,taskInfo)]);
+        })
+        .on(wire.DomainScanTaskInfo, function(channel, message, data){
+            //入库，提交到domian进行扫描
+            pub.send([channel, wireutil.envelope(wire.DomainScanTaskInfo,message)]);
         })
         .handler()
     )
 
     var innerRouter = new EventEmitter();
-    router.on("message", function(source, data){
-        innerRouter.emit(source, data)
+    sub.on("message", function(source, data){
+        innerRouter.emit(source, source, data)
     })
 
-    innerRouter.on("domain", function(data){
-        let record = JSON.parse(data);
-        var d = [
-            record.task_id,
-            JSON.stringify({
-                "cmd" : "Show",
-                "data" : record.record
-            })
-        ];
-        log.info(d)
-        pub.send(d);
-    })
-
-    innerRouter.on("service", function(data){
+    innerRouter.on("domain", wirerouter()
+    .on(wire.Debugging, function(channel, message, data){
 
     })
+    .handler())
 
-    innerRouter.on("whois", function(data){
+    innerRouter.on("whois", wirerouter()
+    .on(wire.Debugging, function(channel, message, data){
 
     })
+    .handler())
 
-    
+    innerRouter.on("service", wirerouter()
+    .on(wire.Debugging, function(channel, message, data){
+
+    })
+    .handler())
+
     function closeSocket(){
         log.info("Closing sockets...");
-        [pub, pull, router].forEach(function(socket){
+        [pub, pull, sub].forEach(function(socket){
             try{
                 socket.close();
             }

@@ -2,7 +2,9 @@ var log = require('../utils/logger').createLogger('[daemon:domain]')
 var EventEmitter = require("events").EventEmitter;
 var DNSProber = require('../libs/dns').DNSProber;
 var dict = require('../utils/dict');
-
+var wire = require("./wire");
+var wirerouter = require("./wire/router.js")
+var wireutil = require("./wire/util.js")
 var util = require("util");
 var zmq = require("zmq");
 
@@ -14,8 +16,8 @@ module.exports.describe = 'domain'
 module.exports.builder = function(yargs) {
   return yargs
     .strict()
-    .option('connect-router', {
-      describe: 'ZeroMQ ROUTER endpoint to connect to.'
+    .option('connect-sub', {
+      describe: 'ZeroMQ SUB endpoint to connect to.'
     , array: true
     , demand: true
     })
@@ -23,25 +25,20 @@ module.exports.builder = function(yargs) {
 
 module.exports.handler = function(argvs){
 
-    var dealer = zmq.socket("dealer");
-    dealer.identity = "domain";
-    argvs.connectRouter.forEach(function(endpoint){
-        dealer.connect(endpoint);
+    var sub = zmq.socket("sub");
+    sub.identity = "domain";
+    sub.subscribe("")
+    argvs.connectSub.forEach(function(endpoint){
+        sub.connect(endpoint);
     })
     
-    dealer.on("message", function(data){
-        
-        let task_info = JSON.parse(data);
-        
-        registerDNSProbe(task_info.id, task_info.target_domain, task_info.dict)
-        .then(function(summary){
-            log.info(summary)
+    sub.on("message", wirerouter()
+        .on(wire.DomainScanTaskInfo, function(channel, message, data){
+            //入库，提交到domian进行扫描
+            log.info(message);
         })
-        .catch(function(error){
-            log.error('!' + error)
-        })
-        
-    })
+        .handler()
+    )
 
     /////////////////////////////////////////////////
     //入库，整合提交到elasticsearch与task，进行whois查询
@@ -115,7 +112,7 @@ module.exports.handler = function(argvs){
 
     function closeSocket(){
         log.info("Closing sockets...");
-        [dealer].forEach(function(socket){
+        [sub].forEach(function(socket){
             try{
                 socket.close();
             }
