@@ -21,10 +21,18 @@ module.exports.builder = function(yargs) {
     , array: true
     , demand: true
     })
+    .option('connect-pull', {
+        describe: 'The address to bind the ZeroMQ PULL endpoint to.'
+        , type: 'string'
+        , demand: true
+    })
 }
 
 module.exports.handler = function(argvs){
 
+    var push = zmq.socket("push");
+    push.connect(argvs.connectPull);
+    
     var sub = zmq.socket("sub");
     sub.identity = "domain";
     sub.subscribe("")
@@ -34,8 +42,7 @@ module.exports.handler = function(argvs){
     
     sub.on("message", wirerouter()
         .on(wire.DomainScanTaskInfo, function(channel, message, data){
-            //入库，提交到domian进行扫描
-            log.info(message);
+            registerDNSProbe(message.info.id, message.targetDomain, message.dict);
         })
         .handler()
     )
@@ -54,11 +61,10 @@ module.exports.handler = function(argvs){
 
     //pub到services与whois进行二阶扫描
     router.on('dns.record.a', function(task_id, record){
-        //log.info(task_id, record)
-        dealer.send(JSON.stringify({
-            "task_id" : task_id,
-            "record" : record
-        }))
+        //入库.then(push.send)
+        push.send([task_id, wireutil.envelope(wire.IPv4Infomation,{
+            "ip" : record.data
+        })]);
     });
 
     router.on('dns.record.cname', function(task_id, record){
@@ -88,7 +94,6 @@ module.exports.handler = function(argvs){
                 })
 
                 prober.on('timeout', function(record){
-                    
                     router.emit('dns.timeout', task_id, record);
                 })
 
@@ -112,7 +117,7 @@ module.exports.handler = function(argvs){
 
     function closeSocket(){
         log.info("Closing sockets...");
-        [sub].forEach(function(socket){
+        [sub, push].forEach(function(socket){
             try{
                 socket.close();
             }

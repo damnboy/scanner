@@ -204,6 +204,11 @@ DNSProber.prototype.manualProbe = function(target, nameservers, dict){
                 var cname = [];
                 var private = [];
                 var public = [];    
+                burster.on('SERVFAIL', function(job, response){
+                    logger.warn('SERVFAIL:')
+                    console.log(job)
+                    console.log(response)
+                })
                 burster.on('NOERROR', function(job, response){
                 
                     var valid_records = response.answers.filter(function(record){

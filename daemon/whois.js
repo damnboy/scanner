@@ -4,7 +4,7 @@ var zmq = require("zmq");
 var wire = require("./wire");
 var wirerouter = require("./wire/router.js")
 var wireutil = require("./wire/util.js")
-
+var IPWhois = require('../libs/whois');
 module.exports.command = 'whois'
 
 module.exports.describe = 'whois'
@@ -17,10 +17,18 @@ module.exports.builder = function(yargs) {
     , array: true
     , demand: true
     })
+    .option('connect-pull', {
+        describe: 'The address to bind the ZeroMQ PULL endpoint to.'
+        , type: 'string'
+        , demand: true
+    })
 }
 
 
 module.exports.handler = function(argvs){
+    
+    var push = zmq.socket("push");
+    push.connect(argvs.connectPull);
 
     var sub = zmq.socket("sub");
     sub.identity = "whois";
@@ -29,17 +37,25 @@ module.exports.handler = function(argvs){
         sub.connect(endpoint);
     })
     
+    var whois = new IPWhois();
     sub.on("message", wirerouter()
-        .on(wire.Debugging, function(channel, message, data){
-            //入库，提交到domian进行扫描
-            log.info(message);
+        .on(wire.IPv4Infomation, function(channel, message, data){
+            //whois扫描后入库
+            whois.whois(message.ip)
+            .then(function(detail){
+                
+                //消息返回task，并推送到client端
+            })
+            .catch(function(err){
+                log.err(err)
+            })
         })
         .handler()
     )
 
     function closeSocket(){
         log.info("Closing sockets...");
-        [sub].forEach(function(socket){
+        [sub, push].forEach(function(socket){
             try{
                 socket.close();
             }

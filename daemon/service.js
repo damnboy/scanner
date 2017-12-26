@@ -4,11 +4,18 @@ var zmq = require("zmq");
 var wire = require("./wire");
 var wirerouter = require("./wire/router.js")
 var wireutil = require("./wire/util.js")
-
+var Queue = require("../utils/queue.js")
+var externalNmap = require('../utils/external-nmap.js');
 module.exports.command = 'service'
 
 module.exports.describe = 'service'
+/*
+    nmap static build
+    https://diagprov.ch/posts/2016/06/static-nmap-builds-for-infosec-via-docker.html
+    https://github.com/ZephrFish/static-tools
+    https://blog.zsec.uk/staticnmap/
 
+*/
 module.exports.builder = function(yargs) {
   return yargs
     .strict()
@@ -17,10 +24,19 @@ module.exports.builder = function(yargs) {
     , array: true
     , demand: true
     })
+    .option('connect-pull', {
+        describe: 'The address to bind the ZeroMQ PULL endpoint to.'
+        , type: 'string'
+        , demand: true
+    })
 }
 
 
 module.exports.handler = function(argvs){
+
+    var queue = new Queue(1);
+    var push = zmq.socket("push");
+    push.connect(argvs.connectPull);
 
     var sub = zmq.socket("sub");
     sub.identity = "services";
@@ -30,9 +46,16 @@ module.exports.handler = function(argvs){
     })
     
     sub.on("message", wirerouter()
-        .on(wire.Debugging, function(channel, message, data){
-            //入库，提交到domian进行扫描
-            log.info(message);
+        .on(wire.IPv4Infomation, function(channel, message, data){
+            //host端口扫描任务全部入库，处理，用flag标示是否扫描成功
+            //需要队列控制并行的nmap数量，避免扫描流量过大导致崩溃
+            queue.enqueue(function(){
+                return externalNmap.portScanner(message.ip)
+                .catch(function(err){
+                    log.warn('detecting host open service error: ' + err)
+                })
+            })
+            
         })
         .handler()
     )
@@ -40,7 +63,7 @@ module.exports.handler = function(argvs){
 
     function closeSocket(){
         log.info("Closing sockets...");
-        [sub].forEach(function(socket){
+        [sub, push].forEach(function(socket){
             try{
                 socket.close();
             }

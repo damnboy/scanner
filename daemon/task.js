@@ -66,6 +66,26 @@ module.exports.handler = function(argvs){
             //入库，提交到domian进行扫描
             pub.send([channel, wireutil.envelope(wire.DomainScanTaskInfo,message)]);
         })
+        .on(wire.IPv4Infomation, function(channel, message, data){
+            log.info('new ip address detected: ' + message.ip)
+
+            pub.send([channel, wireutil.envelope(wire.IPv4Infomation,message)]);
+        })
+        .on(wire.ScanResultDNSRecordA, function(channel, message, data){
+            
+        })
+        .on(wire.ScanResultDNSRecordCName, function(channel, message, data){
+            
+        })
+        .on(wire.ScanResultWhois, function(channel, message, data){
+            
+        })
+        .on(wire.ScanResultOpenPorts, function(channel, message, data){
+            
+        })
+        .on(wire.ScanResultPortBanner, function(channel, message, data){
+            
+        })
         .handler()
     )
 

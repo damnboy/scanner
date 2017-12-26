@@ -91,11 +91,35 @@ IPWhois.prototype._whois = function(ip, whois_server){
     })
 }
 
-IPWhois.prototype.whois = function(ip){
+IPWhois.prototype.enqueue_whois = function(ip){
     var self = this;
     this.queue.enqueue(function(){
         return self._whois(ip, 'whois.arin.net')}
     );
+}
+
+IPWhois.prototype.whois = function(ip){
+
+    return this._whois(ip, 'whois.arin.net')
+    .then(function(response){
+        var p = parse[response.server];
+        if(p){
+            var record = {
+                'ip' : response.ip,
+                'server' : response.server,
+                'detail' : []
+            };
+            var detail = p(response.data);
+            logger.info('%s [%s]', response.ip, response.server);
+            record.detail = detail.map(function(i){
+                logger.info('netname: ', i.netname)
+                logger.info('netblock: ' , i.netblock);
+                return i;
+            })
+            return record;
+        }
+    })
+    
 }
 
 module.exports = IPWhois;

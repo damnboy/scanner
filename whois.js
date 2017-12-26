@@ -43,7 +43,7 @@ module.exports.handler = function(argvs){
     })
 
     if(argvs.address){
-        return whois.whois(argvs.address);
+        return whois.enqueue_whois(argvs.address);
     }
     
     if(argvs.file){
@@ -53,7 +53,7 @@ module.exports.handler = function(argvs){
             
             addr.forEach(function(a){
                 if(ip.isV4Format(a)){
-                    whois.whois(a)
+                    whois.enqueue_whois(a)
                 }
             })
         })

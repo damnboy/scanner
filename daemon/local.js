@@ -20,22 +20,25 @@ module.exports.handler = function(argvs){
     }
     var procs = [
         fork(path.daemon("./index.js"), [
-            "task"/*,
+            "task",
             "--bind-pub" , options.taskBindPub,
             "--bind-pull" , options.taskBindPull,
-            "--bind-sub" , options.taskBindSub,*/
+            "--bind-sub" , options.taskBindSub
         ]),
         fork(path.daemon("./index.js"), [
             "domain" ,
-            "--connect-sub", options.taskBindPub
+            "--connect-sub", options.taskBindPub,
+            "--connect-pull", options.taskBindPull
         ]),
         fork(path.daemon("./index.js"), [
             "service" ,
-            "--connect-sub", options.taskBindPub
+            "--connect-sub", options.taskBindPub,
+            "--connect-pull", options.taskBindPull
         ]),
         fork(path.daemon("./index.js"), [
             "whois" ,
-            "--connect-sub", options.taskBindPub
+            "--connect-sub", options.taskBindPub,
+            "--connect-pull", options.taskBindPull
         ])
     ];
     

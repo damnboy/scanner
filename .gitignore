@@ -10,3 +10,4 @@ server/layoutit
 server/yarn.lock
 server/app/dist
 server/dist/bundle.js
+test.js
