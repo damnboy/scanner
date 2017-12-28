@@ -14,13 +14,9 @@ wirerouter()
     sub.subscribe(message.id);
     sub.connect("tcp://127.0.0.1:7110");
 
-    var task = {
-        "info" : message,
-        "targetDomain" : "qq.com",
-        "dict" : "test"
-    }
-
-    push.send([message.id, wireutil.envelope(wire.DomainScanTaskInfo, task)]);
+    push.send([message.id, wireutil.envelope(wire.ClientReady, {
+        "taskId" : message.id
+    })]);
 })
 .handler())
 
@@ -28,7 +24,9 @@ sub.subscribe("");
 sub.connect("tcp://127.0.0.1:7110");
 push.connect("tcp://127.0.0.1:7111");
 
-push.send(["channel", wireutil.envelope(wire.CreateScanTask, {
-    "username" : "root", 
-    "email" : "root@localhost.com"})
-])  
+push.send(["channel", wireutil.envelope(wire.CreateDomainScanTaskInfo, {
+    "email" : "root@localhost.com",
+    "description" : "...",
+    "targetDomain" : "189.cn",
+    "dict" : "test"
+})])  

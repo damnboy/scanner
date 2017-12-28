@@ -6,9 +6,9 @@ var uuid = require('uuid/v1');
 var zmq = require("zmq");
 var EventEmitter = require("events").EventEmitter;
 var wire = require("./wire");
-var wirerouter = require("./wire/router.js")
-var wireutil = require("./wire/util.js")
-
+var wirerouter = require("./wire/router.js");
+var wireutil = require("./wire/util.js");
+var dbClient = require('../libs/db');
 
 module.exports.command = "task";
 
@@ -47,24 +47,44 @@ module.exports.handler = function(argvs){
     var sub = zmq.socket("sub");
     sub.subscribe("");
     sub.bindSync(argvs.bindSub)
-    log.info('SUB socket bound on', argvs.bindSub)
+    log.info('SUB socket bound on', argvs.bindSub);
 
-    pull.on("message", wirerouter()
-        .on(wire.CreateScanTask, function(channel, message, data){
+    dbClient({
+        'host' : '127.0.0.1',
+        'port' : 9200
+    })
+    .then(function(dbapi){
+
+        pull.on("message", wirerouter()
+        .on(wire.CreateDomainScanTaskInfo, function(channel, message, data){
 
             var taskInfo =  {
                 "id" : uuid(),
-                "description" : "todo",
-                "targetDomain" : "unknown",
-                "dict" : "top3000",
-                "date" : Date.now()
+                "createDate" : Date.now(),
+                "createBy" : message.email,
+                "description" : "",
+                "remark" : "",
+                "domain" : message.targetDomain,
+                "dict" : message.dict
             };
 
-            pub.send([taskInfo.id, wireutil.envelope(wire.ScanTaskInfo,taskInfo)]);
+            //入库
+            dbapi.saveDomainTask(taskInfo)
+            .then(function(){
+                log.info("Domain scan task("+taskInfo.id+") created...")
+                //返回客户端创建后的任务id
+                pub.send([taskInfo.id, wireutil.envelope(wire.ScanTaskInfo, {
+                    "id" : taskInfo.id,
+                    "createDate" : taskInfo.createDate
+                })]);
+            })
+            .catch(function(err){
+                log.error(err)
+            })
         })
-        .on(wire.DomainScanTaskInfo, function(channel, message, data){
-            //入库，提交到domian进行扫描
-            pub.send([channel, wireutil.envelope(wire.DomainScanTaskInfo,message)]);
+        .on(wire.ClientReady, function(channel, message, data){
+            //各个daemon分别根据ClientReady中的id信息，到对应的index中获取任务细项进行扫描
+            pub.send([channel, wireutil.envelope(wire.ClientReady, message)]);
         })
         .on(wire.IPv4Infomation, function(channel, message, data){
             log.info('new ip address detected: ' + message.ip)
@@ -90,32 +110,32 @@ module.exports.handler = function(argvs){
         .on(wire.ScanResultServiceBanner, function(channel, message, data){
             //端口指纹
             
+        }).handler())
+
+        var innerRouter = new EventEmitter();
+        sub.on("message", function(source, data){
+            innerRouter.emit(source, source, data)
         })
-        .handler()
-    )
 
-    var innerRouter = new EventEmitter();
-    sub.on("message", function(source, data){
-        innerRouter.emit(source, source, data)
-    })
+        innerRouter.on("domain", wirerouter()
+        .on(wire.Debugging, function(channel, message, data){
 
-    innerRouter.on("domain", wirerouter()
-    .on(wire.Debugging, function(channel, message, data){
+        })
+        .handler())
 
-    })
-    .handler())
+        innerRouter.on("whois", wirerouter()
+        .on(wire.Debugging, function(channel, message, data){
 
-    innerRouter.on("whois", wirerouter()
-    .on(wire.Debugging, function(channel, message, data){
+        })
+        .handler())
 
-    })
-    .handler())
+        innerRouter.on("service", wirerouter()
+        .on(wire.Debugging, function(channel, message, data){
 
-    innerRouter.on("service", wirerouter()
-    .on(wire.Debugging, function(channel, message, data){
+        })
+        .handler())
 
     })
-    .handler())
 
     function closeSocket(){
         log.info("Closing sockets...");

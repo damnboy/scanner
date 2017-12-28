@@ -116,6 +116,25 @@ module.exports = function(options){
                         }
                     })
                 }
+                DBClient.prototype.saveDomainTask = function(taskInfo){
+                    return new Promise(function(resolve, reject){   
+                        request.post({
+                            'url' : server() + '/domaintask/doc',
+                            'body' : taskInfo,
+                            'json' : true
+                        }, function(error, response){
+                            if(error){
+                                reject(error)
+                            }
+                            else if(response.statusCode === 201){
+                                resolve(response.body);
+                            }
+                            else{
+                                reject(response.body)
+                            }
+                        })
+                    })
+                }
                 DBClient.prototype.doneNmapTask = function(doc){
                     return new Promise(function(resolve, reject){   
                         request.post({

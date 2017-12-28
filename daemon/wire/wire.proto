@@ -1,9 +1,9 @@
 enum MessageType {
   Envelope = 1;
-  CreateScanTask  = 10;
   ScanTaskInfo = 11;
-  DomainScanTaskInfo = 12;
-  HostScanTaskInfo = 13;
+  CreateDomainScanTaskInfo = 12;
+  CreateHostScanTaskInfo = 13;
+  ClientReady = 14;
   IPv4Infomation = 20;
 
   ScanResultDNSRecordA = 30;
@@ -24,33 +24,32 @@ message Envelope {
   optional string channel = 3;
 }
 
-message CreateScanTask {
-  required string username = 1;
-  required string email = 2;
-}
-
-message DomainScanTaskInfo {
-  required ScanTaskInfo info =1;
-  required string targetDomain = 2;
-  required string dict = 3;
-}
-
-message HostScanTaskInfo {
-  required ScanTaskInfo info =1;
-  required string targetHost = 2;
-  required string portRange = 3;
-}
-
 message ScanTaskInfo {
   required string id = 1;
+  required double create_date = 2;
+}
+
+message CreateDomainScanTaskInfo {
+  required string email = 1;
   required string description = 2;
-  required double date = 3;
+  required string targetDomain = 3;
+  required string dict = 4;
+}
+
+message CreateHostScanTaskInfo {
+  required string email = 1;
+  required string description = 2;
+  required string targetHost = 3;
+  required string portRange = 4;
+}
+
+message ClientReady {
+  required string task_id = 1;
 }
 
 message IPv4Infomation {
   required string ip = 1;
 }
-
 
 message ScanResultDNSRecordA{
   

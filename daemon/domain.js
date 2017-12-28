@@ -41,8 +41,10 @@ module.exports.handler = function(argvs){
     })
     
     sub.on("message", wirerouter()
-        .on(wire.DomainScanTaskInfo, function(channel, message, data){
-            registerDNSProbe(message.info.id, message.targetDomain, message.dict);
+        .on(wire.ClientReady, function(channel, message, data){
+            log.info("Got domain scan task(" + message.taskId + ")...");
+            //用id获取对应index中的任务详情
+            //registerDNSProbe(message.info.id, message.targetDomain, message.dict);
         })
         .handler()
     )
