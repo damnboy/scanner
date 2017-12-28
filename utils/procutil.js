@@ -29,15 +29,17 @@ module.exports.fork = function (script, args){
                 所以，还是尽量在主进程做收尾工作，或者主进程收到SIGTERM后主动向子进程发送SIGTERM
             */
 
-            process.on('SIGINT', function() {
+            function onSIGINT() {
                 log.info("sending sigint signal to process("+ proc.pid +")");
                 proc.kill('SIGINT');
-            });
+            }
+            process.on('SIGINT', onSIGINT);
 
-            process.on('SIGTERM', function() {    
+            function onSIGTERM() {    
                 log.info("sending sigint signal to process("+ proc.pid +")");
                 proc.kill('SIGTERM');
-            });
+            }
+            process.on('SIGTERM', onSIGTERM);
 
 
             proc.on('error', function(){
@@ -46,6 +48,8 @@ module.exports.fork = function (script, args){
 
             proc.on('exit', function(code, signal){
                 log.info(util.format("child process exit code : %s, signal: %s", code, signal))
+                process.removeListener('SIGTERM', onSIGTERM);
+                process.removeListener('SIGINT', onSIGINT);
                 if (signal) {
                     resolve(signal)
                 }

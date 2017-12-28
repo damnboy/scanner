@@ -236,7 +236,7 @@ DNSProber.prototype.manualProbe = function(target, nameservers, dict){
                             "resolver" : job.ns.ip[0]
                         });
 
-                        _self.emit('records', resp);
+                        _self.emit('response', resp);
 
                         valid_records.forEach(function(record){
                             var r = {
@@ -252,7 +252,7 @@ DNSProber.prototype.manualProbe = function(target, nameservers, dict){
                                 _self.emit('record.a', r);
                             }
                             logger.info(r);
-                            _self.emit("response", r);
+                            //_self.emit("response", r);
                         });
                     }
                 }); 

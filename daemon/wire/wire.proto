@@ -3,14 +3,15 @@ enum MessageType {
   CreateScanTask  = 10;
   ScanTaskInfo = 11;
   DomainScanTaskInfo = 12;
-
+  HostScanTaskInfo = 13;
   IPv4Infomation = 20;
 
   ScanResultDNSRecordA = 30;
   ScanResultDNSRecordCName = 31;
   ScanResultWhois = 32;
-  ScanResultOpenPorts = 33;
-  ScanResultPortBanner = 34;
+  ScanResultService = 33;
+  ScanResultServiceBanner = 34;
+  
   Debugging = 1000;
 }
 message Debugging{
@@ -34,6 +35,12 @@ message DomainScanTaskInfo {
   required string dict = 3;
 }
 
+message HostScanTaskInfo {
+  required ScanTaskInfo info =1;
+  required string targetHost = 2;
+  required string portRange = 3;
+}
+
 message ScanTaskInfo {
   required string id = 1;
   required string description = 2;
@@ -54,9 +61,9 @@ message ScanResultDNSRecordCName{
 message ScanResultWhois{
   
 }
-message ScanResultOpenPorts{
+message ScanResultService{
   
 }
-message ScanResultPortBanner{
+message ScanResultServiceBanner{
   
 }

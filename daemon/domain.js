@@ -7,7 +7,7 @@ var wirerouter = require("./wire/router.js")
 var wireutil = require("./wire/util.js")
 var util = require("util");
 var zmq = require("zmq");
-
+var dbClient = require('../libs/db');
 
 module.exports.command = 'domain'
 
@@ -47,31 +47,7 @@ module.exports.handler = function(argvs){
         .handler()
     )
 
-    /////////////////////////////////////////////////
-    //入库，整合提交到elasticsearch与task，进行whois查询
-    //入库操作提交到独立的进程内完成，将入库部分的逻辑独立
     var router = new EventEmitter();
-    router.on('dns.trace', function(task_id, trace){
-        log.info(task_id, trace)
-    });
-
-    router.on('dns.timeout', function(task_id, record){
-        log.warn('timeout', record)
-    });
-
-    //pub到services与whois进行二阶扫描
-    router.on('dns.record.a', function(task_id, record){
-        //入库.then(push.send)
-        push.send([task_id, wireutil.envelope(wire.IPv4Infomation,{
-            "ip" : record.data
-        })]);
-    });
-
-    router.on('dns.record.cname', function(task_id, record){
-        //log.info(task_id, record)
-    });
-
-
     function registerDNSProbe(task_id, target, dict_name){
         return new Promise(function(resolve, reject){
             dict.getDNSDict(dict_name)
@@ -97,6 +73,9 @@ module.exports.handler = function(argvs){
                     router.emit('dns.timeout', task_id, record);
                 })
 
+                prober.on('response', function(response){
+                    router.emit('dns.response', task_id, response);
+                })
                 prober.on('record.a', function(record){
                     router.emit('dns.record.a', task_id, record);
                 })
@@ -114,6 +93,44 @@ module.exports.handler = function(argvs){
         })
         
     }
+
+    dbClient({
+        'host' : '127.0.0.1',
+        'port' : 9200
+    })
+    .then(function(dbapi){
+        /////////////////////////////////////////////////
+        //入库，整合提交到elasticsearch与task，进行whois查询
+        //入库操作提交到独立的进程内完成，将入库部分的逻辑独立
+        
+        router.on('dns.trace', function(task_id, trace){
+            log.info(task_id, trace)
+        });
+
+        router.on('dns.timeout', function(task_id, record){
+            log.warn('timeout', record)
+        });
+
+        router.on('dns.response', function(task_id, response){
+            response.task_id = task_id;
+            dbapi.saveDNSRecord(response);
+        })
+
+        //pub到services与whois进行二阶扫描
+        router.on('dns.record.a', function(task_id, record){
+            //入库.then(push.send)
+            push.send([task_id, wireutil.envelope(wire.IPv4Infomation,{
+                "ip" : record.data
+            })]);
+        });
+
+        router.on('dns.record.cname', function(task_id, record){
+            //log.info(task_id, record)
+        });
+    })
+    .catch(function(err){
+
+    })
 
     function closeSocket(){
         log.info("Closing sockets...");

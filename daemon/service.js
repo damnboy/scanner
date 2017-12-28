@@ -5,9 +5,10 @@ var wire = require("./wire");
 var wirerouter = require("./wire/router.js")
 var wireutil = require("./wire/util.js")
 var Queue = require("../utils/queue.js")
-var externalNmap = require('../utils/external-nmap.js');
-module.exports.command = 'service'
+var NmapSchedule = require('../utils/external-nmap.js');
+var dbClient = require('../libs/db');
 
+module.exports.command = 'service'
 module.exports.describe = 'service'
 /*
     nmap static build
@@ -31,10 +32,10 @@ module.exports.builder = function(yargs) {
     })
 }
 
-
 module.exports.handler = function(argvs){
 
-    var queue = new Queue(1);
+    //var queue = new Queue(1); 
+   
     var push = zmq.socket("push");
     push.connect(argvs.connectPull);
 
@@ -45,20 +46,38 @@ module.exports.handler = function(argvs){
         sub.connect(endpoint);
     })
     
-    sub.on("message", wirerouter()
-        .on(wire.IPv4Infomation, function(channel, message, data){
-            //host端口扫描任务全部入库，处理，用flag标示是否扫描成功
-            //需要队列控制并行的nmap数量，避免扫描流量过大导致崩溃
-            queue.enqueue(function(){
-                return externalNmap.portScanner(message.ip)
-                .catch(function(err){
-                    log.warn('detecting host open service error: ' + err)
+    dbClient({
+        'host' : '127.0.0.1',
+        'port' : 9200
+    })
+    .then(function(dbapi){
+        NmapSchedule.start(dbapi);
+
+        sub.on("message", wirerouter()
+            .on(wire.IPv4Infomation, function(channel, message, data){
+                var nmapTask = {
+                    "task_id" : channel.toString("utf-8"),
+                    "ip" : message.ip
+                };
+
+                dbapi.scheduleNmapTask(nmapTask);
+                //host端口扫描任务全部入库，处理，用flag标示是否扫描成功
+                //需要队列控制并行的nmap数量，避免扫描流量过大导致崩溃
+                /*
+                queue.enqueue(function(){
+                    return externalNmap.portScanner(message.ip)
+                    .catch(function(err){
+                        log.warn('detecting host open service error: ' + err)
+                    })
                 })
+                */
             })
-            
-        })
-        .handler()
-    )
+            .handler()
+        )
+    })
+    .catch(function(err){
+        log.error(err)
+    })
 
 
     function closeSocket(){
@@ -75,11 +94,20 @@ module.exports.handler = function(argvs){
     }
 
     process.on("SIGINT", function(){
-        closeSocket();
+        NmapSchedule.wait()
+        .then(function(){
+            closeSocket();
+            process.exit(0)
+        })
+        
     })
 
     process.on("SIGTERM", function(){
-        closeSocket();
+        NmapSchedule.wait()
+        .then(function(){
+            closeSocket();
+            process.exit(0)
+        })
     })
 }
 

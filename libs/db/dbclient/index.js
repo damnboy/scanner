@@ -16,7 +16,15 @@ DBClient.prototype.queryDNSRecord = function(){
 DBClient.prototype.analyzeDNSRecord = function(){
     
 }
+DBClient.prototype.saveWhoisRecord = function(){
+    
+}
+DBClient.prototype.scheduleNmapTask = function(){
 
+}
+DBClient.prototype.getScheduledNmapTask = function(){
+    
+}
 module.exports = DBClient;
 /*
 var fake = require('./raw.js');

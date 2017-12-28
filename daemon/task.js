@@ -72,18 +72,23 @@ module.exports.handler = function(argvs){
             pub.send([channel, wireutil.envelope(wire.IPv4Infomation,message)]);
         })
         .on(wire.ScanResultDNSRecordA, function(channel, message, data){
+            //dns a记录
             
         })
         .on(wire.ScanResultDNSRecordCName, function(channel, message, data){
+            //dns cname记录
             
         })
         .on(wire.ScanResultWhois, function(channel, message, data){
+            //ip whois信息
             
         })
-        .on(wire.ScanResultOpenPorts, function(channel, message, data){
+        .on(wire.ScanResultService, function(channel, message, data){
+            //主机开放端口
             
         })
-        .on(wire.ScanResultPortBanner, function(channel, message, data){
+        .on(wire.ScanResultServiceBanner, function(channel, message, data){
+            //端口指纹
             
         })
         .handler()

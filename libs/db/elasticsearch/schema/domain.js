@@ -4,34 +4,34 @@
 */
 var record = {
     "mappings" : {
-        "record" : {
+        "_doc" : {
             "_all": {
                 "enabled": true   
             },
             "properties" : {
                 "domain" : {
-                    "type" : "text",
-                    "index" : "not_analyzed"
+                    "type" : "keyword",
+                    "fields" :{
+                        "text" : {
+                            "type" : "text"
+                        }
+                    }
                 },
 
                 "resolver" : {
-                    "type" : "text",
-                    "index" : "not_analyzed"
+                    "type" : "ip"
                 },
 
                 "task_id" : {
-                    "type" : "text",
-                    "index" : "not_analyzed"
+                    "type" : "keyword"
                 },
 
                 "description" : {
-                    "type" : "text",
-                    "index" : "analyzed"
+                    "type" : "text"
                 },
 
                 "remark" : {
-                    "type" : "text",
-                    "index" : "analyzed"
+                    "type" : "text"
                 },
 
                 "create_date" : {
@@ -39,13 +39,16 @@ var record = {
                 },
 
                 "a" : {
-                    "type" : "text",
-                    "index" : "not_analyzed"
+                    "type" : "ip"
                 },
 
                 "cname" : {
-                    "type" : "text",
-                    "index" : "not_analyzed"
+                    "type" : "keyword",
+                    "fields" :{
+                        "text" : {
+                            "type" : "text"
+                        }
+                    }
                 }
             }
         }

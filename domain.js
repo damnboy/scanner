@@ -35,10 +35,8 @@ module.exports.handler = function(argvs){
   var dbClient = require('./libs/db');
 
   dbClient({
-    //'host' : '127.0.0.1',
-    //'port' : 9200
-    'host' : '218.85.154.137',
-    'port' : 49157
+    'host' : '127.0.0.1',
+    'port' : 9200
   })
   .then(function(db){
     console.log(db)

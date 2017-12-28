@@ -10,6 +10,8 @@ var _ = require('lodash')
 
 function IPWhois(){
     
+    this.summary = {}
+/*
     EventEmitter.call(this);
 
     var self = this;
@@ -58,6 +60,7 @@ function IPWhois(){
         
         self.emit('finish' , self.summary)
     })
+    */
 }
 
 util.inherits(IPWhois, EventEmitter);//使这个类继承EventEmitter
@@ -90,14 +93,14 @@ IPWhois.prototype._whois = function(ip, whois_server){
         })
     })
 }
-
+/*
 IPWhois.prototype.enqueue_whois = function(ip){
     var self = this;
     this.queue.enqueue(function(){
         return self._whois(ip, 'whois.arin.net')}
     );
 }
-
+*/
 IPWhois.prototype.whois = function(ip){
 
     return this._whois(ip, 'whois.arin.net')
@@ -119,6 +122,7 @@ IPWhois.prototype.whois = function(ip){
             return record;
         }
     })
+
     
 }
 

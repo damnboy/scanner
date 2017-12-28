@@ -4,7 +4,7 @@ var util = require('util');
 var log = require('../../../utils/logger.js');
 var logger = log.createLogger('[DB-CLIENT-ELASTICSEARCH]');
 module.exports = function(options){
-
+    
     var DBClient = require('../dbclient');
 
     return new Promise(function(resolve, reject){
@@ -116,18 +116,89 @@ module.exports = function(options){
                         }
                     })
                 }
-                /*
-                domain 会被elasticsearch引擎的分词器拆分，domain字段的检索变成全文检索，导致搜索结果不唯一
-                搜索结果中包含权重值 "_score":         0.16273327, 
-            
-                */
-                DBClient.prototype.saveDNSRecord =  function (record){
+                DBClient.prototype.doneNmapTask = function(doc){
+                    return new Promise(function(resolve, reject){   
+                        request.post({
+                            'url' : server() + '/services/doc/' + doc._id + '/_update',
+                            'body' : 
+                                {
+                                    "doc":
+                                        _.assign(doc._source , {
+                                        'scanned_date' : Date.now() ,
+                                        'done' : true})
+                                    
+                                }
+                            ,
+                            'json' : true
+                        }, function(error, response){
+                            if(error){
+                                reject(error)
+                            }
+                            else if(response.statusCode === 200){
+                                resolve(response.body)
+                            }
+                            else{
+                                reject(response.statusCode)
+                            }
+                        })
+                    })
+                }
+                //els排序
+                DBClient.prototype.getScheduledNmapTask = function(){
+                    return new Promise(function(resolve, reject){
+                        request.get({
+                            'url' : server() + '/services/_search?size=1',
+                            'body' : {
+                                "query" :{
+                                    "bool" :{
+                                        "filter" : [
+                                            { "term" :{"done" : false} }
+                                        ]
+                                    }
+                                },
+                                "sort": { "create_date": "asc"} 
+                            },
+                            'json' : true
+                        }, function(error, response){
+                            if(error){
+                                reject(error)
+                            }
+                            else if(response.statusCode === 200 && response.body.hits.hits.length === 1){
+                                resolve(response.body.hits.hits[0])
+                            }
+                            else{
+                                reject(response.statusCode)
+                            }
+                        })
+                    })
+                }
+
+                DBClient.prototype.scheduleNmapTask = function(record){
                     request.post({
-                        'url' : server() + '/domain/record/',
+                        'url' : server() + '/services/doc/',
                         'body' : _.assign(record , 
                             {
                                 'create_date' : Date.now() ,
-                                'task_id' : '00000000-0000-0000-000000000000',
+                                'done' : false
+                            }
+                        ),
+                        'json' : true
+                    }, function(error, response){
+                        if(error){
+                            logger.error(error)
+                        }
+                        else{
+                            logger.info(response.body)
+                        }
+                    })
+                }
+
+                DBClient.prototype.saveWhoisRecord = function(record){
+                    request.post({
+                        'url' : server() + '/whois/doc/',
+                        'body' : _.assign(record , 
+                            {
+                                'create_date' : Date.now() ,
                                 'description' : 'description',
                                 'remark' : 'remark'
                             }
@@ -135,19 +206,35 @@ module.exports = function(options){
                         'json' : true
                     }, function(error, response){
                         if(error){
-                            console.log(error)
+                            logger.error(error)
                         }
                         else{
-                            /*
-                            { _index: 'subdomain',
-                _type: 'nsrecord',
-                _id: 'mail.qq.com',
-                _version: 5,
-                result: 'updated',
-                _shards: { total: 2, successful: 1, failed: 0 },
-                created: false }
+                            logger.info(response.body)
+                        }
+                    })
+                }
+                /*
+                domain 会被elasticsearch引擎的分词器拆分，domain字段的检索变成全文检索，导致搜索结果不唯一
+                搜索结果中包含权重值 "_score":         0.16273327, 
+            
                 */
-                            console.log(response.body)
+                DBClient.prototype.saveDNSRecord =  function (record){
+                    request.post({
+                        'url' : server() + '/dnsrecord/doc/',
+                        'body' : _.assign(record , 
+                            {
+                                'create_date' : Date.now() ,
+                                'description' : 'description',
+                                'remark' : 'remark'
+                            }
+                        ),
+                        'json' : true
+                    }, function(error, response){
+                        if(error){
+                            logger.error(error)
+                        }
+                        else{
+                            logger.info(response.body)
                         }
                     })
                 }
