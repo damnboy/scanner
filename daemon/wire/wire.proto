@@ -8,9 +8,10 @@ enum MessageType {
 
   ScanResultDNSRecordA = 30;
   ScanResultDNSRecordCName = 31;
-  ScanResultWhois = 32;
-  ScanResultService = 33;
-  ScanResultServiceBanner = 34;
+  WhoisInformationBlock = 32;
+  ScanResultWhois = 33;
+  ScanResultService = 34;
+  ScanResultServiceBanner = 35;
   
   Debugging = 1000;
 }
@@ -52,17 +53,31 @@ message IPv4Infomation {
 }
 
 message ScanResultDNSRecordA{
-  
+  required string domain = 1;
+  repeated string data = 2;
 }
+
 message ScanResultDNSRecordCName{
-  
+  required string domain = 1;
+  repeated string data = 2;
 }
+
+message WhoisInformationBlock{
+  required string netname = 1;
+  required string netblock = 2;
+}
+
 message ScanResultWhois{
-  
+  required string ip = 1;
+  repeated WhoisInformationBlock details = 2;
 }
+
 message ScanResultService{
-  
+  required string ip = 1;
+  repeated string tcp = 2;
+  repeated string udp = 3; 
 }
+
 message ScanResultServiceBanner{
   
 }

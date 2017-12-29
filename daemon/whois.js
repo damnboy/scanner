@@ -59,6 +59,16 @@ module.exports.handler = function(argvs){
                         //消息返回task，并推送到client端
                         detail.task_id = channel.toString('utf-8');
                         dbapi.saveWhoisRecord(detail);
+                        var result = {
+                            "ip" : message.ip,
+                            "details" : detail.detail.map(function(d){
+                                return {
+                                    "netname" : d.netname,
+                                    "netblock" : d.netblock
+                                };
+                            })
+                        };
+                        push.send([channel, wireutil.envelope(wire.ScanResultWhois,result)]);
                     })
                     .catch(function(err){
                         log.error(err)

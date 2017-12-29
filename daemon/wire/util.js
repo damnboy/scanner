@@ -23,5 +23,6 @@ module.exports = {
             "message" : createMessage(type, object),
             "channel" : channel
         })
-    }
+    },
+    createMessage : createMessage
 }

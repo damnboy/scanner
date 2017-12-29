@@ -87,21 +87,23 @@ module.exports.handler = function(argvs){
             pub.send([channel, wireutil.envelope(wire.ClientReady, message)]);
         })
         .on(wire.IPv4Infomation, function(channel, message, data){
-            log.info('new ip address detected: ' + message.ip)
+            log.info('new ip address detected: ' + message.ip);
 
             pub.send([channel, wireutil.envelope(wire.IPv4Infomation,message)]);
         })
         .on(wire.ScanResultDNSRecordA, function(channel, message, data){
             //dns a记录
-            
+            log.info(message);
         })
         .on(wire.ScanResultDNSRecordCName, function(channel, message, data){
             //dns cname记录
+            log.info(message);
             
         })
         .on(wire.ScanResultWhois, function(channel, message, data){
             //ip whois信息
             
+            log.info(message)
         })
         .on(wire.ScanResultService, function(channel, message, data){
             //主机开放端口
@@ -110,7 +112,7 @@ module.exports.handler = function(argvs){
         .on(wire.ScanResultServiceBanner, function(channel, message, data){
             //端口指纹
             
-        }).handler())
+        }).handler());
 
         var innerRouter = new EventEmitter();
         sub.on("message", function(source, data){

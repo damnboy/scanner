@@ -94,15 +94,6 @@ module.exports = function(options){
                             console.log(error)
                         }
                         else{
-                            /*
-                            { _index: 'subdomain',
-                _type: 'nsrecord',
-                _id: 'mail.qq.com',
-                _version: 5,
-                result: 'updated',
-                _shards: { total: 2, successful: 1, failed: 0 },
-                created: false }
-                */
                             console.log(response.statusCode);
                             if(response.statusCode === 200){
                                 
@@ -116,6 +107,29 @@ module.exports = function(options){
                         }
                     })
                 }
+
+                DBClient.prototype.getDomainTask = function(id){
+                    return new Promise(function(resolve, reject){   
+                        var url = server() + '/domaintask/doc/_search?q=id:'+id;
+                        logger.info(url);
+                        request.get({
+                            'url' : url,
+                            "json" : true
+                        }, function(error, response){
+                            logger.info(response.body)
+                            if(error){
+                                reject(error)
+                            }
+                            else if(response.statusCode === 200 && response.body.hits.hits.length === 1){
+                                resolve(response.body.hits.hits[0]._source);
+                            }
+                            else{
+                                reject(response.body);
+                            }
+                        })
+                    }) 
+                }
+
                 DBClient.prototype.saveDomainTask = function(taskInfo){
                     return new Promise(function(resolve, reject){   
                         request.post({
@@ -124,13 +138,13 @@ module.exports = function(options){
                             'json' : true
                         }, function(error, response){
                             if(error){
-                                reject(error)
+                                reject(error);
                             }
                             else if(response.statusCode === 201){
                                 resolve(response.body);
                             }
                             else{
-                                reject(response.body)
+                                reject(response.body);
                             }
                         })
                     })
@@ -146,8 +160,7 @@ module.exports = function(options){
                                         'scanned_date' : Date.now() ,
                                         'done' : true})
                                     
-                                }
-                            ,
+                                },
                             'json' : true
                         }, function(error, response){
                             if(error){
@@ -183,7 +196,7 @@ module.exports = function(options){
                                 reject(error)
                             }
                             else if(response.statusCode === 200 && response.body.hits.hits.length === 1){
-                                resolve(response.body.hits.hits[0])
+                                resolve(response.body.hits.hits[0]);
                             }
                             else{
                                 reject(response.statusCode)
@@ -204,10 +217,10 @@ module.exports = function(options){
                         'json' : true
                     }, function(error, response){
                         if(error){
-                            logger.error(error)
+                            logger.error(error);
                         }
                         else{
-                            logger.info(response.body)
+                            logger.info(response.body);
                         }
                     })
                 }
@@ -225,10 +238,10 @@ module.exports = function(options){
                         'json' : true
                     }, function(error, response){
                         if(error){
-                            logger.error(error)
+                            logger.error(error);
                         }
                         else{
-                            logger.info(response.body)
+                            logger.info(response.body);
                         }
                     })
                 }
@@ -250,19 +263,19 @@ module.exports = function(options){
                         'json' : true
                     }, function(error, response){
                         if(error){
-                            logger.error(error)
+                            logger.error(error);
                         }
                         else{
-                            logger.info(response.body)
+                            logger.info(response.body);
                         }
-                    })
-                }
+                    });
+                };
             
-                logger.info('elasticsearch client is ready')
+                logger.info('elasticsearch client is ready');
                 resolve(new DBClient({
                     'host' : options.host,
                     'port' : options.port
                 }));
         }});
-    })
-}
+    });
+};

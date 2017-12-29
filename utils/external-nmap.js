@@ -14,7 +14,7 @@ NmapSchedule.prototype.start = function(dbapi){
         //根据时间戳，从nmaptask索引中获取距离当前时间间隔最长的主机开放服务扫描任务
         return dbapi.getScheduledNmapTask()
         .then(function(doc){
-            return self.scan(doc)
+            return self.scan(doc);
         })
         .then(function(doc){
             log.info('scan result: ', doc);
@@ -25,15 +25,15 @@ NmapSchedule.prototype.start = function(dbapi){
                 }, 5000) //nodejs消息队列有机会进行消息调度
             })
             .catch(function(err){
-                log.error('doneNmapTask ' + err)
-                self.start(dbapi)
+                log.error('doneNmapTask ' + err);
+                self.start(dbapi);
             })
         })
         .catch(function(err){
-            log.error('getScheduledNmapTask ' + err)
+            log.error('getScheduledNmapTask ' + err);
             setTimeout(function(){
-                self.start(dbapi)
-            }, 5000)
+                self.start(dbapi);
+            }, 5000);
         })
     })
 }
@@ -48,13 +48,13 @@ NmapSchedule.prototype.scan = function(doc){
         taskInfo.tcp = [];
         taskInfo.udp = []
 
-        var proc = child_process.spawn(path.utils('bin/nmap-7.11'),[
+        var proc = child_process.spawn('nmap',[
             taskInfo.ip,
             '-vv',
             '-n',
             '-Pn',
-            '-p 80,443',
-            '--min-rate','1000'
+            '-p-',
+            '--min-rate','2000'
         ]);
 
         proc.stdout.on('data', function(data){

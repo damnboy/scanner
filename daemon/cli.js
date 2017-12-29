@@ -3,8 +3,8 @@ var push = zmq.socket("push");
 var sub = zmq.socket("sub");
 var EventEmitter = require("events").EventEmitter;
 var wire = require("./wire");
-var wirerouter = require("./wire/router.js")
-var wireutil = require("./wire/util.js")
+var wirerouter = require("./wire/router.js");
+var wireutil = require("./wire/util.js");
 
 sub.on("message",
 wirerouter()
@@ -14,11 +14,14 @@ wirerouter()
     sub.subscribe(message.id);
     sub.connect("tcp://127.0.0.1:7110");
 
-    push.send([message.id, wireutil.envelope(wire.ClientReady, {
-        "taskId" : message.id
-    })]);
+    setTimeout(function(){
+        push.send([message.id, wireutil.envelope(wire.ClientReady, {
+            "taskId" : message.id
+        })]);
+    }, 2000);
+
 })
-.handler())
+.handler());
 
 sub.subscribe("");
 sub.connect("tcp://127.0.0.1:7110");
@@ -29,4 +32,4 @@ push.send(["channel", wireutil.envelope(wire.CreateDomainScanTaskInfo, {
     "description" : "...",
     "targetDomain" : "189.cn",
     "dict" : "test"
-})])  
+})]);

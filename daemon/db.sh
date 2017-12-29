@@ -1,10 +1,10 @@
 #!/bin/sh
-curl -XDELETE 127.0.0.1:9200/dnsrecord?pretty
-curl -XDELETE 127.0.0.1:9200/whois?pretty
-curl -XDELETE 127.0.0.1:9200/task?pretty
-curl -XDELETE 127.0.0.1:9200/services?pretty
-curl -XDELETE 127.0.0.1:9200/servicebanner?pretty
-curl -XDELETE 127.0.0.1:9200/nmaptask?pretty
+curl -XDELETE '127.0.0.1:9200/dnsrecord?pretty'
+curl -XDELETE '127.0.0.1:9200/whois?pretty'
+curl -XDELETE '127.0.0.1:9200/domaintask?pretty'
+curl -XDELETE '127.0.0.1:9200/services?pretty'
+curl -XDELETE '127.0.0.1:9200/servicebanner?pretty'
+curl -XDELETE '127.0.0.1:9200/nmaptask?pretty'
 
 curl -XPUT 'localhost:9200/domaintask?pretty' -H 'Content-Type: application/json' -d'
 {
