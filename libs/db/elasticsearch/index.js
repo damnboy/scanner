@@ -149,6 +149,7 @@ module.exports = function(options){
                         })
                     })
                 }
+
                 DBClient.prototype.doneNmapTask = function(doc){
                     return new Promise(function(resolve, reject){   
                         request.post({
@@ -177,6 +178,7 @@ module.exports = function(options){
                 }
                 //els排序
                 DBClient.prototype.getScheduledNmapTask = function(){
+                    //TODO 清空servicebanner中对应任务下的banner记录
                     return new Promise(function(resolve, reject){
                         request.get({
                             'url' : server() + '/services/_search?size=1',

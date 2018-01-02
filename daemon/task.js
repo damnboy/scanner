@@ -91,6 +91,11 @@ module.exports.handler = function(argvs){
 
             pub.send([channel, wireutil.envelope(wire.IPv4Infomation,message)]);
         })
+        .on(wire.ServiceInformation, function(channel, message, data){
+            log.info('new port detected: ' + message.port);
+
+            pub.send([channel, wireutil.envelope(wire.ServiceInformation, message)]);
+        })
         .on(wire.ScanResultDNSRecordA, function(channel, message, data){
             //dns a记录
             log.info(message);
@@ -102,12 +107,11 @@ module.exports.handler = function(argvs){
         })
         .on(wire.ScanResultWhois, function(channel, message, data){
             //ip whois信息
-            
             log.info(message)
         })
         .on(wire.ScanResultService, function(channel, message, data){
             //主机开放端口
-            
+            log.info(message);
         })
         .on(wire.ScanResultServiceBanner, function(channel, message, data){
             //端口指纹

@@ -1,22 +1,16 @@
-var log = require('../utils/logger').createLogger('[daemon:service]')
+var log = require('../utils/logger').createLogger('[daemon:banner]');
 var util = require("util");
 var zmq = require("zmq");
 var wire = require("./wire");
-var wirerouter = require("./wire/router.js")
-var wireutil = require("./wire/util.js")
-var Queue = require("../utils/queue.js")
+var wirerouter = require("./wire/router.js");
+var wireutil = require("./wire/util.js");
+var Queue = require("../utils/queue.js");
 var NmapSchedule = require('../utils/external-nmap.js');
 var dbClient = require('../libs/db');
 
-module.exports.command = 'service'
-module.exports.describe = 'service'
-/*
-    nmap static build
-    https://diagprov.ch/posts/2016/06/static-nmap-builds-for-infosec-via-docker.html
-    https://github.com/ZephrFish/static-tools
-    https://blog.zsec.uk/staticnmap/
+module.exports.command = 'banner';
+module.exports.describe = 'banner';
 
-*/
 module.exports.builder = function(yargs) {
   return yargs
     .strict()
@@ -29,18 +23,16 @@ module.exports.builder = function(yargs) {
         describe: 'The address to bind the ZeroMQ PULL endpoint to.'
         , type: 'string'
         , demand: true
-    })
-}
+    });
+};
 
 module.exports.handler = function(argvs){
 
-    //var queue = new Queue(1); 
-   
     var push = zmq.socket("push");
     push.connect(argvs.connectPull);
 
     var sub = zmq.socket("sub");
-    sub.identity = "services";
+    sub.identity = "banner";
     sub.subscribe("");
     argvs.connectSub.forEach(function(endpoint){
         sub.connect(endpoint);
@@ -52,50 +44,20 @@ module.exports.handler = function(argvs){
     })
     .then(function(dbapi){
 
-        NmapSchedule.on('tcp', function(taskId, ip, port){
-
-            push.send([taskId, wireutil.envelope(wire.ServiceInformation, {
-                "ip" : ip,
-                "type" : "tcp",
-                "port" : port
-            })]);
-        });
-
-        NmapSchedule.on('udp', function(taskId, ip, port){
-
-            push.send([taskId, wireutil.envelope(wire.ServiceInformation, {
-                "ip" : ip,
-                "type" : "udp",
-                "port" : port
-            })]);
-
-        });
-
-        NmapSchedule.on('host', function(taskId, ip, tcp, udp){
-            //扫描结果入库存储，高仿节点返回大量开放端口，因此端口数量大于100的主机，跳过不执行扫描
-
-        });
-
-        NmapSchedule.start(dbapi);
-
         sub.on("message", wirerouter()
-            .on(wire.IPv4Infomation, function(channel, message, data){
+            .on(wire.ServiceInformation, function(channel, message, data){
                 //扫描任务入库，由nmap调度器负责读取尚未扫描的任务，并执行扫描
-                var nmapTask = {
-                    "task_id" : channel.toString("utf-8"),
-                    "ip" : message.ip
-                };
-
-                dbapi.scheduleNmapTask(nmapTask);
-
+                log.info(message);
+                if(message.type === 'tcp'){
+                    NmapSchedule.portBanner(message.ip, message.port);
+                }
             })
             .handler()
-        )
+        );
     })
     .catch(function(err){
         log.error(err);
     })
-
 
     function closeSocket(){
         log.info("Closing sockets...");
@@ -111,20 +73,11 @@ module.exports.handler = function(argvs){
     }
 
     process.on("SIGINT", function(){
-        NmapSchedule.wait()
-        .then(function(){
-            closeSocket();
-            process.exit(0)
-        })
-        
+        closeSocket();
     })
 
     process.on("SIGTERM", function(){
-        NmapSchedule.wait()
-        .then(function(){
-            closeSocket();
-            process.exit(0)
-        })
+        closeSocket();
     })
 }
 

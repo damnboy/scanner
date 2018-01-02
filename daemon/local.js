@@ -39,6 +39,11 @@ module.exports.handler = function(argvs){
             "whois" ,
             "--connect-sub", options.taskBindPub,
             "--connect-pull", options.taskBindPull
+        ]),
+        fork(path.daemon("./index.js"), [
+            "banner" ,
+            "--connect-sub", options.taskBindPub,
+            "--connect-pull", options.taskBindPull
         ])
     ];
     

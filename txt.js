@@ -43,13 +43,14 @@ module.exports.handler = function(argvs){
     banner.timeout = argvs.timeout;
 
      generator.on('line', function(line){
+         console.log(line)
          if(argvs.type === 'url'){
             banner.url(line);
          }
         
          if(argvs.type === 'ip'){
             argvs.ports.split(',').forEach(function(port){
-                banner.host(line, port)
+                banner.host(line, port);
             })
          }
          /*
