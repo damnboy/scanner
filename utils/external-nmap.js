@@ -23,7 +23,6 @@ NmapSchedule.prototype.start = function(dbapi){
             return self.scan(doc);
         })
         .then(function(doc){
-            log.info('scan result: ', doc);
             dbapi.doneNmapTask(doc)
             .then(function(){
                 setTimeout(function(){
