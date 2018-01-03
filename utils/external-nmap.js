@@ -79,19 +79,14 @@ NmapSchedule.prototype.portBanner = function(ip, port){
         ]);
 
         proc.stdout.on('data', function(data){
-            var output = data.toString('utf-8')
+            var output = data.toString('utf-8').split('\n');
             //var reg = / is ([\w]*).\s*Version:\s([\w\W]*)$/g;
-            var reg = /^\d*/
-            var result = reg.exec(output, 'i');
-            if(result){
-                log.info(result);
-                /*
-                bannerInfo.service = result[1];
-                bannerInfo.version = result[2];
-                self.emit('banner', bannerInfo);
-                log.info(result[1] + ' running on ' +ip + ':' + port + ' detail: ' + result[2]);
-                */
-            }
+            output.forEach(function(line){
+                var r = line.match(/^\d*/g);
+                if(r[0].length !== 0){
+                    console.log(ip, line);
+                }
+            })
         })
 
         proc.stderr.on('data', function(data){
