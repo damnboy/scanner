@@ -22,7 +22,7 @@ module.exports.handler = function(argvs){
         fork(path.daemon("./index.js"), [
             "task",
             //"--bind-pub" , options.taskBindPub,
-            "--bind-pull" , options.taskBindPull,
+            //"--bind-pull" , options.taskBindPull,
             "--bind-sub" , options.taskBindSub
         ]),
         fork(path.daemon("./index.js"), [

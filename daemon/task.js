@@ -25,7 +25,7 @@ module.exports.builder = function(yargs) {
     .option('bind-pull', {
         describe: 'The address to bind the ZeroMQ PULL endpoint to.'
         , type: 'string'
-        , default: 'tcp://*:7111'
+        , default: 'tcp://0.0.0.0:7111'
       })
     .option('bind-sub', {
          describe: 'The address to bind the ZeroMQ SUB endpoint to.'

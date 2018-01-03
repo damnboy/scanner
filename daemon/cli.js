@@ -44,9 +44,7 @@ wirerouter()
             "taskId" : message.id
         })]);
     }, 2000);
-})
-
-.handler());
+}).handler());
 
 sub.subscribe("");
 sub.connect(subUri);
@@ -56,5 +54,5 @@ push.send(["channel", wireutil.envelope(wire.CreateDomainScanTaskInfo, {
     "email" : "root@localhost.com",
     "description" : "...",
     "targetDomain" : "189.cn",
-    "dict" : "test"
+    "dict" : "top3000"
 })]);
