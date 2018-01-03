@@ -114,7 +114,7 @@ NmapSchedule.prototype.scan = function(doc){
         var taskInfo = doc._source
         taskInfo.tcp = [];
         taskInfo.udp = [];
-        log.info(taskInfo)
+
 
         var proc = child_process.spawn('nmap',[
             taskInfo.ip,

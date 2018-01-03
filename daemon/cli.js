@@ -6,8 +6,8 @@ var wire = require("./wire");
 var wirerouter = require("./wire/router.js");
 var wireutil = require("./wire/util.js");
 var log = require('../utils/logger').createLogger('[client:client]');
-var subUri = "tcp://127.0.0.1:7110";
-var pushUri = "tcp://127.0.0.1:7111";
+var subUri = "tcp://218.85.154.137:7110";
+var pushUri = "tcp://218.85.154.137:7111";
 sub.on("message",
 wirerouter()
 .on(wire.ScanTaskInfo, function(channel, message, data){

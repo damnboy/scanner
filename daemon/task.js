@@ -87,13 +87,9 @@ module.exports.handler = function(argvs){
             pub.send([channel, wireutil.envelope(wire.ClientReady, message)]);
         })
         .on(wire.IPv4Infomation, function(channel, message, data){
-            log.info('new ip address detected: ' + message.ip);
-
             pub.send([channel, wireutil.envelope(wire.IPv4Infomation,message)]);
         })
         .on(wire.ServiceInformation, function(channel, message, data){
-            log.info('new ports detected: ' + message.ports);
-
             pub.send([channel, wireutil.envelope(wire.ServiceInformation, message)]);
         })
         .on(wire.ScanResultDNSRecordA, function(channel, message, data){

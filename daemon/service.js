@@ -77,7 +77,7 @@ module.exports.handler = function(argvs){
         NmapSchedule.on('host', function(taskId, ip, tcp, udp){
             //扫描结果入库存储，高仿节点返回大量开放端口，因此端口数量大于100的主机，跳过不执行扫描
             if(tcp.length < 100){
-                log.info('sending tcp ports to banner grab service');
+
                 push.send([taskId, wireutil.envelope(wire.ServiceInformation, {
                     "ip" : ip,
                     "type" : "tcp",
@@ -87,7 +87,7 @@ module.exports.handler = function(argvs){
             }
             
             if(udp.length < 100){
-                log.info('sending udp ports to banner grab service');
+
                 push.send([taskId, wireutil.envelope(wire.ServiceInformation, {
                     "ip" : ip,
                     "type" : "udp",
