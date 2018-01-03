@@ -47,9 +47,17 @@ module.exports.handler = function(argvs){
         sub.on("message", wirerouter()
             .on(wire.ServiceInformation, function(channel, message, data){
                 //扫描任务入库，由nmap调度器负责读取尚未扫描的任务，并执行扫描
-                log.info(message);
+                if(!message.scan){
+                    return;
+                }
+
                 if(message.type === 'tcp'){
-                    NmapSchedule.portBanner(message.ip, message.port);
+                    message.ports.forEach(function(port){
+                        NmapSchedule.portBanner(message.ip, port)
+                        .then(function(banner){
+                            push.send([channel, wireutil.envelope(wire.ScanResultServiceBanner, banner)]);
+                        })
+                    });
                 }
             })
             .handler()

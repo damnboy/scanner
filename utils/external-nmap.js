@@ -60,7 +60,10 @@ NmapSchedule.prototype.portBanner = function(ip, port){
     var self = this;
     return new Promise(function(resolve, reject){
         var bannerInfo = {
-
+            "ip" : ip,
+            "port" : port,
+            "service" : "",
+            "version" : ""
         }
 
         var proc = child_process.spawn('nmap',[
@@ -77,10 +80,12 @@ NmapSchedule.prototype.portBanner = function(ip, port){
 
         proc.stdout.on('data', function(data){
             var output = data.toString('utf-8')
-            var reg = / is ([\w]*).\s*Version:\s([\w\W]*)/g;
+            var reg = / is ([\w]*).\s*Version:\s([\w\W]*)$/g;
             var result = reg.exec(output, 'i');
             if(result){
-            
+                bannerInfo.service = result[1];
+                bannerInfo.version = result[2];
+                self.emit('banner', bannerInfo);
                 log.info(result[1] + ' running on ' +ip + ':' + port + ' detail: ' + result[2]);
             }
         })
@@ -94,7 +99,7 @@ NmapSchedule.prototype.portBanner = function(ip, port){
 
         proc.on('exit', function(code, signal){
             if(code === 0){
-                resolve(bannerInfo)
+                resolve(bannerInfo);
             }
             else{
                 log.warn('nmap exit unexcepted with code: ' + code)
@@ -117,7 +122,7 @@ NmapSchedule.prototype.scan = function(doc){
             '-vv',
             '-n',
             '-Pn',
-            '-p-',
+            //'-p-',
             '--min-rate','2000'
         ]);
 

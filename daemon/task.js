@@ -20,7 +20,7 @@ module.exports.builder = function(yargs) {
     .option('bind-pub', {
       describe: 'The address to bind the ZeroMQ PUB endpoint to.'
         , type: 'string'
-        , default: 'tcp://*:7110'
+        , default: 'tcp://0.0.0.0:7110'
     })
     .option('bind-pull', {
         describe: 'The address to bind the ZeroMQ PULL endpoint to.'
@@ -79,7 +79,7 @@ module.exports.handler = function(argvs){
                 })]);
             })
             .catch(function(err){
-                log.error(err)
+                log.error(err);
             })
         })
         .on(wire.ClientReady, function(channel, message, data){
@@ -92,30 +92,36 @@ module.exports.handler = function(argvs){
             pub.send([channel, wireutil.envelope(wire.IPv4Infomation,message)]);
         })
         .on(wire.ServiceInformation, function(channel, message, data){
-            log.info('new port detected: ' + message.port);
+            log.info('new ports detected: ' + message.ports);
 
             pub.send([channel, wireutil.envelope(wire.ServiceInformation, message)]);
         })
         .on(wire.ScanResultDNSRecordA, function(channel, message, data){
             //dns a记录
             log.info(message);
+            pub.send([channel, wireutil.envelope(wire.ScanResultDNSRecordA, message)]);
         })
         .on(wire.ScanResultDNSRecordCName, function(channel, message, data){
             //dns cname记录
             log.info(message);
+            pub.send([channel, wireutil.envelope(wire.ScanResultDNSRecordCName, message)]);
             
         })
         .on(wire.ScanResultWhois, function(channel, message, data){
             //ip whois信息
-            log.info(message)
+            log.info(message);
+            pub.send([channel, wireutil.envelope(wire.ScanResultWhois, message)]);
         })
         .on(wire.ScanResultService, function(channel, message, data){
             //主机开放端口
             log.info(message);
+            pub.send([channel, wireutil.envelope(wire.ScanResultService, message)]);
         })
         .on(wire.ScanResultServiceBanner, function(channel, message, data){
             //端口指纹
-            
+            log.info(message);
+            pub.send([channel, wireutil.envelope(wire.ScanResultServiceBanner, message)]);
+
         }).handler());
 
         var innerRouter = new EventEmitter();

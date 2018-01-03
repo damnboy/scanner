@@ -53,12 +53,14 @@ module.exports.handler = function(argvs){
     .then(function(dbapi){
 
         NmapSchedule.on('tcp', function(taskId, ip, port){
-
+            
             push.send([taskId, wireutil.envelope(wire.ServiceInformation, {
                 "ip" : ip,
                 "type" : "tcp",
-                "port" : port
+                "ports" : [port],
+                "scan" : false
             })]);
+            
         });
 
         NmapSchedule.on('udp', function(taskId, ip, port){
@@ -66,14 +68,33 @@ module.exports.handler = function(argvs){
             push.send([taskId, wireutil.envelope(wire.ServiceInformation, {
                 "ip" : ip,
                 "type" : "udp",
-                "port" : port
+                "ports" : [port],
+                "scan" : false
             })]);
 
         });
 
         NmapSchedule.on('host', function(taskId, ip, tcp, udp){
             //扫描结果入库存储，高仿节点返回大量开放端口，因此端口数量大于100的主机，跳过不执行扫描
-
+            if(tcp.length < 100){
+                log.info('sending tcp ports to banner grab service');
+                push.send([taskId, wireutil.envelope(wire.ServiceInformation, {
+                    "ip" : ip,
+                    "type" : "tcp",
+                    "ports" : tcp,
+                    "scan" : true
+                })]);
+            }
+            
+            if(udp.length < 100){
+                log.info('sending udp ports to banner grab service');
+                push.send([taskId, wireutil.envelope(wire.ServiceInformation, {
+                    "ip" : ip,
+                    "type" : "udp",
+                    "ports" : udp,
+                    "scan" : true
+                })]);
+            }  
         });
 
         NmapSchedule.start(dbapi);

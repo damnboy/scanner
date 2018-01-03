@@ -51,13 +51,13 @@ message ClientReady {
 
 message IPv4Infomation {
   required string ip = 1;
-
 }
 
 message ServiceInformation {
   required string ip = 1;
   required string type = 2;
-  required string port = 3;
+  repeated string ports = 3;
+  required bool scan = 4;
 }
 
 message ScanResultDNSRecordA{
@@ -87,5 +87,8 @@ message ScanResultService{
 }
 
 message ScanResultServiceBanner{
-  
+  required string ip = 1;
+  required string port = 2;
+  required string service = 3;
+  required string version = 4;
 }
