@@ -222,7 +222,7 @@ module.exports = function(options){
                             logger.error(error);
                         }
                         else{
-                            logger.info(response.body);
+                            ;//logger.info(response.body);
                         }
                     })
                 }
@@ -243,7 +243,7 @@ module.exports = function(options){
                             logger.error(error);
                         }
                         else{
-                            logger.info(response.body);
+                            ;//logger.info(response.body);
                         }
                     })
                 }
@@ -268,7 +268,7 @@ module.exports = function(options){
                             logger.error(error);
                         }
                         else{
-                            logger.info(response.body);
+                            ;//logger.info(response.body);
                         }
                     });
                 };

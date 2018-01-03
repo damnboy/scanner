@@ -55,7 +55,7 @@ module.exports.handler = function(argvs){
                     message.ports.forEach(function(port){
                         NmapSchedule.portBanner(message.ip, port)
                         .then(function(banner){
-                            push.send([channel, wireutil.envelope(wire.ScanResultServiceBanner, banner)]);
+                            //push.send([channel, wireutil.envelope(wire.ScanResultServiceBanner, banner)]);
                         })
                     });
                 }
