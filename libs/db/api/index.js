@@ -17,9 +17,10 @@ DBApi.prototype.analyzeDNSRecord = function(){
     
 }
 
-DBApi.prototype.getAllDomainTasks = function(){
+DBApi.prototype.getRecentDomainTasks = function(){
     
 }
+
 DBApi.prototype.getDomainTask = function(){
     return Promise.resolve(200);
 }

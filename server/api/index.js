@@ -17,4 +17,4 @@ router.get('/detail/:id', function (req, res) {
   res.send('task details');
 })
 
-module.exports = router
+module.exports = router;

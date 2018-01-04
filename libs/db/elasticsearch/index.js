@@ -103,11 +103,27 @@ module.exports = function(options){
 "sort" :[{"createDate":"desc"}]}'
 
     */
-    DBApi.prototype.getAllDomainTasks = function(){
+    DBApi.prototype.getRecentDomainTasks = function(){
         return db.connect()
         .then(function(){
             return new Promise(function(resolve, reject){
-                
+                request.post({
+                    'url' : server() + '/domaintask/_search',
+                    'body' : {"sort" :[{"createDate":"desc"}]},
+                    "json" : true
+                }, function(error, response){
+                    if(error){
+                        reject(error);
+                    }
+                    else if(response.statusCode === 200){
+                        resolve(response.body.hits.hits.map(function(result){
+                            return result._source;
+                        }));
+                    }
+                    else{
+                        reject(response.body);
+                    }
+                })
             })
         })
     }
@@ -294,6 +310,72 @@ module.exports = function(options){
             });
         })
     };
+
+    DBApi.prototype.getServicesByTaskId = function(taskId, offset){
+        return db.connect()
+        .then(function(){
+            return new Promise(function(resolve, reject){
+                var param = {
+                    "query" : {
+                        "term" : {"task_id" : taskId}
+                    },
+                    "from" : offset,
+                    "size" : 100
+                };
+
+                request.post({
+                    'url' : server() + '/services/_search',
+                    'body' : param,
+                    "json" : true
+                }, function(error, response){
+                    if(error){
+                        reject(error);
+                    }
+                    else if(response.statusCode === 200){
+                        resolve(response.body.hits.hits.map(function(result){
+                            return result._source;
+                        }));
+                    }
+                    else{
+                        reject(response.body);
+                    }
+                })
+            })
+        })
+    }
+
+    DBApi.prototype.getDNSARecordsByTaskId = function(taskId, offset){
+        return db.connect()
+        .then(function(){
+            return new Promise(function(resolve, reject){
+                var param = {
+                    "query" : {
+                        "term" : {"task_id" : taskId}
+                    },
+                    "from" : offset,
+                    "size" : 100
+                };
+
+                request.post({
+                    'url' : server() + '/dnsrecord/_search',
+                    'body' : param,
+                    "json" : true
+                }, function(error, response){
+                    if(error){
+                        reject(error);
+                    }
+                    else if(response.statusCode === 200){
+                        resolve(response.body.hits.hits.map(function(result){
+                            return result._source;
+                        }));
+                    }
+                    else{
+                        reject(response.body);
+                    }
+                })
+            })
+        })
+    }
 
     return DBApi;
 }
