@@ -79,7 +79,7 @@ NmapSchedule.prototype.portBanner = function(ip, port){
 
         proc.stdout.on('data', function(data){
             var output = data.toString('utf-8').split('\n');
-            var reg = /\d*\/tcp]*\s*open\s*([a-z\/-]*)\s*syn-ack*\s*(?:ttl)?\s?(?:\d*)?([\w\W]*)$/g;
+            var reg = /\d*\/tcp]*\s*open\s*([a-z\/\-]*)\s*syn-ack*\s*(?:ttl)?\s?(?:\d*)?([\w\W]*)$/g;
             output.forEach(function(line){
                     var r = reg.exec(line, 'i');
                     if(r){
