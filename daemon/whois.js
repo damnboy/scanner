@@ -5,7 +5,7 @@ var wire = require("./wire");
 var wirerouter = require("./wire/router.js")
 var wireutil = require("./wire/util.js")
 var IPWhois = require('../libs/whois');
-var dbClient = require('../libs/db');
+var dbapi = require('../libs/db');
 
 
 module.exports.command = 'whois'
@@ -43,47 +43,36 @@ module.exports.handler = function(argvs){
     var pendingWhois = Promise.resolve('mask');
     var whois = new IPWhois();
     
-    dbClient({
-        'host' : '127.0.0.1',
-        'port' : 9200
-    })
-    .then(function(dbapi){
-        sub.on("message", wirerouter()
-            .on(wire.IPv4Infomation, function(channel, message, data){
-                //whois实现为promise对象，进程退出之前，使用promise.all控制所有whois请求执行完毕之后，方可结束。
-                //whois扫描后入库
-                pendingWhois.then(function(){
-                    return whois.whois(message.ip)
-                    .then(function(detail){
-                        
-                        //消息返回task，并推送到client端
-                        detail.task_id = channel.toString('utf-8');
-                        dbapi.saveWhoisRecord(detail);
-                        var result = {
-                            "ip" : message.ip,
-                            "details" : detail.detail.map(function(d){
-                                return {
-                                    "netname" : d.netname,
-                                    "netblock" : d.netblock
-                                };
-                            })
-                        };
-                        push.send([channel, wireutil.envelope(wire.ScanResultWhois,result)]);
-                    })
-                    .catch(function(err){
-                        log.error(err)
-                    })
+
+    sub.on("message", wirerouter()
+        .on(wire.IPv4Infomation, function(channel, message, data){
+            //whois实现为promise对象，进程退出之前，使用promise.all控制所有whois请求执行完毕之后，方可结束。
+            //whois扫描后入库
+            pendingWhois.then(function(){
+                return whois.whois(message.ip)
+                .then(function(detail){
+                    
+                    //消息返回task，并推送到client端
+                    detail.task_id = channel.toString('utf-8');
+                    dbapi.saveWhoisRecord(detail);
+                    var result = {
+                        "ip" : message.ip,
+                        "details" : detail.detail.map(function(d){
+                            return {
+                                "netname" : d.netname,
+                                "netblock" : d.netblock
+                            };
+                        })
+                    };
+                    push.send([channel, wireutil.envelope(wire.ScanResultWhois,result)]);
                 })
-                
+                .catch(function(err){
+                    log.error(err)
+                })
             })
-            .handler()
-        )
-    })
-    .catch(function(err){
-
-    })
-    
-
+            
+    }).handler())
+        
     function closeSocket(){
         log.info("Closing sockets...");
         [sub, push].forEach(function(socket){

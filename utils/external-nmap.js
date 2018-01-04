@@ -1,7 +1,7 @@
 var child_process = require("child_process");
 var log = require('./logger').createLogger('[util:external-nmap]')
 var path = require("./path.js");
-var dbClient = require('../libs/db');
+var dbapi = require('../libs/db');
 var events = require('events');
 var util = require('util');
 
@@ -13,7 +13,7 @@ function NmapSchedule(){
 
 util.inherits(NmapSchedule, events.EventEmitter);//使这个类继承EventEmitter
 
-NmapSchedule.prototype.start = function(dbapi){
+NmapSchedule.prototype.start = function(){
     var self = this;
     this.chain
     .then(function(result){
@@ -26,18 +26,18 @@ NmapSchedule.prototype.start = function(dbapi){
             dbapi.doneNmapTask(doc)
             .then(function(){
                 setTimeout(function(){
-                    self.start(dbapi)
+                    self.start()
                 }, 5000) //nodejs消息队列有机会进行消息调度
             })
             .catch(function(err){
                 log.error('doneNmapTask ' + err);
-                self.start(dbapi);
+                self.start();
             })
         })
         .catch(function(err){
             log.error('getScheduledNmapTask ' + err);
             setTimeout(function(){
-                self.start(dbapi);
+                self.start();
             }, 5000);
         })
     })

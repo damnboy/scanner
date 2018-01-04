@@ -6,7 +6,7 @@ var wirerouter = require("./wire/router.js")
 var wireutil = require("./wire/util.js")
 var Queue = require("../utils/queue.js")
 var NmapSchedule = require('../utils/external-nmap.js');
-var dbClient = require('../libs/db');
+var dbapi = require('../libs/db');
 
 module.exports.command = 'service'
 module.exports.describe = 'service'
@@ -46,76 +46,65 @@ module.exports.handler = function(argvs){
         sub.connect(endpoint);
     })
     
-    dbClient({
-        'host' : '127.0.0.1',
-        'port' : 9200
-    })
-    .then(function(dbapi){
+    NmapSchedule.on('tcp', function(taskId, ip, port){
+        
+        push.send([taskId, wireutil.envelope(wire.ServiceInformation, {
+            "ip" : ip,
+            "type" : "tcp",
+            "ports" : [port],
+            "scan" : false
+        })]);
+        
+    });
 
-        NmapSchedule.on('tcp', function(taskId, ip, port){
-            
+    NmapSchedule.on('udp', function(taskId, ip, port){
+
+        push.send([taskId, wireutil.envelope(wire.ServiceInformation, {
+            "ip" : ip,
+            "type" : "udp",
+            "ports" : [port],
+            "scan" : false
+        })]);
+
+    });
+
+    NmapSchedule.on('host', function(taskId, ip, tcp, udp){
+        //扫描结果入库存储，高仿节点返回大量开放端口，因此端口数量大于100的主机，跳过不执行扫描
+        if(tcp.length < 100){
+
             push.send([taskId, wireutil.envelope(wire.ServiceInformation, {
                 "ip" : ip,
                 "type" : "tcp",
-                "ports" : [port],
-                "scan" : false
+                "ports" : tcp,
+                "scan" : true
             })]);
-            
-        });
-
-        NmapSchedule.on('udp', function(taskId, ip, port){
+        }
+        
+        if(udp.length < 100){
 
             push.send([taskId, wireutil.envelope(wire.ServiceInformation, {
                 "ip" : ip,
                 "type" : "udp",
-                "ports" : [port],
-                "scan" : false
+                "ports" : udp,
+                "scan" : true
             })]);
+        }  
+    });
 
-        });
+    NmapSchedule.start(dbapi);
 
-        NmapSchedule.on('host', function(taskId, ip, tcp, udp){
-            //扫描结果入库存储，高仿节点返回大量开放端口，因此端口数量大于100的主机，跳过不执行扫描
-            if(tcp.length < 100){
+    sub.on("message", wirerouter()
+        .on(wire.IPv4Infomation, function(channel, message, data){
+            //扫描任务入库，由nmap调度器负责读取尚未扫描的任务，并执行扫描
+            var nmapTask = {
+                "task_id" : channel.toString("utf-8"),
+                "ip" : message.ip
+            };
 
-                push.send([taskId, wireutil.envelope(wire.ServiceInformation, {
-                    "ip" : ip,
-                    "type" : "tcp",
-                    "ports" : tcp,
-                    "scan" : true
-                })]);
-            }
-            
-            if(udp.length < 100){
+            dbapi.scheduleNmapTask(nmapTask);
 
-                push.send([taskId, wireutil.envelope(wire.ServiceInformation, {
-                    "ip" : ip,
-                    "type" : "udp",
-                    "ports" : udp,
-                    "scan" : true
-                })]);
-            }  
-        });
+        }).handler())
 
-        NmapSchedule.start(dbapi);
-
-        sub.on("message", wirerouter()
-            .on(wire.IPv4Infomation, function(channel, message, data){
-                //扫描任务入库，由nmap调度器负责读取尚未扫描的任务，并执行扫描
-                var nmapTask = {
-                    "task_id" : channel.toString("utf-8"),
-                    "ip" : message.ip
-                };
-
-                dbapi.scheduleNmapTask(nmapTask);
-
-            })
-            .handler()
-        )
-    })
-    .catch(function(err){
-        log.error(err);
-    })
 
 
     function closeSocket(){

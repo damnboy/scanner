@@ -6,7 +6,7 @@ var wirerouter = require("./wire/router.js");
 var wireutil = require("./wire/util.js");
 var Queue = require("../utils/queue.js");
 var NmapSchedule = require('../utils/external-nmap.js');
-var dbClient = require('../libs/db');
+var dbapi = require('../libs/db');
 
 module.exports.command = 'banner';
 module.exports.describe = 'banner';
@@ -38,34 +38,25 @@ module.exports.handler = function(argvs){
         sub.connect(endpoint);
     })
     
-    dbClient({
-        'host' : '127.0.0.1',
-        'port' : 9200
-    })
-    .then(function(dbapi){
 
-        sub.on("message", wirerouter()
-            .on(wire.ServiceInformation, function(channel, message, data){
-                //扫描任务入库，由nmap调度器负责读取尚未扫描的任务，并执行扫描
-                if(!message.scan){
-                    return;
-                }
 
-                if(message.type === 'tcp'){
-                    message.ports.forEach(function(port){
-                        NmapSchedule.portBanner(message.ip, port)
-                        .then(function(banner){
-                            push.send([channel, wireutil.envelope(wire.ScanResultServiceBanner, banner)]);
-                        })
-                    });
-                }
-            })
-            .handler()
-        );
-    })
-    .catch(function(err){
-        log.error(err);
-    })
+    sub.on("message", 
+    wirerouter().on(wire.ServiceInformation, function(channel, message, data){
+         //扫描任务入库，由nmap调度器负责读取尚未扫描的任务，并执行扫描
+         if(!message.scan){
+             return;
+         }
+
+         if(message.type === 'tcp'){
+             message.ports.forEach(function(port){
+                 NmapSchedule.portBanner(message.ip, port)
+                 .then(function(banner){
+                     push.send([channel, wireutil.envelope(wire.ScanResultServiceBanner, banner)]);
+                 })
+             });
+         }
+     }).handler());
+
 
     function closeSocket(){
         log.info("Closing sockets...");
