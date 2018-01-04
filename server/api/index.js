@@ -17,4 +17,18 @@ router.get('/detail/:id', function (req, res) {
   res.send('task details');
 })
 
+// define the about route
+router.get('/detail/:id/dnsrecord/', function (req, res) {
+  res.send('task details');
+})
+
+// define the about route
+router.get('/detail/:id/services/:ip', function (req, res) {
+  res.send('task details');
+})
+
+router.get('/detail/:id/servicebanners/:ip/:port', function (req, res) {
+  res.send('task details');
+})
+
 module.exports = router;

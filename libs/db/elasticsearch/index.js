@@ -310,7 +310,9 @@ module.exports = function(options){
             });
         })
     };
-
+    DBApi.prototype.getBanners = function(taskId, ip, port, offset){
+        
+    }
     DBApi.prototype.getServicesByTaskId = function(taskId, offset){
         return db.connect()
         .then(function(){
