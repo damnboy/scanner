@@ -6,12 +6,12 @@ var dict = require('../utils/dict');
 var log = require('../utils/logger.js');
 var logger = log.createLogger('[api-server]');
 
-app.use('/task', require('./api'))
-app.use('/test', require('./test'))
+app.use('/task', require('./api'));
+app.use('/debug', require('./debug'));
 
 app.use(function(err, req, res, next){
   console.log('---err---');
-})
+});
 
 http.listen(3000, function(){
   console.log('listening on *:3000');
