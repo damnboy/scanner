@@ -56,13 +56,17 @@ Service scan match (Probe NULL matched with NULL line 3487): 198.177.122.30:22 i
 */
 
 NmapSchedule.prototype.portBanner = function(ip, port){
+
     var self = this;
     return new Promise(function(resolve, reject){
         var bannerInfo = {
             "ip" : ip,
             "port" : port,
-            "service" : "",
-            "version" : ""
+            "service" : "UNKNOWN",
+            "version" : "UNKNOWN",
+            "sslSupport" : false,
+            "scanedBy" : "nmap",
+            "raw" : ""
         }
 
         var proc = child_process.spawn('nmap',[
@@ -76,15 +80,17 @@ NmapSchedule.prototype.portBanner = function(ip, port){
             '-p', port,
             '--min-rate','2000'
         ]);
-
+        
         proc.stdout.on('data', function(data){
             var output = data.toString('utf-8').split('\n');
             var reg = /\d*\/tcp]*\s*open\s*([a-z\/\-]*)\s*syn-ack*\s*(?:ttl)?\s?(?:\d*)?([\w\W]*)$/g;
             output.forEach(function(line){
                     var r = reg.exec(line, 'i');
                     if(r){
-                        bannerInfo.service = r[1];
+                        bannerInfo.service = r[1].split('/').reverse()[0];
+                        bannerInfo.sslSupport = r[1].split('/').length > 1;
                         bannerInfo.version = r[2];
+                        bannerInfo.raw = Buffer.from(line, 'utf8' );
                     }
             })
         })
