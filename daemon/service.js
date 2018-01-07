@@ -70,7 +70,7 @@ module.exports.handler = function(argvs){
 
     NmapSchedule.on('host', function(taskId, ip, tcp, udp){
         //扫描结果入库存储，高仿节点返回大量开放端口，因此端口数量大于100的主机，跳过不执行扫描
-        if(tcp.length < 100){
+        if(tcp.length < 60){
 
             push.send([taskId, wireutil.envelope(wire.ServiceInformation, {
                 "ip" : ip,
@@ -79,8 +79,11 @@ module.exports.handler = function(argvs){
                 "scan" : true
             })]);
         }
+        else{
+            log.warn('Too many open service on host %s, seems hosted on highly defence cloud service', ip);
+        }
         
-        if(udp.length < 100){
+        if(udp.length < 60){
 
             push.send([taskId, wireutil.envelope(wire.ServiceInformation, {
                 "ip" : ip,

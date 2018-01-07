@@ -5,8 +5,16 @@ var IPWhois = require('../libs/whois');
 var dict = require('../utils/dict');
 var log = require('../utils/logger.js');
 var logger = log.createLogger('[api-server]');
+var bodyParser = require('body-parser');
 
-app.use('/task', require('./api'));
+
+app.use(bodyParser.json()); // for parsing application/json
+app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
+
+app.use('/task', require('./api/task'));
+app.use('/service', require('./api/service'));
+app.use('/dnsrecord', require('./api/dnsrecord'));
+app.use('/banner', require('./api/banner'));
 app.use('/debug', require('./debug'));
 
 app.use(function(err, req, res, next){

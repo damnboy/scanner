@@ -313,18 +313,29 @@ module.exports = function(options){
     DBApi.prototype.getBanners = function(taskId, ip, port, offset){
         
     }
-    DBApi.prototype.getServicesByTaskId = function(taskId, offset){
+
+    DBApi.prototype.getServices = function(options, offset){
+        var query = {}
+        query.bool = {
+            "must": []
+        }
+
+        if(options["ip"]){
+            query.bool.must.push({"match" : {"ip" : options["ip"]}})
+        }
+        if(options["task_id"]){
+            query.bool.must.push({"match" : {"task_id" : options["task_id"]}})
+        }
+        
         return db.connect()
         .then(function(){
             return new Promise(function(resolve, reject){
                 var param = {
-                    "query" : {
-                        "term" : {"task_id" : taskId}
-                    },
+                    "query" : query,
                     "from" : offset,
                     "size" : 100
                 };
-
+                console.log(param)
                 request.post({
                     'url' : server() + '/services/_search',
                     'body' : param,
