@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-
+var dbApi = require('../../libs/db')
 // middleware that is specific to this router
 router.use(function timeLog (req, res, next) {
   console.log('Time: ', Date.now())
@@ -9,12 +9,39 @@ router.use(function timeLog (req, res, next) {
 
 // define the about route
 router.get('/', function (req, res) {
-  res.send('all tasks');
+  dbApi.getRecentDomainTasks()
+  .then(function(tasks){
+    res.status(200)
+    .json(tasks)
+    .end();
+  })
+  .catch(function(err){
+    res.status(500)
+    .json({
+
+      "status" : "failed",
+      "data" : err
+    })
+  })
+
 })
 
 // define the about route
 router.get('/detail/:id', function (req, res) {
-  res.send('task details');
+   dbApi.getDomainTask(req.params.id)
+  .then(function(task){
+    res.status(200)
+    .json(task)
+    .end();
+  })
+  .catch(function(err){
+    res.status(500)
+    .json({
+
+      "status" : "failed",
+      "data" : err
+    })
+  })
 })
 
 // define the about route
