@@ -50,6 +50,31 @@
 ## 2018-1-7
 banner定义与入库
 
+##2018-1-8
+banner定义，
+elasticsearch中mutil field定义
+同一个字段，以不同的索引方式来存储，
+    索引为text类型用于全文检索
+    索引为keyword类型用于排序与聚合
+
+    "domain" :{
+        "type" : "text",
+        "fields" :{
+            "raw" : {
+                "type" : "keyword",
+                "analyzer" : "english" //可为相同字段下不用的索引方式指定分析器
+            }
+        }
+    }
+
+banner定义
+angularjs界面
+
+## 2018-1-9
+banner识别序列化执行
+grab.js识别实现以及性能测试
+
+
 # JavaScript
     
 # NodeJS

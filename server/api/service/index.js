@@ -33,7 +33,7 @@ router.get('/:taskId/:offset', function (req, res) {
 // define the about route
 router.post('/detail', function (req, res) {
     console.log(req.body)
-    dbApi.getServices(req.body, req.body.offset)
+    dbApi.getBanners(req.body, 0)
     .then(function(records){
         res.status(200)
         .json(utils.successJSONResponse(records.map(function(r){
