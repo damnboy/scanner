@@ -8,8 +8,8 @@ var Queue = require("../utils/queue.js")
 var NmapSchedule = require('../utils/external-nmap.js');
 var dbapi = require('../libs/db');
 
-module.exports.command = 'service'
-module.exports.describe = 'service'
+module.exports.command = 'service';
+module.exports.describe = 'service';
 /*
     nmap static build
     https://diagprov.ch/posts/2016/06/static-nmap-builds-for-infosec-via-docker.html

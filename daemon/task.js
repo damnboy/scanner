@@ -112,8 +112,15 @@ module.exports.handler = function(argvs){
     .on(wire.ScanResultServiceBanner, function(channel, message, data){
         //端口指纹
         log.info(message);
-        pub.send([channel, wireutil.envelope(wire.ScanResultServiceBanner, message)]);
+        message.taskId = channel.toString('utf-8');
 
+        dbapi.saveBanner(message)
+        .then(function(){
+            pub.send([channel, wireutil.envelope(wire.ScanResultServiceBanner, message)]);
+        })
+        .catch(function(err){
+            log.error(err);
+        });
     }).handler());
 
     var innerRouter = new EventEmitter();

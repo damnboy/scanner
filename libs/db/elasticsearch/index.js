@@ -310,6 +310,30 @@ module.exports = function(options){
             });
         })
     };
+
+    DBApi.prototype.saveBanner = function(banner){
+        return db.connect()
+        .then(function(){
+            request.post({
+                'url' : server() + '/servicebanner/doc/',
+                'body' : _.assign(banner , 
+                    {
+                        'create_date' : Date.now() ,
+                        'description' : 'description',
+                        'remark' : 'remark'
+                    }
+                ),
+                'json' : true
+            }, function(error, response){
+                if(error){
+                    logger.error(error);
+                }
+                else{
+                    ;//logger.info(response.body);
+                }
+            });
+        })
+    }
     DBApi.prototype.getBanners = function(taskId, ip, port, offset){
         
     }

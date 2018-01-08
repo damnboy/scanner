@@ -132,22 +132,23 @@ NmapSchedule.prototype.scan = function(doc){
         ]);
 
         proc.stdout.on('data', function(data){
-            var output = data.toString('utf-8')
+            var output = data.toString('utf-8');
             var reg = /open port (\d*)\/(\w*)/g;
             var result = reg.exec(output, 'i');
             if(result){
+                var port = parseInt(result[1]);
                 if(result[2] === 'tcp'){
-                    taskInfo.tcp.push(result[1])
-                    self.emit('tcp', taskInfo['task_id'], taskInfo.ip, result[1]);
+                    taskInfo.tcp.push(port);
+                    self.emit('tcp', taskInfo['task_id'], taskInfo.ip, port);
                 }
                 else if(result[2] === 'udp'){
-                    taskInfo.udp.push(result[1])
-                    self.emit('udp', taskInfo['task_id'], taskInfo.ip, result[1]);
+                    taskInfo.udp.push(port);
+                    self.emit('udp', taskInfo['task_id'], taskInfo.ip, port);
                 }
                 else{
                     ;
                 }
-                log.info(taskInfo.ip + ' ' + result[1] + '/' + result[2]);
+                log.info(taskInfo.ip + ' ' + port + '/' + result[2]);
             }
         })
 

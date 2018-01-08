@@ -23,11 +23,11 @@ wirerouter()
     })
     .on(wire.ScanResultDNSRecordCName, function(channel, message, data){
         //dns cname记录
-        log.info('[DNS] %s @ %s', message.domain, message.data);  
+        //log.info('[DNS] %s @ %s', message.domain, message.data);  
     })
     .on(wire.ScanResultWhois, function(channel, message, data){
         //ip whois信息
-        log.info('[WHOIS] %s located at %s with netname: %s', message.ip, message.details[0].netblock, message.details[0].netname);
+        //log.info('[WHOIS] %s located at %s with netname: %s', message.ip, message.details[0].netblock, message.details[0].netname);
     })
     .on(wire.ScanResultService, function(channel, message, data){
         //主机开放端口
@@ -55,5 +55,7 @@ push.send(["channel", wireutil.envelope(wire.CreateDomainScanTaskInfo, {
     "email" : "root@localhost.com",
     "description" : "...",
     "targetDomain" : "189.cn",
-    "dict" : "top3000"
+    "dict" : "test"
 })]);
+
+
