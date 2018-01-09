@@ -51,6 +51,7 @@
 banner定义与入库
 
 # JavaScript
+    https://molily.de/robust-javascript/#characteristics-of-javascript
     
 # NodeJS
     进程管理
