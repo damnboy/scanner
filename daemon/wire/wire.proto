@@ -57,7 +57,7 @@ message ServiceInformation {
   required string ip = 1;
   required string type = 2;
   repeated int32 ports = 3;
-  required bool scan = 4;
+  required string taskId = 4;
 }
 
 message ScanResultDNSRecordA{
@@ -89,9 +89,10 @@ message ScanResultService{
 message ScanResultServiceBanner{
   required string ip = 1;
   required int32 port = 2;
-  required string service = 3;
-  required string version = 4;
-  required bool sslSupport = 5;
-  required string scanedBy = 6;
-  required bytes raw = 7;
+  required string type = 3;
+  required string service = 4;
+  required string version = 5;
+  required bool sslSupport = 6;
+  required string scanedBy = 7;
+  required bytes raw = 8;
 }

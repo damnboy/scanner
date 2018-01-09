@@ -71,6 +71,8 @@ banner定义
 angularjs界面
 
 ## 2018-1-9
+elasticsearch modeling your data
+
 banner识别序列化执行
 grab.js识别实现以及性能测试
 
@@ -91,8 +93,11 @@ grab.js识别实现以及性能测试
     基本用法
 
 # Elasticsearch
-    数据类型，
-    mapping定义，
+    数据类型：
+
+    mapping定义：
+        字段多类型
+        
     查询：
         排序：sort
         分页：from&size，scroll

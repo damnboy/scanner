@@ -5,7 +5,7 @@ var wire = require("./wire");
 var wirerouter = require("./wire/router.js");
 var wireutil = require("./wire/util.js");
 var Queue = require("../utils/queue.js");
-var NmapSchedule = require('../utils/external-nmap.js');
+var BannerSchedule = require('../utils/external-nmap.js');
 var dbapi = require('../libs/db');
 
 module.exports.command = 'banner';
@@ -39,10 +39,12 @@ module.exports.handler = function(argvs){
     })
     
 
+    BannerSchedule.startBanner();
 
     sub.on("message", 
     wirerouter().on(wire.ServiceInformation, function(channel, message, data){
          //扫描任务入库，由nmap调度器负责读取尚未扫描的任务，并执行扫描
+         /*
          if(!message.scan){
              return;
          }
@@ -55,6 +57,7 @@ module.exports.handler = function(argvs){
                  })
              });
          }
+         */
      }).handler());
 
 
@@ -72,11 +75,20 @@ module.exports.handler = function(argvs){
     }
 
     process.on("SIGINT", function(){
-        closeSocket();
+        BannerSchedule.wait()
+        .then(function(){
+            closeSocket();
+            process.exit(0)
+        })
+        
     })
 
     process.on("SIGTERM", function(){
-        closeSocket();
+        BannerSchedule.wait()
+        .then(function(){
+            closeSocket();
+            process.exit(0)
+        })
     })
 }
 

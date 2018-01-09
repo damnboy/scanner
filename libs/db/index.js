@@ -11,7 +11,7 @@ module.exports = (function(options){
     }
 })({
     "type" : "elasticsearch",
-    "host" : "218.85.154.137",
+    "host" : "127.0.0.1",
     "port" : "9200"
 })
 

@@ -173,6 +173,12 @@ curl -XPUT 'localhost:9200/services?pretty' -H 'Content-Type: application/json' 
                 },
                 "udp" : {
                     "type" : "long"
+                },
+                "done" : {
+                    "type" : "boolean"
+                },
+                "scanned_date" : {
+                    "type" : "date"
                 }
             }
         }
@@ -185,30 +191,41 @@ curl -XPUT 'localhost:9200/servicebanner?pretty' -H 'Content-Type: application/j
   "mappings" : {
         "doc" : {
             "properties" : {
+                "done" : {
+                    "type" : "boolean"
+                },
                 "task_id" : {
                     "type" : "keyword"
-                },
-
-                "description" : {
-                    "type" : "text"
-                },
-
-                "remark" : {
-                    "type" : "text"
-                },
-
-                "create_date" : {
-                    "type" : "date"
                 },
                 "ip" : {
                     "type" : "ip"
                 },
+
+                "type" : {
+                    "type" : "keyword"
+                },
+
                 "port" : {
                     "type" : "integer"
                 },
+                "description" : {
+                    "type" : "text"
+                },
+                "remark" : {
+                    "type" : "text"
+                },
+                "create_date" : {
+                    "type" : "date"
+                },
+
+                "scanned_date" : {
+                    "type" : "date"
+                },
+
                 "service" : {
                     "type" : "keyword"
                 },
+
                 "version" : {
                     "type" : "text",
                     "fields" : {
@@ -217,12 +234,15 @@ curl -XPUT 'localhost:9200/servicebanner?pretty' -H 'Content-Type: application/j
                         }
                     }
                 },
+
                 "sslSupport" : {
                     "type" : "boolean"
                 },
+
                 "scannedBy" : {
                     "type" : "keyword"
                 },
+
                 "raw" : {
                     "type" : "binary"
                 }

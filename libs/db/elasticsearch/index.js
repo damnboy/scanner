@@ -173,16 +173,16 @@ module.exports = function(options){
             })
         })
     }
-    DBApi.prototype.doneNmapTask = function(doc){
+    DBApi.prototype.doneNmapTask = function(hostInfo, id){
         return db.connect()
         .then(function(){
             return new Promise(function(resolve, reject){   
                 request.post({
-                    'url' : server() + '/services/doc/' + doc._id + '/_update',
+                    'url' : server() + '/services/doc/' + id + '/_update',
                     'body' : 
                         {
                             "doc":
-                                _.assign(doc._source , {
+                                _.assign(hostInfo , {
                                 'scanned_date' : Date.now() ,
                                 'done' : true})
                             
@@ -234,7 +234,6 @@ module.exports = function(options){
                 })
             })
         })
-
     }
     DBApi.prototype.scheduleNmapTask = function(record){
         return db.connect()
@@ -250,7 +249,7 @@ module.exports = function(options){
                 'json' : true
             }, function(error, response){
                 if(error){
-                    logger.error(error);
+                    log.error(error);
                 }
                 else{
                     ;//logger.info(response.body);
@@ -274,10 +273,10 @@ module.exports = function(options){
                 'json' : true
             }, function(error, response){
                 if(error){
-                    logger.error(error);
+                    log.error(error);
                 }
                 else{
-                    ;//logger.info(response.body);
+                    ;//log.info(response.body);
                 }
             })
         })
@@ -302,10 +301,10 @@ module.exports = function(options){
                 'json' : true
             }, function(error, response){
                 if(error){
-                    logger.error(error);
+                    log.error(error);
                 }
                 else{
-                    ;//logger.info(response.body);
+                    ;//log.info(response.body);
                 }
             });
         })
@@ -326,12 +325,117 @@ module.exports = function(options){
                 'json' : true
             }, function(error, response){
                 if(error){
-                    logger.error(error);
+                    log.error(error);
                 }
                 else{
-                    ;//logger.info(response.body);
+                    ;//log.info(response.body);
                 }
             });
+        })
+    }
+    DBApi.prototype.updateBanner = function(options){
+
+    }
+
+    DBApi.prototype.doneBannerTask = function(bannerInfo, id){
+
+        return db.connect()
+        .then(function(){
+            return new Promise(function(resolve, reject){   
+                request.post({
+                    'url' : server() + '/servicebanner/doc/' + id + '/_update',
+                    'body' : 
+                        {
+                            "doc": _.assign(bannerInfo, 
+                                {
+                                    "scanned_date" : Date.now(), 
+                                    "done" : true
+                                }
+                            )
+                        },
+                    'json' : true
+                }, function(error, response){
+                    if(error){
+                        reject(error)
+                    }
+                    else if(response.statusCode === 200){
+                        resolve(response.body)
+                    }
+                    else{
+                        reject(response.body)
+                    }
+                })
+            })
+        })
+    }
+
+    DBApi.prototype.scheduleBannerTask = function(ip, port, type, taskId){
+        return db.connect()
+        .then(function(){
+            request.post({
+                'url' : server() + '/servicebanner/doc/',
+                'body' : {
+                    "ip" : ip,
+                    "port" : port,
+                    "type" : type,
+                    "taskId" : taskId,
+                    "create_date" : Date.now(),
+                    "done" : false,
+                    "description" : 'description',
+                    "remark" : 'remark',
+                    "service" : 'UNKNOWN',
+                    "version" : 'UNKNOWN',
+                    "sslSupport" : false,
+                    "scannedBy" : 'UNKNOWN',
+                    "raw" : Buffer.from("", 'utf8').toString('base64')
+                },
+                'json' : true
+            }, function(error, response){
+                if(error){
+                    log.error(error);
+                }
+                else{
+                    if(response.statusCode === 201){
+                        ;//log.info(response.body._index, response.body._id);
+                    } 
+                    else{
+                        log.error(response.body);
+                    }
+                }
+            });
+        })
+    }
+
+    DBApi.prototype.getScheduledBannerTask = function(){
+        //TODO 清空servicebanner中对应任务下的banner记录
+        return db.connect()
+        .then(function(){
+            return new Promise(function(resolve, reject){
+                request.get({
+                    'url' : server() + '/servicebanner/_search?size=1',
+                    'body' : {
+                        "query" :{
+                            "bool" :{
+                                "filter" : [
+                                    { "term" :{"done" : false} }
+                                ]
+                            }
+                        },
+                        "sort": { "create_date": "asc"} 
+                    },
+                    'json' : true
+                }, function(error, response){
+                    if(error){
+                        reject(error)
+                    }
+                    else if(response.statusCode === 200 && response.body.hits.hits.length === 1){
+                        resolve(response.body.hits.hits[0]);
+                    }
+                    else{
+                        reject(response.statusCode)
+                    }
+                })
+            })
         })
     }
     DBApi.prototype.getBanners = function(options, offset){

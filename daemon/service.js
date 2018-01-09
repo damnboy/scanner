@@ -47,64 +47,58 @@ module.exports.handler = function(argvs){
     })
     
     NmapSchedule.on('tcp', function(taskId, ip, port){
-        
+        /*
         push.send([taskId, wireutil.envelope(wire.ServiceInformation, {
             "ip" : ip,
             "type" : "tcp",
             "ports" : [port],
             "scan" : false
         })]);
-        
+        */
     });
 
     NmapSchedule.on('udp', function(taskId, ip, port){
-
+        /*
         push.send([taskId, wireutil.envelope(wire.ServiceInformation, {
             "ip" : ip,
             "type" : "udp",
             "ports" : [port],
-            "scan" : false
+            "taskId" :taskId
         })]);
-
+        */
     });
 
     NmapSchedule.on('host', function(taskId, ip, tcp, udp){
         //扫描结果入库存储，高仿节点返回大量开放端口，因此端口数量大于100的主机，跳过不执行扫描
-        if(tcp.length < 60){
+        if(tcp.length >0 && tcp.length < 60){
 
             push.send([taskId, wireutil.envelope(wire.ServiceInformation, {
                 "ip" : ip,
                 "type" : "tcp",
                 "ports" : tcp,
-                "scan" : true
+                "taskId" :taskId
             })]);
         }
         else{
             log.warn('Too many open service on host %s, seems hosted on highly defence cloud service', ip);
         }
         
-        if(udp.length < 60){
+        if(udp.length >0 & udp.length < 60){
 
             push.send([taskId, wireutil.envelope(wire.ServiceInformation, {
                 "ip" : ip,
                 "type" : "udp",
                 "ports" : udp,
-                "scan" : true
+                "taskId" :taskId
             })]);
         }  
     });
 
-    NmapSchedule.start(dbapi);
+    NmapSchedule.startNmap();
 
     sub.on("message", wirerouter()
         .on(wire.IPv4Infomation, function(channel, message, data){
-            //扫描任务入库，由nmap调度器负责读取尚未扫描的任务，并执行扫描
-            var nmapTask = {
-                "task_id" : channel.toString("utf-8"),
-                "ip" : message.ip
-            };
 
-            dbapi.scheduleNmapTask(nmapTask);
 
         }).handler())
 

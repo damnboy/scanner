@@ -7,6 +7,9 @@ function DBApi(){
 DBApi.prototype.saveBanner = function(){
     
 }
+DBApi.prototype.scheduleBannerTask = function(){
+    
+}
 DBApi.prototype.saveDNSRecord = function(){
 
 }

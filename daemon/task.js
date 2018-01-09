@@ -83,35 +83,48 @@ module.exports.handler = function(argvs){
         pub.send([channel, wireutil.envelope(wire.ClientReady, message)]);
     })
     .on(wire.IPv4Infomation, function(channel, message, data){
-        pub.send([channel, wireutil.envelope(wire.IPv4Infomation,message)]);
+        //扫描任务入库，由nmap调度器负责读取尚未扫描的任务，并执行扫描
+        dbapi.scheduleNmapTask({
+            "task_id" : channel.toString("utf-8"),
+             "ip" : message.ip
+        }).then(function(response){
+            pub.send([channel, wireutil.envelope(wire.IPv4Infomation,message)]);
+        })
+        
     })
     .on(wire.ServiceInformation, function(channel, message, data){
-        pub.send([channel, wireutil.envelope(wire.ServiceInformation, message)]);
+        /*TODO 一次提交多个端口指纹扫描请求到nmap，扫描完毕之后bulk接口提交到elasticsearch中 */
+        message.ports.forEach(function(port){
+            dbapi.scheduleBannerTask(message.ip, port, message.type, message.taskId)
+            .then(function(response){
+                pub.send([channel, wireutil.envelope(wire.ServiceInformation, message)]);
+            })
+        })
     })
     .on(wire.ScanResultDNSRecordA, function(channel, message, data){
         //dns a记录
-        log.info(message);
+        //log.info(message);
         pub.send([channel, wireutil.envelope(wire.ScanResultDNSRecordA, message)]);
     })
     .on(wire.ScanResultDNSRecordCName, function(channel, message, data){
         //dns cname记录
-        log.info(message);
+        //log.info(message);
         pub.send([channel, wireutil.envelope(wire.ScanResultDNSRecordCName, message)]);
         
     })
     .on(wire.ScanResultWhois, function(channel, message, data){
         //ip whois信息
-        log.info(message);
+        //log.info(message);
         pub.send([channel, wireutil.envelope(wire.ScanResultWhois, message)]);
     })
     .on(wire.ScanResultService, function(channel, message, data){
         //主机开放端口
-        log.info(message);
+        //log.info(message);
         pub.send([channel, wireutil.envelope(wire.ScanResultService, message)]);
     })
     .on(wire.ScanResultServiceBanner, function(channel, message, data){
         //端口指纹
-        log.info(message);
+        //log.info(message);
         message.taskId = channel.toString('utf-8');
 
         dbapi.saveBanner(message)
