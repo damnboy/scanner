@@ -6,8 +6,10 @@ var wire = require("./daemon/wire");
 var wirerouter = require("./daemon/wire/router.js");
 var wireutil = require("./daemon/wire/util.js");
 var log = require('./utils/logger').createLogger('[client:client]');
-var subUri = "tcp://127.0.0.1:7110";
-var pushUri = "tcp://127.0.0.1:7111";
+var subUri = "tcp://218.85.154.137:7110";
+var pushUri = "tcp://218.85.154.137:7111";
+//var subUri = "tcp://127.0.0.1:7110";
+//var pushUri = "tcp://127.0.0.1:7111";
 
 sub.on("message",
 wirerouter()
@@ -23,11 +25,11 @@ wirerouter()
     })
     .on(wire.ScanResultDNSRecordCName, function(channel, message, data){
         //dns cname记录
-        log.info('[DNS] %s @ %s', message.domain, message.data);  
+        //log.info('[DNS] %s @ %s', message.domain, message.data);  
     })
     .on(wire.ScanResultWhois, function(channel, message, data){
         //ip whois信息
-        log.info('[WHOIS] %s located at %s with netname: %s', message.ip, message.details[0].netblock, message.details[0].netname);
+        //log.info('[WHOIS] %s located at %s with netname: %s', message.ip, message.details[0].netblock, message.details[0].netname);
     })
     .on(wire.ScanResultService, function(channel, message, data){
         //主机开放端口
@@ -57,3 +59,5 @@ push.send(["channel", wireutil.envelope(wire.CreateDomainScanTaskInfo, {
     "targetDomain" : "189.cn",
     "dict" : "top3000"
 })]);
+
+

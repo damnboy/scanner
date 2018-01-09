@@ -185,14 +185,6 @@ curl -XPUT 'localhost:9200/servicebanner?pretty' -H 'Content-Type: application/j
   "mappings" : {
         "doc" : {
             "properties" : {
-                "ip" : {
-                    "type" : "ip"
-                },
-
-                "port" : {
-                    "type" : "long"
-                },
-
                 "task_id" : {
                     "type" : "keyword"
                 },
@@ -208,9 +200,31 @@ curl -XPUT 'localhost:9200/servicebanner?pretty' -H 'Content-Type: application/j
                 "create_date" : {
                     "type" : "date"
                 },
-
-                "banner" : {
-                    "type" : "text"
+                "ip" : {
+                    "type" : "ip"
+                },
+                "port" : {
+                    "type" : "integer"
+                },
+                "service" : {
+                    "type" : "keyword"
+                },
+                "version" : {
+                    "type" : "text",
+                    "fields" : {
+                        "raw" : {
+                            "type" : "keyword"
+                        }
+                    }
+                },
+                "sslSupport" : {
+                    "type" : "boolean"
+                },
+                "scannedBy" : {
+                    "type" : "keyword"
+                },
+                "raw" : {
+                    "type" : "binary"
                 }
             }
         }

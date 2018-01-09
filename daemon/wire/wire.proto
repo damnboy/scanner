@@ -56,7 +56,7 @@ message IPv4Infomation {
 message ServiceInformation {
   required string ip = 1;
   required string type = 2;
-  repeated string ports = 3;
+  repeated int32 ports = 3;
   required bool scan = 4;
 }
 

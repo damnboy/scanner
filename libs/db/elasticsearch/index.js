@@ -310,8 +310,71 @@ module.exports = function(options){
             });
         })
     };
-    DBApi.prototype.getBanners = function(taskId, ip, port, offset){
+
+    DBApi.prototype.saveBanner = function(banner){
+        return db.connect()
+        .then(function(){
+            request.post({
+                'url' : server() + '/servicebanner/doc/',
+                'body' : _.assign(banner , 
+                    {
+                        'create_date' : Date.now() ,
+                        'description' : 'description',
+                        'remark' : 'remark'
+                    }
+                ),
+                'json' : true
+            }, function(error, response){
+                if(error){
+                    logger.error(error);
+                }
+                else{
+                    ;//logger.info(response.body);
+                }
+            });
+        })
+    }
+    DBApi.prototype.getBanners = function(options, offset){
+        var query = {}
+        query.bool = {
+            "must": []
+        }
+
+        if(options["ip"]){
+            query.bool.must.push({"match" : {"ip" : options["ip"]}})
+        }
+        if(options["task_id"]){
+            query.bool.must.push({"match" : {"task_id" : options["task_id"]}})
+        }
         
+        return db.connect()
+        .then(function(){
+            return new Promise(function(resolve, reject){
+                var param = {
+                    "query" : query,
+                    "from" : offset,
+                    "size" : 100
+                };
+                console.log(param)
+                request.post({
+                    'url' : server() + '/servicebanner/_search',
+                    'body' : param,
+                    "json" : true
+                }, function(error, response){
+                    if(error){
+                        reject(error);
+                    }
+                    else if(response.statusCode === 200){
+                        resolve(response.body.hits.hits.map(function(result){
+                            return result._source;
+                        }));
+                    }
+                    else{
+                        reject(response.body);
+                    }
+                })
+            })
+        })
     }
 
     DBApi.prototype.getServices = function(options, offset){

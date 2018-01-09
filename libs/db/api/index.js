@@ -4,7 +4,9 @@
 function DBApi(){
 
 }
-
+DBApi.prototype.saveBanner = function(){
+    
+}
 DBApi.prototype.saveDNSRecord = function(){
 
 }
