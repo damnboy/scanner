@@ -160,8 +160,8 @@ NmapSchedule.prototype.scan = function(ti){
             '-vv',
             '-n',
             '-Pn',
-            //'-p-',
-            '--min-rate','1000'
+            '-p-',
+            '--min-rate','2000'
         ]);
 
         proc.stdout.on('data', function(data){

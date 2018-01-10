@@ -448,7 +448,7 @@ module.exports = function(options){
             query.bool.must.push({"match" : {"ip" : options["ip"]}})
         }
         if(options["task_id"]){
-            query.bool.must.push({"match" : {"task_id" : options["task_id"]}})
+            query.bool.must.push({"match" : {"taskId" : options["task_id"]}})
         }
         
         return db.connect()
@@ -457,7 +457,7 @@ module.exports = function(options){
                 var param = {
                     "query" : query,
                     "from" : offset,
-                    "size" : 100
+                    "size" : 20
                 };
                 console.log(param)
                 request.post({
@@ -500,18 +500,20 @@ module.exports = function(options){
                 var param = {
                     "query" : query,
                     "from" : offset,
-                    "size" : 100
+                    "size" : 20
                 };
-                console.log(param)
+
                 request.post({
                     'url' : server() + '/services/_search',
                     'body' : param,
                     "json" : true
                 }, function(error, response){
+
                     if(error){
                         reject(error);
                     }
                     else if(response.statusCode === 200){
+                       
                         resolve(response.body.hits.hits.map(function(result){
                             return result._source;
                         }));
@@ -523,17 +525,32 @@ module.exports = function(options){
             })
         })
     }
-
+    /*
+    {
+    "query" : {   
+       "bool" : {
+         "must" : [
+           {"match" : {"task_id" : "c9f31ab0-f52f-11e7-83e3-b19955fb51a7"}},
+           {"exists": {"field": "a"}}
+         ]
+       }
+    }
+}
+    */
     DBApi.prototype.getDNSARecordsByTaskId = function(taskId, offset){
+        var query = {}
+        query.bool = {}
+        query.bool.must = []
+        query.bool.must.push({"match" : {"task_id" : taskId}})
+        query.bool.must.push({"exists": {"field": "a"}})
+
         return db.connect()
         .then(function(){
             return new Promise(function(resolve, reject){
                 var param = {
-                    "query" : {
-                        "term" : {"task_id" : taskId}
-                    },
+                    "query" : query,
                     "from" : offset,
-                    "size" : 100
+                    "size" : 20
                 };
 
                 request.post({

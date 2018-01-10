@@ -12,7 +12,7 @@ var bodyParser = require('body-parser');
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
-app.use('/static', express.static('./test/angular/angular-phonecat/app'));
+app.use('/static', express.static('./test/angular-phonecat/angular-phonecat/app'));
 app.use('/task', require('./api/task'));
 app.use('/service', require('./api/service'));
 app.use('/dnsrecord', require('./api/dnsrecord'));
