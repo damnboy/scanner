@@ -74,7 +74,13 @@ angularjs界面
 elasticsearch modeling your data
 
 banner识别序列化执行
+入库&查询基本完成
+    exist查询
+
+
+## 2018-1-10
 grab.js识别实现以及性能测试
+分析masscan 指纹识别实现
 
 
 # JavaScript
