@@ -105,7 +105,9 @@ var getAuthorityAnswers = function(target, custom_nameservers){
             var random_ns = nameservers[Math.round(Math.random()*10) % nameservers.length];
             var random_ns_ip = random_ns.ip[Math.round(Math.random()*10) % random_ns.ip.length];
             response = yield dns_request_a(target, random_ns_ip, 53);
-            
+            if(response._flags.rcode === RESPONSE_CODE['NXDOMAIN']){
+                logger.warn('NXDOMAIN:' + target);
+            }
             if(response._flags.rcode !== RESPONSE_CODE['NOERROR'] || response._flags.aa === 0x01)
             {
                 return response;
