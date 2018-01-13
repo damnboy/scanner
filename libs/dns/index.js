@@ -506,26 +506,30 @@ DNSBurster.prototype.burstDomains = function(dict){
       }, 16);
 
       work.drain = function() {
-        Object.keys(responses_summary).forEach(function(key){
-            logger.info('%s : %s' ,key, responses_summary[key]);
-        })
+        setTimeout(function(){
+            var domains = dict.splice(0,4);
+            if(dict.length === 0){
+                clearInterval(timer);
+            }
+            domains.forEach(function(domain){
+                work.push({
+                    subdomain: domain,
+                    ns: nameservers[Math.round(Math.random()*10) % nameservers.length]
+                  });
+            })
+        }, 1000);
 
-        _self.emit('finish', responses_summary);
+        if(dict.length === 0){
+            Object.keys(responses_summary).forEach(function(key){
+                logger.info('%s : %s' ,key, responses_summary[key]);
+            })
+    
+            _self.emit('finish', responses_summary);
+        }
+        
       };
 
-      var rate = 100;
-      var timer = setInterval(function(){
-        var domains = dict.splice(0,rate);
-        if(dict.length === 0){
-            clearInterval(timer);
-        }
-        domains.forEach(function(domain){
-            work.push({
-                subdomain: domain,
-                ns: nameservers[Math.round(Math.random()*10) % nameservers.length]
-              });
-        })
-    }, 1000);
+      work.drain()
     //});
 }
 
