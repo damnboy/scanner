@@ -105,9 +105,7 @@ var getAuthorityAnswers = function(target, custom_nameservers){
             var random_ns = nameservers[Math.round(Math.random()*10) % nameservers.length];
             var random_ns_ip = random_ns.ip[Math.round(Math.random()*10) % random_ns.ip.length];
             response = yield dns_request_a(target, random_ns_ip, 53);
-            if(response._flags.rcode === RESPONSE_CODE['NXDOMAIN']){
-                logger.warn('NXDOMAIN:' + target);
-            }
+
             if(response._flags.rcode !== RESPONSE_CODE['NOERROR'] || response._flags.aa === 0x01)
             {
                 return response;
@@ -210,7 +208,12 @@ DNSProber.prototype.manualProbe = function(target, nameservers, dict){
                     logger.warn('SERVFAIL:')
                     console.log(job)
                     console.log(response)
+                });
+
+                burster.on('NXDOMAIN', function(job, response){
+                    logger.warn('NXDOMAIN: ' + job.subdomain);
                 })
+
                 burster.on('NOERROR', function(job, response){
                 
                     var valid_records = response.answers.filter(function(record){
@@ -505,14 +508,12 @@ DNSBurster.prototype.burstDomains = function(dict){
             done();
         });
 
-      }, 16);
+      }, 8);
 
       work.drain = function() {
         setTimeout(function(){
-            var domains = dict.splice(0,4);
-            if(dict.length === 0){
-                clearInterval(timer);
-            }
+            var domains = dict.splice(0,8);
+
             domains.forEach(function(domain){
                 work.push({
                     subdomain: domain,
