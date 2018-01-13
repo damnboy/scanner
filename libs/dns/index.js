@@ -508,19 +508,19 @@ DNSBurster.prototype.burstDomains = function(dict){
             done();
         });
 
-      }, 8);
+      }, nameservers.length);
 
       work.drain = function() {
         setTimeout(function(){
-            var domains = dict.splice(0,8);
+            var domains = dict.splice(0, nameservers.length) ;
 
-            domains.forEach(function(domain){
+            domains.map(function(domain, index){
                 work.push({
                     subdomain: domain,
-                    ns: nameservers[Math.round(Math.random()*10) % nameservers.length]
+                    ns: nameservers[index]
                   });
             })
-        }, 1000);
+        }, 0);
 
         if(dict.length === 0){
             Object.keys(responses_summary).forEach(function(key){
