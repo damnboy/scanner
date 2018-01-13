@@ -32,14 +32,7 @@ module.exports.handler = function(argvs){
   var _ = require('lodash');
   var dict = require('./utils/dict');
   var dns = require('./libs/dns');
-  var dbClient = require('./libs/db');
 
-  dbClient({
-    'host' : '127.0.0.1',
-    'port' : 9200
-  })
-  .then(function(db){
-    console.log(db)
     var dns_prober = new dns.DNSProber();
     dns_prober.on('error', function(error){
       console.log('error', error);
@@ -62,7 +55,6 @@ module.exports.handler = function(argvs){
 
       //schema & lodash assign, extend, merge
       dns_prober.on('records', function(response){
-          db.saveDNSRecord(response)
           console.log(response);
         })
     dns_prober.on('response', function(response){
@@ -111,7 +103,6 @@ module.exports.handler = function(argvs){
       console.log('----- IP ------ \r\n');
     })
 
-
     dict.getDNSDict(argvs.dict)
     .then(function(dict){
         
@@ -134,7 +125,7 @@ module.exports.handler = function(argvs){
         }
 
     });
-  })
+  
 
 
 }

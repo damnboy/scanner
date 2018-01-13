@@ -465,7 +465,7 @@ DNSBurster.prototype.wildcard = function(){
     });
 }
 
-DNSBurster.prototype.burstDomains = function(domains){
+DNSBurster.prototype.burstDomains = function(dict){
 
     var _self = this;
     var target = this.options.target;
@@ -513,12 +513,19 @@ DNSBurster.prototype.burstDomains = function(domains){
         _self.emit('finish', responses_summary);
       };
 
-      domains.forEach(function(domain){
-          work.push({
-            subdomain: domain,
-            ns: nameservers[Math.round(Math.random()*10) % nameservers.length]
-          });
-        });
+      var rate = 100;
+      var timer = setInterval(function(){
+        var domains = dict.splice(0,rate);
+        if(dict.length === 0){
+            clearInterval(timer);
+        }
+        domains.forEach(function(domain){
+            work.push({
+                subdomain: domain,
+                ns: nameservers[Math.round(Math.random()*10) % nameservers.length]
+              });
+        })
+    }, 1000);
     //});
 }
 
