@@ -53,7 +53,7 @@ module.exports.handler = function(argvs){
                 .then(function(detail){
                     
                     //消息返回task，并推送到client端
-                    detail.task_id = channel.toString('utf-8');
+                    detail.taskId = channel.toString('utf-8');
                     dbapi.saveWhoisRecord(detail);
                     var result = {
                         "ip" : message.ip,

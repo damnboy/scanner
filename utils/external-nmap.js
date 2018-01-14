@@ -172,11 +172,11 @@ NmapSchedule.prototype.scan = function(ti){
                 var port = parseInt(result[1]);
                 if(result[2] === 'tcp'){
                     taskInfo.tcp.push(port);
-                    self.emit('tcp', taskInfo['task_id'], taskInfo.ip, port);
+                    self.emit('tcp', taskInfo['taskId'], taskInfo.ip, port);
                 }
                 else if(result[2] === 'udp'){
                     taskInfo.udp.push(port);
-                    self.emit('udp', taskInfo['task_id'], taskInfo.ip, port);
+                    self.emit('udp', taskInfo['taskId'], taskInfo.ip, port);
                 }
                 else{
                     ;
@@ -191,7 +191,7 @@ NmapSchedule.prototype.scan = function(ti){
 
         proc.on('exit', function(code, signal){
             if(code === 0){
-                self.emit('host', taskInfo['task_id'], taskInfo.ip, taskInfo.tcp, taskInfo.udp);
+                self.emit('host', taskInfo['taskId'], taskInfo.ip, taskInfo.tcp, taskInfo.udp);
                 resolve(taskInfo)
             }
             else{

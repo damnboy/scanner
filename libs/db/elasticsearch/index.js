@@ -360,8 +360,8 @@ module.exports = function(options){
         if(options["ip"]){
             query.bool.must.push({"match" : {"ip" : options["ip"]}})
         }
-        if(options["task_id"]){
-            query.bool.must.push({"match" : {"taskId" : options["task_id"]}})
+        if(options["taskId"]){
+            query.bool.must.push({"match" : {"taskId" : options["taskId"]}})
         }
         
         return db.connect()
@@ -403,8 +403,8 @@ module.exports = function(options){
         if(options["ip"]){
             query.bool.must.push({"match" : {"ip" : options["ip"]}})
         }
-        if(options["task_id"]){
-            query.bool.must.push({"match" : {"task_id" : options["task_id"]}})
+        if(options["taskId"]){
+            query.bool.must.push({"match" : {"taskId" : options["taskId"]}})
         }
         
         return db.connect()
@@ -443,7 +443,7 @@ module.exports = function(options){
     "query" : {   
        "bool" : {
          "must" : [
-           {"match" : {"task_id" : "c9f31ab0-f52f-11e7-83e3-b19955fb51a7"}},
+           {"match" : {"taskId" : "c9f31ab0-f52f-11e7-83e3-b19955fb51a7"}},
            {"exists": {"field": "a"}}
          ]
        }

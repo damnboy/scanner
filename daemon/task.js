@@ -83,7 +83,7 @@ module.exports.handler = function(argvs){
     .on(wire.IPv4Infomation, function(channel, message, data){
         //扫描任务入库，由nmap调度器负责读取尚未扫描的任务，并执行扫描
         dbapi.scheduleNmapTask({
-            "task_id" : channel.toString("utf-8"),
+            "taskId" : channel.toString("utf-8"),
              "ip" : message.ip
         }).then(function(response){
             pub.send([channel, wireutil.envelope(wire.IPv4Infomation,message)]);

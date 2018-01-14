@@ -53,7 +53,7 @@ module.exports.handler = function(argvs){
     );
 
     var router = new EventEmitter();
-    function registerDNSProbe(task_id, target, dict_name, customNameservers){
+    function registerDNSProbe(taskId, target, dict_name, customNameservers){
         return new Promise(function(resolve, reject){
             dict.getDNSDict(dict_name)
             .then(function(records){
@@ -68,7 +68,7 @@ module.exports.handler = function(argvs){
                 });
 
                 prober.on('trace', function(trace){
-                    router.emit('dns.trace', task_id, trace);
+                    router.emit('dns.trace', taskId, trace);
                 });
                 
                 prober.on('error', function(error){
@@ -76,19 +76,19 @@ module.exports.handler = function(argvs){
                 });
 
                 prober.on('timeout', function(record){
-                    router.emit('dns.timeout', task_id, record);
+                    router.emit('dns.timeout', taskId, record);
                 });
 
                 prober.on('response', function(response){
-                    router.emit('dns.response', task_id, response);
+                    router.emit('dns.response', taskId, response);
                 });
 
                 prober.on('record.a', function(record){
-                    router.emit('dns.record.a', task_id, record);
+                    router.emit('dns.record.a', taskId, record);
                 });
 
                 prober.on('record.cname', function(record){
-                    router.emit('dns.record.cname', task_id, record);
+                    router.emit('dns.record.cname', taskId, record);
                 });
                 
                 prober.on('finish', function(summary){
@@ -110,11 +110,11 @@ module.exports.handler = function(argvs){
     //入库，整合提交到elasticsearch与task，进行whois查询
     //入库操作提交到独立的进程内完成，将入库部分的逻辑独立
     
-    router.on('dns.trace', function(task_id, trace){
-        log.info(task_id, trace);
+    router.on('dns.trace', function(taskId, trace){
+        log.info(taskId, trace);
     });
 
-    router.on('dns.timeout', function(task_id, record){
+    router.on('dns.timeout', function(taskId, record){
         log.warn('timeout', record);
     });
     /*
@@ -123,23 +123,23 @@ module.exports.handler = function(argvs){
             cname: [ 'webmail.189.cn', '189.webmail.21cn.com' ],
             a: [],
             resolver: '118.85.203.178',
-            task_id: '833f3b90-ec69-11e7-8ff5-fd62b8b82915',
+            taskId: '833f3b90-ec69-11e7-8ff5-fd62b8b82915',
             create_date: 1514532360820,
             description: 'description',
             remark: 'remark' 
         }
     */
-    router.on('dns.response', function(task_id, response){
-        response.task_id = task_id;
+    router.on('dns.response', function(taskId, response){
+        response.taskId = taskId;
         dbapi.saveDNSRecord(response);
         if(response.cname.length > 0){
-            push.send([task_id, wireutil.envelope(wire.ScanResultDNSRecordCName,{
+            push.send([taskId, wireutil.envelope(wire.ScanResultDNSRecordCName,{
                 "domain" : response.domain,
                 "data" : response.cname
             })]);
         }
         if(response.a.length > 0){
-            push.send([task_id, wireutil.envelope(wire.ScanResultDNSRecordA,{
+            push.send([taskId, wireutil.envelope(wire.ScanResultDNSRecordA,{
                 "domain" : response.domain,
                 "data" : response.a
             })]);
@@ -147,15 +147,15 @@ module.exports.handler = function(argvs){
     });
 
     //pub到services与whois进行二阶扫描
-    router.on('dns.record.a', function(task_id, record){
+    router.on('dns.record.a', function(taskId, record){
         //入库.then(push.send)
-        push.send([task_id, wireutil.envelope(wire.IPv4Infomation,{
+        push.send([taskId, wireutil.envelope(wire.IPv4Infomation,{
             "ip" : record.data
         })]);
     });
 
-    router.on('dns.record.cname', function(task_id, record){
-        //log.info(task_id, record)
+    router.on('dns.record.cname', function(taskId, record){
+        //log.info(taskId, record)
     });
 
 

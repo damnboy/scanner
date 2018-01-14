@@ -271,7 +271,6 @@ DNSProber.prototype.manualProbe = function(target, nameservers, dict){
                 }); 
 
                 burster.on('error', function(job, err){
-                    failed[job.ns.ip[0]].push(job.subdomain);
                     if(err.message === 'Query timed out'){
                         logger.error('Timeout while resolving ' + job.subdomain  + ' @ ' + job.ns.ip[0]);
                         _self.emit('timeout', job);

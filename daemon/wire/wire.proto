@@ -47,7 +47,7 @@ message CreateHostScanTaskInfo {
 }
 
 message ClientReady {
-  required string task_id = 1;
+  required string taskId = 1;
 }
 
 message IPv4Infomation {

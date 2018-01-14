@@ -10,7 +10,7 @@ router.use(function timeLog (req, res, next) {
 
 // define the about route
 router.get('/:taskId/:offset', function (req, res) {
-    dbApi.getServices({"task_id":req.params.taskId}, req.params.offset)
+    dbApi.getServices({"taskId":req.params.taskId}, req.params.offset)
     .then(function(records){
         res.status(200)
         .json(utils.successJSONResponse(records.map(function(r){

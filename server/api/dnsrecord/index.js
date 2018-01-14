@@ -30,7 +30,7 @@ router.get('/:taskId/:offset', function (req, res) {
 
 /*
     http://127.0.0.1:3000/dnsrecord/detail
-    task_id=6c746750-f074-11e7-895b-25fb9132e396&domain=www.qq.com&ip=1.1.1.1
+    taskId=6c746750-f074-11e7-895b-25fb9132e396&domain=www.qq.com&ip=1.1.1.1
     原始参数提交到db接口进行组装，生成专用的查询语法
 */
 router.post('/detail', function (req, res) {
