@@ -69,10 +69,10 @@ function dns_request(domain, type, nameserver, port){
 
 function dns_request_ns(domain, nameserver, port){
   logger.info('digging %s on %s', domain, nameserver);
-  return dns_request(domain, 'NS', nameserver, port)
+  return dns_request(domain, 'NS', nameserver, port);
 }
 function dns_request_a(domain, nameserver, port){
-  return dns_request(domain, 'A', nameserver, port)
+  return dns_request(domain, 'A', nameserver, port);
 }
 
 
@@ -105,7 +105,7 @@ var getAuthorityAnswers = function(target, custom_nameservers){
             var random_ns = nameservers[Math.round(Math.random()*10) % nameservers.length];
             var random_ns_ip = random_ns.ip[Math.round(Math.random()*10) % random_ns.ip.length];
             response = yield dns_request_a(target, random_ns_ip, 53);
-            
+
             if(response._flags.rcode !== RESPONSE_CODE['NOERROR'] || response._flags.aa === 0x01)
             {
                 return response;
@@ -183,6 +183,12 @@ DNSProber.prototype._probe = function(target, nameservers){
 
 DNSProber.prototype.manualProbe = function(target, nameservers, dict){
     var _self = this;
+    //统计解析成功率
+    //var failed = nameservers.reduce(function(ret, nameserver){
+    //    ret[nameserver] = [];
+    //    return ret;
+    //},{});
+
     function startBuster(){
         if(nameservers.length > 0){
             _self.emit('info', {
@@ -195,20 +201,27 @@ DNSProber.prototype.manualProbe = function(target, nameservers, dict){
             _self.emit('info', {
                 "message": util.format('Start buster target domain: %s', target)
             })  
+
             var burster = new DNSBurster({
                 'target' : target,
                 'nameservers' : nameservers
             }); 
+
             burster.wildcard()
             .then(function(wildcard_addresses){
                 var cname = [];
                 var private = [];
                 var public = [];    
                 burster.on('SERVFAIL', function(job, response){
-                    logger.warn('SERVFAIL:')
-                    console.log(job)
-                    console.log(response)
-                })
+                    logger.warn('SERVFAIL:');
+                    console.log(job);
+                    console.log(response);
+                });
+
+                burster.on('NXDOMAIN', function(job, response){
+                    logger.warn('NXDOMAIN: ' + job.subdomain);
+                });
+
                 burster.on('NOERROR', function(job, response){
                 
                     var valid_records = response.answers.filter(function(record){
@@ -223,10 +236,10 @@ DNSProber.prototype.manualProbe = function(target, nameservers, dict){
                     if(valid_records.length > 0){
                         var resp = valid_records.reduce(function(ret, record){
                             if(record.type === 'CNAME'){
-                                ret.cname.push(record.data)
+                                ret.cname.push(record.data);
                             }
                             if(record.type ==='A'){
-                                ret.a.push(record.data)
+                                ret.a.push(record.data);
                             }
                             return ret
                         },{
@@ -259,11 +272,13 @@ DNSProber.prototype.manualProbe = function(target, nameservers, dict){
 
                 burster.on('error', function(job, err){
                     if(err.message === 'Query timed out'){
-                        _self.emit('timeout', job)
-                    }else{
+                        logger.error('Timeout while resolving ' + job.subdomain  + ' @ ' + job.ns.ip[0]);
+                        _self.emit('timeout', job);
+                    }
+                    else
+                    {
                         _self.emit('error', err);
                     }
-                    
                 });
 
                 burster.on('finish', function(response){
@@ -384,7 +399,7 @@ DNSProber.prototype.autoProbe = function(target, dict){
                         nameservers.forEach(function(ns){
                             logger.info(ns);
                         })
-                        logger.info('------')
+                        logger.info('------');
 
                         if(invalid_nameservers.length > 0){
                             _self.emit('info', {
@@ -465,8 +480,7 @@ DNSBurster.prototype.wildcard = function(){
     });
 }
 
-DNSBurster.prototype.burstDomains = function(domains){
-
+DNSBurster.prototype.burstDomains = function(dict){
     var _self = this;
     var target = this.options.target;
     var nameservers = this.options.nameservers;
@@ -503,29 +517,38 @@ DNSBurster.prototype.burstDomains = function(domains){
             done();
         });
 
-      }, 16);
+      }, nameservers.length);
 
       work.drain = function() {
-        Object.keys(responses_summary).forEach(function(key){
-            logger.info('%s : %s' ,key, responses_summary[key]);
-        })
+        setTimeout(function(){
+            var domains = dict.splice(0, nameservers.length) ;
 
-        _self.emit('finish', responses_summary);
+            domains.map(function(domain, index){
+                work.push({
+                    subdomain: domain,
+                    ns: nameservers[index]
+                  });
+            })
+        }, 0);
+
+        if(dict.length === 0){
+            Object.keys(responses_summary).forEach(function(key){
+                logger.info('%s : %s' ,key, responses_summary[key]);
+            })
+    
+            _self.emit('finish', responses_summary);
+        }
+        
       };
 
-      domains.forEach(function(domain){
-          work.push({
-            subdomain: domain,
-            ns: nameservers[Math.round(Math.random()*10) % nameservers.length]
-          });
-        });
+      work.drain()
     //});
 }
 
 DNSBurster.prototype.burst = function(dict){
     var target = this.options.target;
     return this.burstDomains(dict.map(function(subdomain){
-        return [subdomain, target].join('.')
+        return [subdomain, target].join('.');
     }))
 }
 

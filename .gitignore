@@ -12,3 +12,5 @@ server/app/dist
 server/dist/bundle.js
 test.js
 daemon/cli.js
+cli.js
+cli.js

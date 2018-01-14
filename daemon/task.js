@@ -9,6 +9,7 @@ var wire = require("./wire");
 var wirerouter = require("./wire/router.js");
 var wireutil = require("./wire/util.js");
 var dbapi = require('../libs/db');
+var _ = require('lodash');
 
 module.exports.command = "task";
 
@@ -54,15 +55,12 @@ module.exports.handler = function(argvs){
     pull.on("message", wirerouter()
     .on(wire.CreateDomainScanTaskInfo, function(channel, message, data){
 
-        var taskInfo =  {
+        var taskInfo = _.assign({
             "id" : uuid(),
             "createDate" : Date.now(),
-            "createBy" : message.email,
             "description" : "",
             "remark" : "",
-            "domain" : message.targetDomain,
-            "dict" : message.dict
-        };
+        }, message);
 
         //入库
         dbapi.saveDomainTask(taskInfo)
@@ -85,7 +83,7 @@ module.exports.handler = function(argvs){
     .on(wire.IPv4Infomation, function(channel, message, data){
         //扫描任务入库，由nmap调度器负责读取尚未扫描的任务，并执行扫描
         dbapi.scheduleNmapTask({
-            "task_id" : channel.toString("utf-8"),
+            "taskId" : channel.toString("utf-8"),
              "ip" : message.ip
         }).then(function(response){
             pub.send([channel, wireutil.envelope(wire.IPv4Infomation,message)]);

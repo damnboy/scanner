@@ -36,6 +36,7 @@ message CreateDomainScanTaskInfo {
   required string description = 2;
   required string targetDomain = 3;
   required string dict = 4;
+  repeated string customNameservers = 5;
 }
 
 message CreateHostScanTaskInfo {
@@ -46,7 +47,7 @@ message CreateHostScanTaskInfo {
 }
 
 message ClientReady {
-  required string task_id = 1;
+  required string taskId = 1;
 }
 
 message IPv4Infomation {

@@ -32,14 +32,7 @@ module.exports.handler = function(argvs){
   var _ = require('lodash');
   var dict = require('./utils/dict');
   var dns = require('./libs/dns');
-  var dbClient = require('./libs/db');
 
-  dbClient({
-    'host' : '127.0.0.1',
-    'port' : 9200
-  })
-  .then(function(db){
-    console.log(db)
     var dns_prober = new dns.DNSProber();
     dns_prober.on('error', function(error){
       console.log('error', error);
@@ -55,6 +48,9 @@ module.exports.handler = function(argvs){
       })
     })
 
+    dns_prober.on('timeout', function(job){
+      //console.log(job.subdomain + ' timeout')
+    })
     dns_prober.on('info', function(info){
         console.log(info.message);
     })
@@ -62,11 +58,11 @@ module.exports.handler = function(argvs){
 
       //schema & lodash assign, extend, merge
       dns_prober.on('records', function(response){
-          db.saveDNSRecord(response)
-          console.log(response);
+          //console.log(response);
         })
+
     dns_prober.on('response', function(response){
-      console.log(response);
+      //console.log(response);
     })
 
     dns_prober.on('finish', function(summary, public, cname, private, wildcard){
@@ -111,10 +107,8 @@ module.exports.handler = function(argvs){
       console.log('----- IP ------ \r\n');
     })
 
-
     dict.getDNSDict(argvs.dict)
     .then(function(dict){
-        
         var target = argvs.target;
         var nameservers = argvs.nameservers;
         console.log(nameservers)
@@ -122,7 +116,7 @@ module.exports.handler = function(argvs){
           dns_prober.on('failed', function(trace){
             console.log('dns probe failed, try last dns trace stack records as authority nameservers\r\n');
             var nameservers = trace[trace.length - 1].reduce(function(ret, record){
-                return ret.concat(record.ip)
+                return ret.concat(record.ip);
             }, [])
             dns_prober.manualProbe(target, nameservers, dict)
           });
@@ -132,9 +126,5 @@ module.exports.handler = function(argvs){
         else{
           dns_prober.manualProbe(target, nameservers.split(','), dict);
         }
-
     });
-  })
-
-
 }

@@ -45,7 +45,7 @@ angular.
 
         this.onHostDetail = function(ip){
           $http.post('/service/detail/',{
-            'task_id' : $routeParams.phoneId,
+            'taskId' : $routeParams.phoneId,
             'ip' : ip
           })
           .then(function(response){

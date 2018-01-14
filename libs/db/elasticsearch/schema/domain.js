@@ -22,7 +22,7 @@ var record = {
                     "type" : "ip"
                 },
 
-                "task_id" : {
+                "taskId" : {
                     "type" : "keyword"
                 },
 

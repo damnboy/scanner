@@ -9,24 +9,24 @@ var util = require("util");
 var zmq = require("zmq");
 var dbapi = require('../libs/db');
 
-module.exports.command = 'domain'
+module.exports.command = 'domain';
 
-module.exports.describe = 'domain'
+module.exports.describe = 'domain';
 
 module.exports.builder = function(yargs) {
   return yargs
     .strict()
     .option('connect-sub', {
-      describe: 'ZeroMQ SUB endpoint to connect to.'
-    , array: true
-    , demand: true
+      describe: 'ZeroMQ SUB endpoint to connect to.', 
+      array: true, 
+      demand: true
     })
     .option('connect-pull', {
-        describe: 'The address to bind the ZeroMQ PULL endpoint to.'
-        , type: 'string'
-        , demand: true
-    })
-}
+        describe: 'The address to bind the ZeroMQ PULL endpoint to.', 
+        type: 'string',
+        demand: true
+    });
+};
 
 module.exports.handler = function(argvs){
 
@@ -35,24 +35,25 @@ module.exports.handler = function(argvs){
     
     var sub = zmq.socket("sub");
     sub.identity = "domain";
-    sub.subscribe("")
+    sub.subscribe("");
     argvs.connectSub.forEach(function(endpoint){
         sub.connect(endpoint);
-    })
+    });
     
     sub.on("message", wirerouter()
         .on(wire.ClientReady, function(channel, message, data){
             log.info("Got domain scan task(" + message.taskId + ")...");
             dbapi.getDomainTask(message.taskId)
             .then(function(taskInfo){
-                registerDNSProbe(taskInfo.id, taskInfo.domain, taskInfo.dict);
+                console.log(taskInfo);
+                registerDNSProbe(taskInfo.id, taskInfo.targetDomain, taskInfo.dict, taskInfo.customNameservers);
             });
         })
         .handler()
-    )
+    );
 
     var router = new EventEmitter();
-    function registerDNSProbe(task_id, target, dict_name){
+    function registerDNSProbe(taskId, target, dict_name, customNameservers){
         return new Promise(function(resolve, reject){
             dict.getDNSDict(dict_name)
             .then(function(records){
@@ -61,41 +62,47 @@ module.exports.handler = function(argvs){
                 prober.on('failed', function(trace){
                 
                     var nameservers = trace[trace.length - 1].reduce(function(ret, record){
-                        return ret.concat(record.ip)
-                    }, [])
-                    prober.manualProbe(target, nameservers, records)
-                })
+                        return ret.concat(record.ip);
+                    }, []);
+                    prober.manualProbe(target, nameservers, records);
+                });
+
                 prober.on('trace', function(trace){
-                    router.emit('dns.trace', task_id, trace);
-                })
+                    router.emit('dns.trace', taskId, trace);
+                });
                 
                 prober.on('error', function(error){
-                    reject(error)
-                })
+                    reject(error);
+                });
 
                 prober.on('timeout', function(record){
-                    router.emit('dns.timeout', task_id, record);
-                })
+                    router.emit('dns.timeout', taskId, record);
+                });
 
                 prober.on('response', function(response){
-                    router.emit('dns.response', task_id, response);
-                })
+                    router.emit('dns.response', taskId, response);
+                });
+
                 prober.on('record.a', function(record){
-                    router.emit('dns.record.a', task_id, record);
-                })
+                    router.emit('dns.record.a', taskId, record);
+                });
 
                 prober.on('record.cname', function(record){
-                    router.emit('dns.record.cname', task_id, record);
-                })
+                    router.emit('dns.record.cname', taskId, record);
+                });
                 
                 prober.on('finish', function(summary){
-                    resolve(summary)
-                })
+                    resolve(summary);
+                });
 
-                prober.autoProbe(target, records);
-            })
-        })
-        
+                if(customNameservers !== undefined && customNameservers.length === 0){
+                    prober.autoProbe(target, records);
+                }
+                else{
+                    prober.manualProbe(target, customNameservers, records);
+                }
+            });
+        });
     }
 
 
@@ -103,34 +110,36 @@ module.exports.handler = function(argvs){
     //入库，整合提交到elasticsearch与task，进行whois查询
     //入库操作提交到独立的进程内完成，将入库部分的逻辑独立
     
-    router.on('dns.trace', function(task_id, trace){
-        log.info(task_id, trace)
+    router.on('dns.trace', function(taskId, trace){
+        log.info(taskId, trace);
     });
 
-    router.on('dns.timeout', function(task_id, record){
-        log.warn('timeout', record)
+    router.on('dns.timeout', function(taskId, record){
+        log.warn('timeout', record);
     });
     /*
-    { domain: 'mail.189.cn',
-    cname: [ 'webmail.189.cn', '189.webmail.21cn.com' ],
-    a: [],
-    resolver: '118.85.203.178',
-    task_id: '833f3b90-ec69-11e7-8ff5-fd62b8b82915',
-    create_date: 1514532360820,
-    description: 'description',
-    remark: 'remark' }
+        { 
+            domain: 'mail.189.cn',
+            cname: [ 'webmail.189.cn', '189.webmail.21cn.com' ],
+            a: [],
+            resolver: '118.85.203.178',
+            taskId: '833f3b90-ec69-11e7-8ff5-fd62b8b82915',
+            create_date: 1514532360820,
+            description: 'description',
+            remark: 'remark' 
+        }
     */
-    router.on('dns.response', function(task_id, response){
-        response.task_id = task_id;
+    router.on('dns.response', function(taskId, response){
+        response.taskId = taskId;
         dbapi.saveDNSRecord(response);
         if(response.cname.length > 0){
-            push.send([task_id, wireutil.envelope(wire.ScanResultDNSRecordCName,{
+            push.send([taskId, wireutil.envelope(wire.ScanResultDNSRecordCName,{
                 "domain" : response.domain,
                 "data" : response.cname
             })]);
         }
         if(response.a.length > 0){
-            push.send([task_id, wireutil.envelope(wire.ScanResultDNSRecordA,{
+            push.send([taskId, wireutil.envelope(wire.ScanResultDNSRecordA,{
                 "domain" : response.domain,
                 "data" : response.a
             })]);
@@ -138,15 +147,15 @@ module.exports.handler = function(argvs){
     });
 
     //pub到services与whois进行二阶扫描
-    router.on('dns.record.a', function(task_id, record){
+    router.on('dns.record.a', function(taskId, record){
         //入库.then(push.send)
-        push.send([task_id, wireutil.envelope(wire.IPv4Infomation,{
+        push.send([taskId, wireutil.envelope(wire.IPv4Infomation,{
             "ip" : record.data
         })]);
     });
 
-    router.on('dns.record.cname', function(task_id, record){
-        //log.info(task_id, record)
+    router.on('dns.record.cname', function(taskId, record){
+        //log.info(taskId, record)
     });
 
 
@@ -159,18 +168,17 @@ module.exports.handler = function(argvs){
             catch(err){
 
             }
-            
-        })
+        });
     }
 
     process.on("SIGINT", function(){
         closeSocket();
-    })
+    });
 
     process.on("SIGTERM", function(){
         closeSocket();
-    })
-}
+    });
+};
 
 
 
