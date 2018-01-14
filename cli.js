@@ -6,12 +6,12 @@ var wire = require("./daemon/wire");
 var wirerouter = require("./daemon/wire/router.js");
 var wireutil = require("./daemon/wire/util.js");
 var log = require('./utils/logger').createLogger('[client:client]');
-var subUri = "tcp://198.177.122.30:7110";
-var pushUri = "tcp://198.177.122.30:7111";
+//var subUri = "tcp://198.177.122.30:7110";
+//var pushUri = "tcp://198.177.122.30:7111";
 //var subUri = "tcp://218.85.154.137:7110";
 //var pushUri = "tcp://218.85.154.137:7111";
-//var subUri = "tcp://127.0.0.1:7110";
-//var pushUri = "tcp://127.0.0.1:7111";
+var subUri = "tcp://127.0.0.1:7110";
+var pushUri = "tcp://127.0.0.1:7111";
 
 sub.on("message",
 wirerouter()
@@ -58,8 +58,8 @@ push.connect(pushUri);
 push.send(["channel", wireutil.envelope(wire.CreateDomainScanTaskInfo, {
     "email" : "root@localhost.com",
     "description" : "...",
-    "targetDomain" : "efi.com",
-    "dict" : "top3000"
+    "targetDomain" : "qq.com",
+    "dict" : "test"
 })]);
 
 

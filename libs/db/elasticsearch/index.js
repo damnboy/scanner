@@ -10,99 +10,11 @@ module.exports = function(options){
         return util.format('http://%s:%d', options.host, options.port)
     }
 
-    DBApi.prototype.analyzeDNSRecord = function (){
-        return db.connect()
-        .then(function(){
-            var DSL = {
-                "aggs": {
-                    "all_address": {
-                        "terms": { "field": "domain" }
-                    }
-                }
-            };
-
-            request.post({
-                'url' : server() + '/domain/record/_search',
-                'body': DSL, 
-                'json' : true
-            }, function(error, response){
-                if(error){
-                    console.log(error)
-                }
-                else{
-                    console.log(response.statusCode);
-                    if(response.statusCode === 200){
-                        console.log(response.body.aggregations.all_address.buckets)
-                    }
-                    else{
-                        console.log(response.body)
-                    }
-                }
-            })
-        })
-
-    }
-
-    DBApi.prototype.queryDNSRecord = function (domain){
-
-        return db.connect()
-        .then(function(){
-            var DSL_fulltext = {'query':{'match':{'domain':domain}}};
-
-            var DSL_fulltext_filter = {
-                "query" : {
-                    "bool" : {
-                        "must" : {
-                            "match" : {
-                                "domain" : domain
-                            }
-                        },
-                        "filter" : {
-                            "range" : {
-                                "count" : { "gt" : 1 } 
-                            }
-                        }
-                    }
-                }
-            }
-            
-            var DSL_phrase = {
-                "query" : {
-                    "match_phrase" : {
-                        "domain" : domain
-                    }
-                }
-            }
-            
-            request.post({
-                'url' : server() + '/domain/record/_search',
-                'body': DSL_fulltext, 
-                'json' : true
-            }, function(error, response){
-                if(error){
-                    console.log(error)
-                }
-                else{
-                    console.log(response.statusCode);
-                    if(response.statusCode === 200){
-                        
-                        response.body.hits.hits.forEach(function(record){
-                            console.log(record)
-                        })
-                    }
-                    else{
-                        
-                    }
-                }
-            })
-        })
-    }
-
-    /*
-    curl -i 192.168.100.254:9200/domaintask/_search?pretty -H 'Content-Type: application/json' -d '{
-"sort" :[{"createDate":"desc"}]}'
-
-    */
+    ///////////////////////
+    //  TASK
+    //////////////////////
+    
+    //curl -i 192.168.100.254:9200/domaintask/_search?pretty -H 'Content-Type: application/json' -d '{"sort" :[{"createDate":"desc"}]}'
     DBApi.prototype.getRecentDomainTasks = function(){
         return db.connect()
         .then(function(){
@@ -123,10 +35,10 @@ module.exports = function(options){
                     else{
                         reject(response.body);
                     }
-                })
-            })
-        })
-    }
+                });
+            });
+        });
+    };
 
     DBApi.prototype.getDomainTask = function(id){
         return db.connect()
@@ -138,7 +50,7 @@ module.exports = function(options){
                     "json" : true
                 }, function(error, response){
                     if(error){
-                        reject(error)
+                        reject(error);
                     }
                     else if(response.statusCode === 200 && response.body.hits.hits.length === 1){
                         resolve(response.body.hits.hits[0]._source);
@@ -169,10 +81,11 @@ module.exports = function(options){
                     else{
                         reject(response.body);
                     }
-                })                        
-            })
-        })
-    }
+                });                        
+            });
+        });
+    };
+
     DBApi.prototype.doneNmapTask = function(hostInfo, id){
         return db.connect()
         .then(function(){
@@ -183,7 +96,7 @@ module.exports = function(options){
                         {
                             "doc":
                                 _.assign(hostInfo , {
-                                'scanned_date' : Date.now() ,
+                                'scannedDate' : Date.now() ,
                                 'done' : true})
                             
                         },
@@ -218,7 +131,7 @@ module.exports = function(options){
                                 ]
                             }
                         },
-                        "sort": { "create_date": "asc"} 
+                        "sort": { "createDate": "asc"} 
                     },
                     'json' : true
                 }, function(error, response){
@@ -242,7 +155,7 @@ module.exports = function(options){
                 'url' : server() + '/services/doc/',
                 'body' : _.assign(record , 
                     {
-                        'create_date' : Date.now() ,
+                        'createDate' : Date.now() ,
                         'done' : false
                     }
                 ),
@@ -265,7 +178,7 @@ module.exports = function(options){
                 'url' : server() + '/whois/doc/',
                 'body' : _.assign(record , 
                     {
-                        'create_date' : Date.now() ,
+                        'createDate' : Date.now() ,
                         'description' : 'description',
                         'remark' : 'remark'
                     }
@@ -293,7 +206,7 @@ module.exports = function(options){
                 'url' : server() + '/dnsrecord/doc/',
                 'body' : _.assign(record , 
                     {
-                        'create_date' : Date.now() ,
+                        'createDate' : Date.now() ,
                         'description' : 'description',
                         'remark' : 'remark'
                     }
@@ -317,7 +230,7 @@ module.exports = function(options){
                 'url' : server() + '/servicebanner/doc/',
                 'body' : _.assign(banner , 
                     {
-                        'create_date' : Date.now() ,
+                        'createDate' : Date.now() ,
                         'description' : 'description',
                         'remark' : 'remark'
                     }
@@ -348,7 +261,7 @@ module.exports = function(options){
                         {
                             "doc": _.assign(bannerInfo, 
                                 {
-                                    "scanned_date" : Date.now(), 
+                                    "scannedDate" : Date.now(), 
                                     "done" : true
                                 }
                             )
@@ -379,7 +292,7 @@ module.exports = function(options){
                     "port" : port,
                     "type" : type,
                     "taskId" : taskId,
-                    "create_date" : Date.now(),
+                    "createDate" : Date.now(),
                     "done" : false,
                     "description" : 'description',
                     "remark" : 'remark',
@@ -421,7 +334,7 @@ module.exports = function(options){
                                 ]
                             }
                         },
-                        "sort": { "create_date": "asc"} 
+                        "sort": { "createDate": "asc"} 
                     },
                     'json' : true
                 }, function(error, response){
@@ -432,7 +345,7 @@ module.exports = function(options){
                         resolve(response.body.hits.hits[0]);
                     }
                     else{
-                        reject(response.statusCode)
+                        reject(response.statusCode);
                     }
                 })
             })
@@ -541,7 +454,7 @@ module.exports = function(options){
         var query = {}
         query.bool = {}
         query.bool.must = []
-        query.bool.must.push({"match" : {"task_id" : taskId}})
+        query.bool.must.push({"match" : {"taskId" : taskId}})
         query.bool.must.push({"exists": {"field": "a"}})
 
         return db.connect()
@@ -576,3 +489,93 @@ module.exports = function(options){
 
     return DBApi;
 }
+/*
+
+    DBApi.prototype.analyzeDNSRecord = function (){
+        return db.connect()
+        .then(function(){
+            var DSL = {
+                "aggs": {
+                    "all_address": {
+                        "terms": { "field": "domain" }
+                    }
+                }
+            };
+
+            request.post({
+                'url' : server() + '/domain/record/_search',
+                'body': DSL, 
+                'json' : true
+            }, function(error, response){
+                if(error){
+                    console.log(error)
+                }
+                else{
+                    console.log(response.statusCode);
+                    if(response.statusCode === 200){
+                        console.log(response.body.aggregations.all_address.buckets)
+                    }
+                    else{
+                        console.log(response.body)
+                    }
+                }
+            })
+        })
+
+    }
+
+    DBApi.prototype.queryDNSRecord = function (domain){
+
+        return db.connect()
+        .then(function(){
+            var DSL_fulltext = {'query':{'match':{'domain':domain}}};
+
+            var DSL_fulltext_filter = {
+                "query" : {
+                    "bool" : {
+                        "must" : {
+                            "match" : {
+                                "domain" : domain
+                            }
+                        },
+                        "filter" : {
+                            "range" : {
+                                "count" : { "gt" : 1 } 
+                            }
+                        }
+                    }
+                }
+            }
+            
+            var DSL_phrase = {
+                "query" : {
+                    "match_phrase" : {
+                        "domain" : domain
+                    }
+                }
+            }
+            
+            request.post({
+                'url' : server() + '/domain/record/_search',
+                'body': DSL_fulltext, 
+                'json' : true
+            }, function(error, response){
+                if(error){
+                    console.log(error)
+                }
+                else{
+                    console.log(response.statusCode);
+                    if(response.statusCode === 200){
+                        
+                        response.body.hits.hits.forEach(function(record){
+                            console.log(record)
+                        })
+                    }
+                    else{
+                        
+                    }
+                }
+            })
+        })
+    }
+    */

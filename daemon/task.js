@@ -9,6 +9,7 @@ var wire = require("./wire");
 var wirerouter = require("./wire/router.js");
 var wireutil = require("./wire/util.js");
 var dbapi = require('../libs/db');
+var _ = require('lodash');
 
 module.exports.command = "task";
 
@@ -54,15 +55,12 @@ module.exports.handler = function(argvs){
     pull.on("message", wirerouter()
     .on(wire.CreateDomainScanTaskInfo, function(channel, message, data){
 
-        var taskInfo =  {
+        var taskInfo = _.assign({
             "id" : uuid(),
             "createDate" : Date.now(),
-            "createBy" : message.email,
             "description" : "",
             "remark" : "",
-            "domain" : message.targetDomain,
-            "dict" : message.dict
-        };
+        }, message);
 
         //入库
         dbapi.saveDomainTask(taskInfo)

@@ -23,11 +23,11 @@ curl -XPUT 'localhost:9200/domaintask?pretty' -H 'Content-Type: application/json
                     "type" : "text"
                 },
 
-                "create_date" : {
+                "createDate" : {
                     "type" : "date"
                 },
 
-                "created_by" :{
+                "createdBy" :{
                     "type" : "keyword"
                 },
 
@@ -36,6 +36,10 @@ curl -XPUT 'localhost:9200/domaintask?pretty' -H 'Content-Type: application/json
                 },
 
                 "dict" : {
+                    "type" : "keyword"
+                },
+
+                "customNameservers" : {
                     "type" : "keyword"
                 }
             }
@@ -62,7 +66,7 @@ curl -XPUT 'localhost:9200/dnsrecord?pretty' -H 'Content-Type: application/json'
                     "type" : "ip"
                 },
 
-                "task_id" : {
+                "taskId" : {
                     "type" : "keyword"
                 },
 
@@ -74,7 +78,7 @@ curl -XPUT 'localhost:9200/dnsrecord?pretty' -H 'Content-Type: application/json'
                     "type" : "text"
                 },
 
-                "create_date" : {
+                "createDate" : {
                     "type" : "date"
                 },
 
@@ -106,7 +110,7 @@ curl -XPUT 'localhost:9200/whois?pretty' -H 'Content-Type: application/json' -d'
                 "server" : {
                     "type" : "keyword"
                 },
-                "task_id" : {
+                "taskId" : {
                     "type" : "keyword"
                 },
 
@@ -118,7 +122,7 @@ curl -XPUT 'localhost:9200/whois?pretty' -H 'Content-Type: application/json' -d'
                     "type" : "text"
                 },
 
-                "create_date" : {
+                "createDate" : {
                     "type" : "date"
                 },
 
@@ -152,7 +156,7 @@ curl -XPUT 'localhost:9200/services?pretty' -H 'Content-Type: application/json' 
                 "ip" : {
                     "type" : "ip"
                 },
-                "task_id" : {
+                "taskId" : {
                     "type" : "keyword"
                 },
 
@@ -164,7 +168,7 @@ curl -XPUT 'localhost:9200/services?pretty' -H 'Content-Type: application/json' 
                     "type" : "text"
                 },
 
-                "create_date" : {
+                "createDate" : {
                     "type" : "date"
                 },
 
@@ -177,7 +181,7 @@ curl -XPUT 'localhost:9200/services?pretty' -H 'Content-Type: application/json' 
                 "done" : {
                     "type" : "boolean"
                 },
-                "scanned_date" : {
+                "scannedDate" : {
                     "type" : "date"
                 }
             }
@@ -194,7 +198,7 @@ curl -XPUT 'localhost:9200/servicebanner?pretty' -H 'Content-Type: application/j
                 "done" : {
                     "type" : "boolean"
                 },
-                "task_id" : {
+                "taskId" : {
                     "type" : "keyword"
                 },
                 "ip" : {
@@ -214,11 +218,11 @@ curl -XPUT 'localhost:9200/servicebanner?pretty' -H 'Content-Type: application/j
                 "remark" : {
                     "type" : "text"
                 },
-                "create_date" : {
+                "createDate" : {
                     "type" : "date"
                 },
 
-                "scanned_date" : {
+                "scannedDate" : {
                     "type" : "date"
                 },
 
@@ -260,10 +264,10 @@ curl -XPUT 'localhost:9200/nmaptask?pretty' -H 'Content-Type: application/json' 
                 "ip" : {
                     "type" : "ip"
                 },
-                "task_id" : {
+                "taskId" : {
                     "type" : "keyword"
                 },
-                "create_date" : {
+                "createDate" : {
                     "type" : "date"
                 },
                 "done" : {

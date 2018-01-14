@@ -48,6 +48,9 @@ module.exports.handler = function(argvs){
       })
     })
 
+    dns_prober.on('timeout', function(job){
+      //console.log(job.subdomain + ' timeout')
+    })
     dns_prober.on('info', function(info){
         console.log(info.message);
     })
@@ -55,10 +58,11 @@ module.exports.handler = function(argvs){
 
       //schema & lodash assign, extend, merge
       dns_prober.on('records', function(response){
-          console.log(response);
+          //console.log(response);
         })
+
     dns_prober.on('response', function(response){
-      console.log(response);
+      //console.log(response);
     })
 
     dns_prober.on('finish', function(summary, public, cname, private, wildcard){
@@ -105,7 +109,6 @@ module.exports.handler = function(argvs){
 
     dict.getDNSDict(argvs.dict)
     .then(function(dict){
-        
         var target = argvs.target;
         var nameservers = argvs.nameservers;
         console.log(nameservers)
@@ -113,7 +116,7 @@ module.exports.handler = function(argvs){
           dns_prober.on('failed', function(trace){
             console.log('dns probe failed, try last dns trace stack records as authority nameservers\r\n');
             var nameservers = trace[trace.length - 1].reduce(function(ret, record){
-                return ret.concat(record.ip)
+                return ret.concat(record.ip);
             }, [])
             dns_prober.manualProbe(target, nameservers, dict)
           });
@@ -123,9 +126,5 @@ module.exports.handler = function(argvs){
         else{
           dns_prober.manualProbe(target, nameservers.split(','), dict);
         }
-
     });
-  
-
-
 }

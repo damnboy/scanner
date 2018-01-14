@@ -82,6 +82,12 @@ banner识别序列化执行
 grab.js识别实现以及性能测试
 分析masscan 指纹识别实现
 
+## 2018-1-13
+dns并行解析策略修改，根据目标ns服务器数量来控制并行解析请求
+并在结果中展现，目标dns对域名的解析成功率
+在超时请求占比高的情况下，丢弃解析率底的权威dns。
+
+domainscantask添加自定义dns字段
 
 # JavaScript
     https://molily.de/robust-javascript/#characteristics-of-javascript
