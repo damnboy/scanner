@@ -56,7 +56,7 @@ push.connect(pushUri);
 push.send(["channel", wireutil.envelope(wire.CreateDomainScanTaskInfo, {
     "email" : "root@localhost.com",
     "description" : "...",
-    "targetDomain" : "189.cn",
+    "targetDomain" : "zhenro.cn",
     "dict" : "top3000"
 })]);
 
