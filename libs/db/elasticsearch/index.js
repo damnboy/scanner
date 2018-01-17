@@ -487,8 +487,43 @@ module.exports = function(options){
         })
     }
 
+    //dashboard
+    DBApi.prototype.getSSLHosts = function(){
+        var DLS = {
+            "from" : 0,
+            "size" : 100
+        }
+        DLS.query = {}
+        DLS.query.bool = {}
+        DLS.query.bool.must = [];
+        DLS.query.bool.must.push({"match":{"sslSupport":"true"}})
+
+        return db.connect()
+        .then(function(){
+            return new Promise(function(resolve, reject){
+                request.post({
+                    'url' : server() + '/servicebanner/_search',
+                    'body' : DLS,
+                    "json" : true
+                }, function(error, response){
+                    if(error){
+                        reject(error);
+                    }
+                    else if(response.statusCode === 200){
+                        resolve(response.body.hits.hits.map(function(result){
+                            return result._source;
+                        }));
+                    }
+                    else{
+                        reject(response.body);
+                    }
+                })
+            })
+        })
+    }
     return DBApi;
 }
+
 /*
 
     DBApi.prototype.analyzeDNSRecord = function (){

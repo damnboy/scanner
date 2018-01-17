@@ -79,8 +79,11 @@ banner识别序列化执行
 
 
 ## 2018-1-10
-grab.js识别实现以及性能测试
-分析masscan 指纹识别实现
+*grab.js识别实现以及性能测试
+*分析masscan 指纹识别实现
+
+## 2018-1-11
+*扫描带宽配置：扫描器流量配置以及出口流量比例配置
 
 ## 2018-1-13
 dns并行解析策略修改，根据目标ns服务器数量来控制并行解析请求
@@ -90,12 +93,28 @@ dns并行解析策略修改，根据目标ns服务器数量来控制并行解析
 domainscantask添加自定义dns字段
 
 ## 2018-1-14
+<<<<<<< HEAD
 servicebanner记录重复
     解析记录中，重复ip的出现，会导致services索引下出现重复ip，
     nmap重复扫描ip，导致出现重复记录。
     入services索引前，基于taskId与ip进行查找，确认没有重复ip后再入库
 
 banner识别，通过聚合，查询servicebanner下同ip的端口之后，根据ip批量执行。是否能加速banner识别？
+=======
+## 2018-1-15
+## 2018-1-16
+js,原型链，继承
+plugins原型设计
+
+angularjs静态代码分析逆向工具
+https://github.com/mgechev/ngrev
+数据库选择
+https://www.mongodb.com/compare/mongodb-postgresql?jmp=cpress&utm_campaign=WW_CP_newsletter_sponsorship_FY19Q1&utm_content=sponsored&utm_medium=display&utm_source=javascriptweekly&utm_date=20180112
+
+二进制payload抓取工具
+tcpdump保存pcap文件，nodejs脚本解析得到二进制payload，JAVARMI为例子
+
+>>>>>>> ca64e1a161070aa5fdad61e02ab281fc9198262f
 
 # JavaScript
     https://molily.de/robust-javascript/#characteristics-of-javascript
