@@ -89,6 +89,14 @@ dns并行解析策略修改，根据目标ns服务器数量来控制并行解析
 
 domainscantask添加自定义dns字段
 
+## 2018-1-14
+servicebanner记录重复
+    解析记录中，重复ip的出现，会导致services索引下出现重复ip，
+    nmap重复扫描ip，导致出现重复记录。
+    入services索引前，基于taskId与ip进行查找，确认没有重复ip后再入库
+
+banner识别，通过聚合，查询servicebanner下同ip的端口之后，根据ip批量执行。是否能加速banner识别？
+
 # JavaScript
     https://molily.de/robust-javascript/#characteristics-of-javascript
     

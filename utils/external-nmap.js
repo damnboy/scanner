@@ -107,9 +107,10 @@ NmapSchedule.prototype.portBanner = function(serviceInfo){
             '--version-all',
             '-Pn',
             '-p', serviceInfo.port,
-            '--min-rate','1000'
+            '--min-rate','2000'
         ]);
-        log.info(serviceInfo.ip, serviceInfo.port, serviceInfo.type)
+        
+        log.info(serviceInfo.ip, serviceInfo.port, serviceInfo.type);
         
         proc.stdout.on('data', function(data){
             var output = data.toString('utf-8').split('\n');
