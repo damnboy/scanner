@@ -4,6 +4,7 @@
 function DBApi(){
 
 }
+DBApi.prototype.getSSLHosts = function(){}
 DBApi.prototype.saveBanner = function(){
     
 }

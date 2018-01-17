@@ -92,6 +92,21 @@ dns并行解析策略修改，根据目标ns服务器数量来控制并行解析
 
 domainscantask添加自定义dns字段
 
+## 2018-1-14
+## 2018-1-15
+## 2018-1-16
+js,原型链，继承
+plugins原型设计
+
+angularjs静态代码分析逆向工具
+https://github.com/mgechev/ngrev
+数据库选择
+https://www.mongodb.com/compare/mongodb-postgresql?jmp=cpress&utm_campaign=WW_CP_newsletter_sponsorship_FY19Q1&utm_content=sponsored&utm_medium=display&utm_source=javascriptweekly&utm_date=20180112
+
+二进制payload抓取工具
+tcpdump保存pcap文件，nodejs脚本解析得到二进制payload，JAVARMI为例子
+
+
 # JavaScript
     https://molily.de/robust-javascript/#characteristics-of-javascript
     
