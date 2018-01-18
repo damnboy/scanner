@@ -26,9 +26,10 @@
         <li ng-repeat="phone in $ctrl.phones | filter:$ctrl.query | orderBy:$ctrl.orderProp"
             class="thumbnail phone-list-item">
           <a href="#!/phones/{{phone.id}}" class="thumb">
-            <img src="http://www.{{phone.domain}}/favicon.ico"/>
+            <img src="http://www.{{phone.targetDomain}}/favicon.ico"/>
           </a>
           <a href="#!/phones/{{phone.id}}">{{phone.targetDomain}}</a>
+          <a href="#!/whois/{{phone.id}}">[whois]</a>
           <p>{{phone.createDate}}</p>
         </li>
       </ul>

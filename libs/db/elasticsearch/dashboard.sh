@@ -1,11 +1,15 @@
 ## ip - domain 映射聚合查询
 
-curl -XGET 'http://127.0.0.1:9200/dnsrecord/_count?pretty' -H 'Content-Type: application/json' -d'
+curl -XGET 'http://127.0.0.1:9200/dnsrecord/_search?pretty' -H 'Content-Type: application/json' -d'
 {
+    "from" : 0,
+    "size" : 25,
+    "_source" : "domain",
     "query" : {   
        "bool" : {
          "must" : [
-           {"match" : {"taskId" : "3b9cc4f0-fad4-11e7-a04f-016018e269c5"}}
+           {"match" : {"taskId" : "a8db5560-fc71-11e7-b457-45b900efcb68"}},
+           {"match" : {"a" : "113.108.216.239"}}
          ]
        }
     }
@@ -130,17 +134,17 @@ curl -XGET 'http://127.0.0.1:9200/whois/_search?pretty' -H 'Content-Type: applic
 ## 某网段下的host信息
 curl -XGET 'http://127.0.0.1:9200/whois/_search?pretty' -H 'Content-Type: application/json' -d'
 {
-    "size" : 0,
+    "_source" : "ip",
     "query" : {   
        "bool" : {
          "must" : [
-           {"match" : {"taskId" : "13a4c710-fc62-11e7-a13b-2bbc7490144a"}},
+           {"match" : {"taskId" : "a8db5560-fc71-11e7-b457-45b900efcb68"}},
            {"nested" : {
             "path" : "detail",
             "query" : {
                 "bool" : {
                     "must" : [
-                    { "match" : {"detail.netblock" : "42.99.0.0 - 42.99.63.255"} }
+                    { "match" : {"detail.netblock" : "113.96.0.0 - 113.111.255.255"} }
                     ]
                 }
             }
@@ -148,7 +152,7 @@ curl -XGET 'http://127.0.0.1:9200/whois/_search?pretty' -H 'Content-Type: applic
          ]
        }
     },
-    "aggs" : {
+    "aggs": {
       "ip": {"terms": { "field": "ip" }}
     }
 }'

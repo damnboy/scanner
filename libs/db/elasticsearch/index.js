@@ -572,31 +572,53 @@ module.exports = function(options){
 
         })
     }
-    //todo联合查询dnsrecord索引，获取ip对应的域名记录
-    DBApi.prototype.getHostsOnNetblock = function(taskId, netBlock){
-        return this.executeDSLSearch('whois', {
-            "_source" : "ip",
+    DBApi.prototype.getVirtualHost = function(taskId, ip, size){
+        return this.executeDSLSearch('dnsrecord',
+        {
+            "from" : 0,
+            "size" : size,
+            "_source" : "domain",
             "query" : {   
                "bool" : {
                  "must" : [
-                    {"match" : {"taskId" : "13a4c710-fc62-11e7-a13b-2bbc7490144a"}},
+                   {"match" : {"taskId" : taskId}},
+                   {"match" : {"a" : ip}}
+                 ]
+               }
+            }
+        })
+    }
+    //todo
+    DBApi.prototype.getHostsOnNetblock = function(taskId, netBlock){
+        return this.executeAggregation('whois', {
+            "size" : 0,
+            "query" : {   
+               "bool" : {
+                 "must" : [
+                    {"match" : {"taskId" : taskId}},
                     {"nested" : {
                         "path" : "detail",
                         "query" : {
                             "bool" : {
                                 "must" : [
-                                { "match" : {"detail.netblock" : "42.99.0.0 - 42.99.63.255"} }
+                                { "match" : {"detail.netblock" : netBlock} }
                                 ]
                             }
                         }
                     }}
                  ]
                }
-            }
+            },
+            "aggs": {
+                "ip": {"terms": { "field": "ip" }}
+              }
         })
         .then(function(results){
-            return results.map(function(i){
-                return {ip : i.ip}
+            return results.ip.buckets.map(function(i){
+                return {
+                    ip : i.key,
+                    count : i.doc_count
+                }
             })
         })
     }

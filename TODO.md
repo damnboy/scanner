@@ -120,7 +120,9 @@ whois信息展现
 *service入库之前检查ip是否存在，避免重复的banner识别任务
 els不具备实时一致性，dns扫描任务结束后，在dnsrecord索引上执行聚合查询，过滤出单一的ip地址，在批量导入services索引执行全端口扫描
 
-
+## 2018-1-19
+getHostsOnNetblock 联合查询dnsrecord索引，获取ip对应的域名记录
+whois信息重复问题，bulkinsert之后，用过调度执行查询
 
 # JavaScript
     https://molily.de/robust-javascript/#characteristics-of-javascript

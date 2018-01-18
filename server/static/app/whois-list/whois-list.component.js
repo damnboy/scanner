@@ -40,7 +40,16 @@ angular.
           if(node.type === "netblock"){
             $http.get('/whois/hosts/' + $routeParams.taskId + '/' + node.name).then(function(response) {
               node.children = response.data.data.map(function(i){
-                return {"name" :i.ip,  "type":"ip", "children" : [{"name":""}]}
+                return {"name" :i.ip,  "count" :i.count, "type":"ip", "children" : [{"name":""}]}
+              })
+            });
+          }
+
+          if(node.type === "ip"){
+            //dnsrecord/virtualHost/a8db5560-fc71-11e7-b457-45b900efcb68/113.108.216.239/25
+            $http.get('/dnsrecord/virtualHost/' + $routeParams.taskId + '/' + node.name + '/' + node.count).then(function(response) {
+              node.children = response.data.data.map(function(i){
+                return {"name" :i.domain, "type":"domain", "children" : []}
               })
             });
           }
