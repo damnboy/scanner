@@ -34,6 +34,13 @@ module.exports = function(options){
         });
     }
 
+    DBApi.prototype.executeAggregation = function(index, query){
+        return this._executeDSLQuery(index, '_search', query)
+        .then(function(result){
+            return result.aggregations;
+        })
+    }
+
     DBApi.prototype.executeBulk = function(index, query){
         return db.connect()
         .then(function(){
@@ -498,6 +505,100 @@ module.exports = function(options){
                 }
             }
         });
+    }
+
+    DBApi.prototype.getNetnames = function(taskId){
+        
+        return this.executeAggregation('whois',
+        {
+            "size" : 0,
+            "query" : {
+                "match" : { "taskId" : taskId }
+            },
+            "aggs" : {
+                "detail" : {
+                    "nested" : {
+                        "path" : "detail"
+                    },
+                    "aggs" : {
+                        "hosts" : { "terms" : { "field" : "detail.netname" ,"size": 3000} }
+                    }
+                }
+            }
+        })
+        .then(function(results){
+            return results.detail.hosts.buckets.map(function(r){
+                return {'netname' : r.key ,'count': r.doc_count}
+            }).sort()
+        })
+    }
+
+    DBApi.prototype.getNetblocks = function(taskId, netName){
+        return this.executeAggregation('whois',
+        {
+            "size" : 0,
+            "query" : {   
+               "bool" : {
+                 "must" : [
+                   {"match" : {"taskId" : taskId}},
+                   {"nested" : {
+                    "path" : "detail",
+                    "query" : {
+                        "bool" : {
+                            "must" : [
+                            { "match" : {"detail.netname" : netName} }
+                            ]
+                        }
+                    }
+                }}
+                 ]
+               }
+            },
+            "aggs" : {
+                "detail" : {
+                    "nested" : {
+                        "path" : "detail"
+                    },
+                    "aggs" : {
+                        "hosts" : { "terms" : { "field" : "detail.netblock" } }
+                    }
+                }
+            }
+        })
+        .then(function(results){
+            return results.detail.hosts.buckets.map(function(i){
+                return {'netblock':i.key, 'count':i.doc_count}
+            })
+
+        })
+    }
+    //todo联合查询dnsrecord索引，获取ip对应的域名记录
+    DBApi.prototype.getHostsOnNetblock = function(taskId, netBlock){
+        return this.executeDSLSearch('whois', {
+            "_source" : "ip",
+            "query" : {   
+               "bool" : {
+                 "must" : [
+                    {"match" : {"taskId" : "13a4c710-fc62-11e7-a13b-2bbc7490144a"}},
+                    {"nested" : {
+                        "path" : "detail",
+                        "query" : {
+                            "bool" : {
+                                "must" : [
+                                { "match" : {"detail.netblock" : "42.99.0.0 - 42.99.63.255"} }
+                                ]
+                            }
+                        }
+                    }}
+                 ]
+               }
+            }
+        })
+        .then(function(results){
+            return results.map(function(i){
+                return {ip : i.ip}
+            })
+        })
     }
     return DBApi;
 }

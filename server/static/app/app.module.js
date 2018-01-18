@@ -7,5 +7,7 @@ angular.module('phonecatApp', [
   'core',
   'phoneDetail',
   'phoneList',
-  'hostDetail'
+  'hostDetail',
+  'whoisList',
+  'treeControl'
 ]);

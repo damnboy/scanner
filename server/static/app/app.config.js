@@ -16,6 +16,9 @@ angular.
         when('/phones/:phoneId/:ip', {
           template: '<phone-detail></phone-detail>'
         }).
+        when('/whois/:taskId', {
+          template: '<whois-list></whois-list>'
+        }).
         otherwise('/phones');
     }
   ]);

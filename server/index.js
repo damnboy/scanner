@@ -17,6 +17,7 @@ app.use('/task', require('./api/task'));
 app.use('/service', require('./api/service'));
 app.use('/dnsrecord', require('./api/dnsrecord'));
 app.use('/banner', require('./api/banner'));
+app.use('/whois', require('./api/whois'));
 app.use('/debug', require('./debug'));
 
 app.use(function(err, req, res, next){

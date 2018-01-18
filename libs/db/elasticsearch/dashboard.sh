@@ -25,7 +25,7 @@ curl -XGET 'http://127.0.0.1:9200/dnsrecord/_search?pretty' -H 'Content-Type: ap
 
 curl -XGET 'http://127.0.0.1:9200/dnsrecord/_search?pretty' -H 'Content-Type: application/json' -d'
 {
-        "query" : {   
+  "query" : {   
        "bool" : {
          "must" : [
            {"match" : {"taskId" : "3b9cc4f0-fad4-11e7-a04f-016018e269c5"}}
@@ -110,8 +110,9 @@ curl -XGET 'http://127.0.0.1:9200/servicebanner/_search?pretty' -H 'Content-Type
 ## whois信息，netblock下的主机数量
 curl -XGET 'http://127.0.0.1:9200/whois/_search?pretty' -H 'Content-Type: application/json' -d'
 {
+    "size" : 0,
     "query" : {
-        "match" : { "taskId" : "3b9cc4f0-fad4-11e7-a04f-016018e269c5" }
+        "match" : { "taskId" : "13a4c710-fc62-11e7-a13b-2bbc7490144a" }
     },
     "aggs" : {
         "detail" : {
@@ -119,7 +120,7 @@ curl -XGET 'http://127.0.0.1:9200/whois/_search?pretty' -H 'Content-Type: applic
                 "path" : "detail"
             },
             "aggs" : {
-                "hosts" : { "terms" : { "field" : "detail.netname" } }
+                "hosts" : { "terms" : { "field" : "detail.netname" ,"size": 3000} }
             }
         }
     }
@@ -129,20 +130,51 @@ curl -XGET 'http://127.0.0.1:9200/whois/_search?pretty' -H 'Content-Type: applic
 ## 某网段下的host信息
 curl -XGET 'http://127.0.0.1:9200/whois/_search?pretty' -H 'Content-Type: application/json' -d'
 {
-    "query": {
-        "nested" : {
+    "size" : 0,
+    "query" : {   
+       "bool" : {
+         "must" : [
+           {"match" : {"taskId" : "13a4c710-fc62-11e7-a13b-2bbc7490144a"}},
+           {"nested" : {
             "path" : "detail",
             "query" : {
                 "bool" : {
                     "must" : [
-                    { "match" : {"detail.netname" : "EFI-NET"} }
+                    { "match" : {"detail.netblock" : "42.99.0.0 - 42.99.63.255"} }
                     ]
                 }
             }
-        }
+        }}
+         ]
+       }
     },
     "aggs" : {
-      "ip": {"terms": { "field": "ip" }},
+      "ip": {"terms": { "field": "ip" }}
+    }
+}'
+
+## 某网段下的host信息
+curl -XGET 'http://127.0.0.1:9200/whois/_search?pretty' -H 'Content-Type: application/json' -d'
+{
+    "size" : 0,
+    "query" : {   
+       "bool" : {
+         "must" : [
+           {"match" : {"taskId" : "13a4c710-fc62-11e7-a13b-2bbc7490144a"}},
+           {"nested" : {
+            "path" : "detail",
+            "query" : {
+                "bool" : {
+                    "must" : [
+                    { "match" : {"detail.netname" : "CHINANET-GD"} }
+                    ]
+                }
+            }
+        }}
+         ]
+       }
+    },
+    "aggs" : {
         "detail" : {
             "nested" : {
                 "path" : "detail"
@@ -163,7 +195,7 @@ curl -XGET 'http://127.0.0.1:9200/whois/_search?pretty' -H 'Content-Type: applic
             "query" : {
                 "bool" : {
                     "must" : [
-                    { "match" : {"detail.netblock" : "EFI-NET"} }
+                    { "match" : {"detail.netblock" : "ALISOFT"} }
                     ]
                 }
             }

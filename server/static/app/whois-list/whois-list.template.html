@@ -1,0 +1,10 @@
+<treecontrol class="tree-classic"
+tree-model="$ctrl.dataForTheTree"
+options="$ctrl.treeOptions"
+on-selection="$ctrl.showSelected(node, selected)"
+on-node-toggle="$ctrl.showToggle(node, expanded)"
+>
+{{node.name}}({{node.count}}) 
+</treecontrol>
+
+
