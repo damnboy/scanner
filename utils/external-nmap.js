@@ -20,7 +20,7 @@ NmapSchedule.prototype.startBanner = function(){
     this.chain
     .then(function(result){
         //根据时间戳，从nmaptask索引中获取距离当前时间间隔最长的主机开放服务扫描任务
-        return dbapi.getScheduledBannerTask()
+        return dbapi.getScheduledBannerTask();
     })
     .then(function(doc){
         var serviceInfo = doc._source;
@@ -144,7 +144,7 @@ NmapSchedule.prototype.portBanner = function(serviceInfo){
         })
     })
     .catch(function(err){
-        log.error('portBanner' + err)
+        log.error('portBanner: ' + err);
     })
 }
 

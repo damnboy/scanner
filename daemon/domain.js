@@ -45,9 +45,18 @@ module.exports.handler = function(argvs){
             log.info("Got domain scan task(" + message.taskId + ")...");
             dbapi.getDomainTask(message.taskId)
             .then(function(taskInfo){
-                console.log(taskInfo);
-                registerDNSProbe(taskInfo.id, taskInfo.targetDomain, taskInfo.dict, taskInfo.customNameservers);
-            });
+                return registerDNSProbe(taskInfo.id, taskInfo.targetDomain, taskInfo.dict, taskInfo.customNameservers)
+                .then(function(summary){
+                    log.info(taskInfo.targetDomain);
+                    log.info(summary);
+
+                    push.send([message.taskId, wireutil.envelope(wire.ScanResultDNS,{})]);
+
+                })
+            })
+            .catch(function(err){
+                log.error(err)
+            })
         })
         .handler()
     );

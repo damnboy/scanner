@@ -80,15 +80,53 @@ module.exports.handler = function(argvs){
         //各个daemon分别根据ClientReady中的id信息，到对应的index中获取任务细项进行扫描
         pub.send([channel, wireutil.envelope(wire.ClientReady, message)]);
     })
+    .on(wire.ScanResultDNS, function(channel, message, data){
+        
+        setTimeout(function(){
+            var taskId = channel.toString('utf-8');
+            log.info('Bulking ip addresses of task(' + taskId + ') into service scanning...');
+
+            dbapi.getHosts(taskId)
+            .then(function(hosts){
+
+                return hosts.map(function(host){
+                    return {
+                        "createDate" : Date.now() ,
+                        "done" : false,
+                        "ip" : host,
+                        "taskId" : taskId
+                    }
+                });
+            })
+            .then(function(records){
+
+                var bulkBody = records.reduce(function(bulk, record){
+                    bulk.push(JSON.stringify({ "index":{ "_index": "services", "_type": "doc" } }));
+                    bulk.push(JSON.stringify(record));
+                    return bulk;
+                },[])
+
+                dbapi.executeBulk('services', bulkBody.join('\n') + '\n')
+                .then(function(result){
+                    console.log(result);
+                })
+            })
+            .catch(function(err){
+                console.log(err);
+            })
+
+        }, 5000);
+    })
     .on(wire.IPv4Infomation, function(channel, message, data){
         //扫描任务入库，由nmap调度器负责读取尚未扫描的任务，并执行扫描
+        /*
         dbapi.scheduleNmapTask({
             "taskId" : channel.toString("utf-8"),
              "ip" : message.ip
         }).then(function(response){
             pub.send([channel, wireutil.envelope(wire.IPv4Infomation,message)]);
         })
-        
+        */
     })
     .on(wire.ServiceInformation, function(channel, message, data){
         /*TODO 一次提交多个端口指纹扫描请求到nmap，扫描完毕之后bulk接口提交到elasticsearch中 */

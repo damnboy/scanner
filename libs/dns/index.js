@@ -11,6 +11,9 @@ var log = require('../../utils/logger.js');
 var logger = log.createLogger('[DNS]');
 //https://technet.microsoft.com/en-us/library/dd197470%28v=ws.10%29.aspx
 
+function randomItem(array){
+    return array[Math.round(Math.random()*10) % array.length];
+}
 var RESPONSE_CODE = {
     'NOERROR'   : 0x0,
     'FORMERR'   : 0x1,
@@ -75,7 +78,7 @@ function dns_request_a(domain, nameserver, port){
   return dns_request(domain, 'A', nameserver, port);
 }
 
-
+/*
 var tld = [
     {'name':'a.root-servers.net', 'ip' : ['198.41.0.4'] },  
     {'name':'b.root-servers.net', 'ip' : ['192.228.79.201']},
@@ -91,20 +94,34 @@ var tld = [
     {'name':'l.root-servers.net', 'ip' : ['199.7.83.42']},
     {'name':'m.root-servers.net', 'ip' : ['202.12.27.33']}
 ]
+*/
+var tld = [
+'198.41.0.4',       
+'192.228.79.201',
+'192.33.4.12',
+'199.7.91.13',
+'192.203.230.10',
+'192.5.5.241',
+'192.112.36.4',
+'198.7.190.53',
+'192.36.148.17',
+'192.58.128.30',
+'193.0.14.129',
+'199.7.83.42',
+'202.12.27.33'
+]
 /*
     问题汇总
 
     1.某些ns，即便子域名不存在，也不会返回NXDOMAIN（rcode === 3）
     2.泛解析有时不返回aa标志, 只能根据是否返回 answer为判断
 */
-var getAuthorityAnswers = function(target, custom_nameservers){
+var getAuthorityAnswers = function(target, nameserver){
     function *recursive(){
+
         var response;
-        var nameservers = custom_nameservers === undefined ? tld : custom_nameservers;
         do{
-            var random_ns = nameservers[Math.round(Math.random()*10) % nameservers.length];
-            var random_ns_ip = random_ns.ip[Math.round(Math.random()*10) % random_ns.ip.length];
-            response = yield dns_request_a(target, random_ns_ip, 53);
+            response = yield dns_request_a(target, nameserver, 53);
 
             if(response._flags.rcode !== RESPONSE_CODE['NOERROR'] || response._flags.aa === 0x01)
             {
@@ -116,20 +133,20 @@ var getAuthorityAnswers = function(target, custom_nameservers){
             }
 
             if(response.additionals.length > 0){
-                nameservers = response.additionals.reduce(function(curr, record){
+                nameserver = randomItem(response.additionals.reduce(function(curr, record){
                     if(record.type === 'A'){
-                    curr.push({'name':record.name, 'ip' : [record.data]})
+                        curr.push(record.data);
                     }
                     return curr;
-                }, []);
+                }, []))
             }
             else{
-                nameservers = response.authorities.reduce(function(curr, record){
-                if(record.type === 'NS'){
-                    curr.push({'name':record.data, 'ip' : [record.data]})
-                }
-                return curr;
-                },[]);
+                nameserver = randomItem(response.additionals.reduce(function(curr, record){
+                    if(record.type === 'NS'){
+                        curr.push(record.data);
+                    }
+                    return curr;
+                }, []))
             }
         }
         while(true);
@@ -246,7 +263,7 @@ DNSProber.prototype.manualProbe = function(target, nameservers, dict){
                             'domain' : job.subdomain,
                             'cname' : [],
                             'a' : [],
-                            "resolver" : job.ns.ip[0]
+                            "resolver" : job.nameserver
                         });
 
                         _self.emit('response', resp);
@@ -272,7 +289,7 @@ DNSProber.prototype.manualProbe = function(target, nameservers, dict){
 
                 burster.on('error', function(job, err){
                     if(err.message === 'Query timed out'){
-                        logger.error('Timeout while resolving ' + job.subdomain  + ' @ ' + job.ns.ip[0]);
+                        logger.error('Timeout while resolving ' + job.subdomain  + ' @ ' + job.nameserver);
                         _self.emit('timeout', job);
                     }
                     else
@@ -297,16 +314,13 @@ DNSProber.prototype.manualProbe = function(target, nameservers, dict){
 }
 
 DNSProber.prototype.autoProbe = function(target, dict){
-    var trace=[];
+    var trace = [];
     var _self = this;
     function *recursive(){
         var response;
         var nameservers = tld;
         do{
-            var random_ns = nameservers[Math.round(Math.random()*10) % nameservers.length];
-            var random_ns_ip = random_ns.ip[Math.round(Math.random()*10) % random_ns.ip.length];
-            
-            response = yield dns_request_ns(target, random_ns_ip, 53);
+            response = yield dns_request_ns(target, randomItem(nameservers), 53);
             
             if(response._flags.rcode !== RESPONSE_CODE['NOERROR'] || response._flags.aa === 0x01){
                 return response;
@@ -315,27 +329,36 @@ DNSProber.prototype.autoProbe = function(target, dict){
             if(response.additionals.length > 0){
                 nameservers = response.additionals.reduce(function(curr, record){
                     if(record.type === 'A'){
-                        curr.push({'name':record.name, 'ip':[record.data]})
+                        curr.push(record.data);
                     }
                     return curr;
                 }, []);
+
+                trace[trace.length] = response.additionals.reduce(function(curr, record){
+                    if(record.type === 'A'){
+                        logger.info({name:record.name, ip:record.data});
+                        curr.push({name:record.name, ip:record.data})
+                    }
+                    return curr;
+                },[]);
+
             }
             else{
                 nameservers = response.authorities.reduce(function(curr, record){
                     if(record.type === 'NS'){
-                        curr.push({'name':record.data, 'ip': [record.data]})
+                        curr.push(record.data);
+                    }
+                    return curr;
+                },[]);
+
+                trace[trace.length] = response.authorities.reduce(function(curr, record){
+                    if(record.type === 'NS'){
+                        logger.info({name:record.name, ip:record.data});
+                        curr.push({name:record.name, ip:record.data})
                     }
                     return curr;
                 },[]);
             }
-
-            logger.info('------')
-            nameservers.forEach(function(ns){
-                logger.info(ns);
-            })
-            logger.info('------')
-
-            trace.push(nameservers);
         }
         while(true);
     }
@@ -368,7 +391,7 @@ DNSProber.prototype.autoProbe = function(target, dict){
                         if(ip.test(ns)){
                             return ns;
                         }
-                        return getAuthorityAnswers(ns, tld).catch(function(err){
+                        return getAuthorityAnswers(ns, randomItem(tld)).catch(function(err){
                             invalid_nameservers.push(ns);
                             return undefined
                         })
@@ -387,31 +410,40 @@ DNSProber.prototype.autoProbe = function(target, dict){
                                     }
                                 }
                                 return r;
-                            },[])
+                            },[]);
+
                             return {
                                 'name': response.questions[0].name,
                                 'ip': addresses
                             }
                         });
 
-
-                        logger.info('------')
+                        logger.info('---------------------------------')
+                        logger.info('----- Authority Nameservers -----')
                         nameservers.forEach(function(ns){
                             logger.info(ns);
                         })
-                        logger.info('------');
+                        logger.info('----- Authority Nameservers -----')
+                        logger.info('---------------------------------')
 
                         if(invalid_nameservers.length > 0){
-                            _self.emit('info', {
-                                //nameservers
-                                "message" : invalid_nameservers.reduce(function(message, ns){
-                                    message += util.format('%s\r\n', ns);
-                                    return message;
-                                }, util.format('There nameserver of target seem down...\r\n'))
+                            logger.warn('There nameserver of target seem down...');
+                            invalid_nameservers.forEach(function(ns){
+                                logger.warn(ns);
                             })
                         }   
-                        trace.push(nameservers);
 
+                        /*
+                        logger.info('---------------------------------')
+                        logger.info('----- DNS Trace Stack -----')
+                        trace.forEach(function(stack){
+                            logger.info(stack);
+                        })
+                        logger.info('----- DNS Trace Stack -----')
+                        logger.info('---------------------------------')
+                        */
+
+                        //trace.push(nameservers);
                         _self.emit('trace', trace);
 
                         var ns = nameservers.reduce(function(curr, ns){
@@ -436,20 +468,18 @@ DNSProber.prototype.autoProbe = function(target, dict){
 
 function DNSBurster(options) {//新建一个类
     events.EventEmitter.call(this);
-    this.options = options;
-    this.options.nameservers = this.options.nameservers.map(function(ns){
-        return {"ip": [ns]};
-    })
+    this.target = options.target;
+    this.nameservers = options.nameservers;
 }
 
 util.inherits(DNSBurster, events.EventEmitter);//使这个类继承EventEmitter
 
 DNSBurster.prototype.wildcard = function(){
-    var nameservers = this.options.nameservers;
-    var target = this.options.target;
+    var target = this.target;
+    var nameservers = this.nameservers;
     logger.info('Detecting wildcard record on target domain...');
-    return bluebird.map(['7e420e12','a35517d','334948b'], function(ns){
-        return getAuthorityAnswers(util.format('%s.%s', ns, target), nameservers)
+    return bluebird.map(['7e420e12','a35517d','334948b'], function(prefix){
+        return getAuthorityAnswers(util.format('%s.%s', prefix, target), randomItem(nameservers))
         .catch(function(err){
             return undefined;
         })
@@ -482,8 +512,8 @@ DNSBurster.prototype.wildcard = function(){
 
 DNSBurster.prototype.burstDomains = function(dict){
     var _self = this;
-    var target = this.options.target;
-    var nameservers = this.options.nameservers;
+    var target = this.target;
+    var nameservers = this.nameservers;
     var responses_summary = {
         'NOERROR':0,
         'FORMERR':0,
@@ -501,7 +531,7 @@ DNSBurster.prototype.burstDomains = function(dict){
 
     //return new Promise(function(resolve, reject){
       var work = async.queue(function(job, done){
-        getAuthorityAnswers(job.subdomain, [job.ns])
+        getAuthorityAnswers(job.subdomain, job.nameserver)
         .then(function(response){
             var response_code = Object.keys(RESPONSE_CODE)[response._flags.rcode];
             responses_summary[response_code] += 1;
@@ -526,7 +556,7 @@ DNSBurster.prototype.burstDomains = function(dict){
             domains.map(function(domain, index){
                 work.push({
                     subdomain: domain,
-                    ns: nameservers[index]
+                    nameserver: nameservers[index]
                   });
             })
         }, 0);
@@ -546,7 +576,7 @@ DNSBurster.prototype.burstDomains = function(dict){
 }
 
 DNSBurster.prototype.burst = function(dict){
-    var target = this.options.target;
+    var target = this.target;
     return this.burstDomains(dict.map(function(subdomain){
         return [subdomain, target].join('.');
     }))

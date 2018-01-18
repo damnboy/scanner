@@ -7,12 +7,14 @@ enum MessageType {
   IPv4Infomation = 20;
   ServiceInformation = 21;
 
+   
   ScanResultDNSRecordA = 30;
   ScanResultDNSRecordCName = 31;
   WhoisInformationBlock = 32;
   ScanResultWhois = 33;
   ScanResultService = 34;
   ScanResultServiceBanner = 35;
+  ScanResultDNS = 36;
   
   Debugging = 1000;
 }
@@ -96,4 +98,9 @@ message ScanResultServiceBanner{
   required bool sslSupport = 6;
   required string scanedBy = 7;
   required bytes raw = 8;
+}
+
+
+message ScanResultDNS{
+  
 }

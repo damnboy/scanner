@@ -93,14 +93,6 @@ dns并行解析策略修改，根据目标ns服务器数量来控制并行解析
 domainscantask添加自定义dns字段
 
 ## 2018-1-14
-<<<<<<< HEAD
-servicebanner记录重复
-    解析记录中，重复ip的出现，会导致services索引下出现重复ip，
-    nmap重复扫描ip，导致出现重复记录。
-    入services索引前，基于taskId与ip进行查找，确认没有重复ip后再入库
-
-banner识别，通过聚合，查询servicebanner下同ip的端口之后，根据ip批量执行。是否能加速banner识别？
-=======
 ## 2018-1-15
 ## 2018-1-16
 js,原型链，继承
@@ -114,7 +106,21 @@ https://www.mongodb.com/compare/mongodb-postgresql?jmp=cpress&utm_campaign=WW_CP
 二进制payload抓取工具
 tcpdump保存pcap文件，nodejs脚本解析得到二进制payload，JAVARMI为例子
 
->>>>>>> ca64e1a161070aa5fdad61e02ab281fc9198262f
+## 2018-1-17
+whois 网段以及网络名信息els查询整合
+*netname(netblock)
+    *ip
+    *ip
+    *ip
+
+## 2018-1-18
+angular-tree-control集成
+whois信息展现
+
+*service入库之前检查ip是否存在，避免重复的banner识别任务
+els不具备实时一致性，dns扫描任务结束后，在dnsrecord索引上执行聚合查询，过滤出单一的ip地址，在批量导入services索引执行全端口扫描
+
+
 
 # JavaScript
     https://molily.de/robust-javascript/#characteristics-of-javascript

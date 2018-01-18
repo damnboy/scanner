@@ -1,3 +1,45 @@
+## ip - domain 映射聚合查询
+
+curl -XGET 'http://127.0.0.1:9200/dnsrecord/_count?pretty' -H 'Content-Type: application/json' -d'
+{
+    "query" : {   
+       "bool" : {
+         "must" : [
+           {"match" : {"taskId" : "3b9cc4f0-fad4-11e7-a04f-016018e269c5"}}
+         ]
+       }
+    }
+}'
+
+curl -XGET 'http://127.0.0.1:9200/dnsrecord/_search?pretty' -H 'Content-Type: application/json' -d'
+{
+    "query" : {   
+       "bool" : {
+         "must" : [
+           {"match" : {"taskId" : "3b9cc4f0-fad4-11e7-a04f-016018e269c5"}}
+         ]
+       }
+    },
+    "_source" : "a"
+}'
+
+curl -XGET 'http://127.0.0.1:9200/dnsrecord/_search?pretty' -H 'Content-Type: application/json' -d'
+{
+        "query" : {   
+       "bool" : {
+         "must" : [
+           {"match" : {"taskId" : "3b9cc4f0-fad4-11e7-a04f-016018e269c5"}}
+         ]
+       }
+    },
+  "size": 0,
+  "aggs": {
+    "all_interests": {
+      "terms": { "field": "a" ,"size": 3000}
+    }
+  }
+}
+'
 
 ## 服务信息统计
 curl -XGET 'http://127.0.0.1:9200/servicebanner/_search?pretty' -H 'Content-Type: application/json' -d'
