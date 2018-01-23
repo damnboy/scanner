@@ -8,10 +8,10 @@ var wireutil = require("./daemon/wire/util.js");
 var log = require('./utils/logger').createLogger('[client:client]');
 //var subUri = "tcp://127.0.0.1:7110";
 //var pushUri = "tcp://127.0.0.1:7111";
-//var subUri = "tcp://198.177.122.30:7110";
-//var pushUri = "tcp://198.177.122.30:7111";
-var subUri = "tcp://218.85.154.137:7110";
-var pushUri = "tcp://218.85.154.137:7111";
+var subUri = "tcp://198.177.122.30:7110";
+var pushUri = "tcp://198.177.122.30:7111";
+//var subUri = "tcp://218.85.154.137:7110";
+//var pushUri = "tcp://218.85.154.137:7111";
 sub.on("message",
 wirerouter()
 .on(wire.ScanTaskInfo, function(channel, message, data){
@@ -57,9 +57,9 @@ push.connect(pushUri);
 push.send(["channel", wireutil.envelope(wire.CreateDomainScanTaskInfo, {
     "email" : "root@localhost.com",
     "description" : "...",
-    "targetDomain" : "sina.cn",
-    "dict" : "top3000",
-    "customNameservers" : ['123.125.29.99', '61.172.201.254']
+    "targetDomain" : "cafe24.co.kr",
+    "dict" : "top3000"/*,
+    "customNameservers" : ['123.125.29.99', '61.172.201.254']*/
 })]);
 
 

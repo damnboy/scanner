@@ -5,7 +5,7 @@ module.exports = function(options){
     var request = require("request")
     var util = require("util")
     var log = require('../../../utils/logger').createLogger('[db:elasticsearch]');
-    var _ = require("lodash")
+    var _ = require("lodash");
     function server(){
         return util.format('http://%s:%d', options.host, options.port)
     }
@@ -621,6 +621,42 @@ module.exports = function(options){
                 }
             })
         })
+    }
+
+    DBApi.prototype.getHostsBySerivce = function(service){
+        return this.executeDSLSearch('servicebanner',{ 
+            "_source" : ["ip", "port"],
+            "query" : {   
+                 "bool" : {
+                   "must" : [
+                     {"match" : {"service" : service}}
+                   ]
+                 }
+            }
+        })
+    }
+    //Dashboard
+    DBApi.prototype.getServicesSummary = function(){
+        return this.executeAggregation('servicebanner',
+        {
+          "query" : {   
+               "bool" : {
+                 "must" : [
+                   {"match" : {"done" : true}}
+                 ]
+               }
+            },
+          "size" : 0,
+          "aggs": {
+            "summary": {
+              "terms": { "field": "service" }
+            }
+          }
+        })
+        .then(function(results){
+            return results.summary.buckets;
+        })
+        
     }
     return DBApi;
 }

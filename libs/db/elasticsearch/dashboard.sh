@@ -45,70 +45,7 @@ curl -XGET 'http://127.0.0.1:9200/dnsrecord/_search?pretty' -H 'Content-Type: ap
 }
 '
 
-## 服务信息统计
-curl -XGET 'http://127.0.0.1:9200/servicebanner/_search?pretty' -H 'Content-Type: application/json' -d'
-{
-  "aggs": {
-    "all_interests": {
-      "terms": { "field": "service" }
-    }
-  }
-}
-'
 
-## 扫描器统计
-curl -XGET 'http://127.0.0.1:9200/servicebanner/_search?pretty' -H 'Content-Type: application/json' -d'
-{
-  "aggs": {
-    "all_interests": {
-      "terms": { "field": "scannedBy" }
-    }
-  }
-}
-'
-
-## 尚未完成的扫描任务统计
-curl -XGET 'http://218.85.154.137:9200/services/_search?pretty' -H 'Content-Type: application/json' -d'
-{
-    "query" : {   
-       "bool" : {
-         "must" : [
-           {"match" : {"done" : "false"}}
-         ]
-       }
-    }
-}
-'
-
-## 获取指定服务
-curl -XGET 'http://127.0.0.1:9200/servicebanner/_search?pretty' -H 'Content-Type: application/json' -d'
-{
-  "query" : {   
-       "bool" : {
-         "must" : [
-           {"match" : {"service" : "ldap"}}
-         ]
-       }
-  }
-}'
-
-## ssl 主机信息收集sslSupport
-curl -XGET 'http://127.0.0.1:9200/servicebanner/_search?pretty' -H 'Content-Type: application/json' -d'
-{
-  "query" : {   
-       "bool" : {
-         "must" : [
-           {"match" : {"scannedBy" : "nmap"}}
-         ]
-       }
-  },
-  "aggs": {
-    "all_interests": {
-      "terms": { "field": "sslSupport" }
-    }
-  }
-}
-'
 
 
 ## whois信息，netblock下的主机数量

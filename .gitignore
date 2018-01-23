@@ -4,6 +4,7 @@ node_modules
 .vscode
 todo
 test
+auth
 server/app/bower_components
 server/node_modules
 server/layoutit

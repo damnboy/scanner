@@ -113,6 +113,10 @@ curl -XPUT 'localhost:9200/whois?pretty' -H 'Content-Type: application/json' -d'
                 "taskId" : {
                     "type" : "keyword"
                 },
+                
+                "joinedNetname" : {
+                    "type" : "keyword"
+                },
 
                 "description" : {
                     "type" : "text"

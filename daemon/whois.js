@@ -54,6 +54,14 @@ module.exports.handler = function(argvs){
                     
                     //消息返回task，并推送到client端
                     detail.taskId = channel.toString('utf-8');
+                    
+                    //创建join字段用于查询
+                    detail.joinedNetname = detail.detail.reduce(function(ret, block){
+                        ret.push(block.netname);
+                        return ret;
+                
+                    }, []).join('^');
+
                     dbapi.saveWhoisRecord(detail);
                     var result = {
                         "ip" : message.ip,
