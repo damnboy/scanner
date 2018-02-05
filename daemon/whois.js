@@ -45,7 +45,21 @@ module.exports.handler = function(argvs){
     
 
     sub.on("message", wirerouter()
+        .on(wire.ScanResultDNS, function(channel, message, data){
+            /*TODO
+            var taskId = channel.toString('utf-8');
+            dbapi.getHosts(taskId)
+            .then(function(hosts){
+
+
+            })
+            .catch(function(err){
+                console.log(err);
+            })
+            */
+        })
         .on(wire.IPv4Infomation, function(channel, message, data){
+            
             //whois实现为promise对象，进程退出之前，使用promise.all控制所有whois请求执行完毕之后，方可结束。
             //whois扫描后入库
             pendingWhois.then(function(){

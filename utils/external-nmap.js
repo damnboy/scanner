@@ -54,7 +54,7 @@ NmapSchedule.prototype.startNmap = function(){
         //根据时间戳，从nmaptask索引中获取距离当前时间间隔最长的主机开放服务扫描任务
         return dbapi.getScheduledNmapTask()
         .then(function(doc){
-            return self.scan(doc._source)
+            return self.fastScan(doc._source)
             .then(function(hostInfo){
                 return dbapi.doneNmapTask(hostInfo, doc._id);
             })
@@ -145,6 +145,61 @@ NmapSchedule.prototype.portBanner = function(serviceInfo){
     })
     .catch(function(err){
         log.error('portBanner: ' + err);
+    })
+}
+
+NmapSchedule.prototype.fastScan = function(ti){
+    var self = this;
+    return new Promise(function(resolve, reject){
+        var taskInfo = ti;
+        taskInfo.tcp = [];
+        taskInfo.udp = [];
+
+
+        var proc = child_process.spawn('nmap',[
+            taskInfo.ip,
+            '-vv',
+            '-n',
+            '-Pn',
+            '-F',
+            '--min-rate','2000'
+        ]);
+
+        proc.stdout.on('data', function(data){
+            var output = data.toString('utf-8');
+            var reg = /open port (\d*)\/(\w*)/g;
+            var result = reg.exec(output, 'i');
+            if(result){
+                var port = parseInt(result[1]);
+                if(result[2] === 'tcp'){
+                    taskInfo.tcp.push(port);
+                    self.emit('tcp', taskInfo['taskId'], taskInfo.ip, port);
+                }
+                else if(result[2] === 'udp'){
+                    taskInfo.udp.push(port);
+                    self.emit('udp', taskInfo['taskId'], taskInfo.ip, port);
+                }
+                else{
+                    ;
+                }
+                log.info(taskInfo.ip + ' ' + port + '/' + result[2]);
+            }
+        })
+
+        proc.stderr.on('data', function(data){
+            log.warn(data.toString('utf-8'));
+        })
+
+        proc.on('exit', function(code, signal){
+            if(code === 0){
+                self.emit('host', taskInfo['taskId'], taskInfo.ip, taskInfo.tcp, taskInfo.udp);
+                resolve(taskInfo)
+            }
+            else{
+                log.warn('nmap exit unexcepted with code: ' + code)
+                reject(code);
+            }
+        })
     })
 }
 

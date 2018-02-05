@@ -31,7 +31,7 @@ function WebApplicationBanner(){
     })
 
     this.queue.on('error', function(error){
-        //logger.error('%s - %s', error.url, error.message)
+        logger.error('%s - %s', error.url, error.message)
     })  
 
     this.queue.on('finish', function(){
@@ -69,15 +69,7 @@ WebApplicationBanner.prototype.url = function(url){
     this.queue.enqueue(function(){
         return new Promise(function(resolve, reject){
             var page = new WebPage();
-            return page.request({
-                'method' : 'GET',
-                'uri' : url,
-                'timeout' : self.timeout,  
-                'encoding' : null,
-                agentOptions: {
-                    rejectUnauthorized: false
-                }
-            })
+            return page.request(url)
             .then(function(response){
                 var body = response.body;
                 const $ = cheerio.load(response.body);
@@ -91,7 +83,7 @@ WebApplicationBanner.prototype.url = function(url){
             })
             .catch(function(error){
                 error.url = url;
-                reject(error)
+                reject(error);
             })
         })
 

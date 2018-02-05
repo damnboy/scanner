@@ -8,15 +8,24 @@ function WebPage(){
     this.request;
 }
 
-WebPage.prototype.request = function(options){
+WebPage.prototype.request = function(url){
     var self = this;
     return new Promise(function(resolve, reject){
-        request(options, function(err, response){
+        request.get({
+            url : url,
+            //启动该选项会导致部分站点出现socket hang up错误，3xx前与3xx之后schema不一致导致？？？
+            followRedirect: false, 
+            agentOptions : {
+                "checkServerIdentity" : function (servername, cert){
+                    console.log(servername, cert);
+                }
+            }
+        }, function(err, response){
             if(err){
-                reject(err)
+                reject(err);
             }
             else{ 
-                resolve(response)           
+                resolve(response);           
             }   
         })
     })
@@ -54,11 +63,11 @@ WebPage.prototype._detectEncoding = function(headers, body){
 }
 
 WebPage.prototype.url_request = function(url){
-
+    
     return this.request({
         'id' : this.hosts.length,
         'description' : url,
-        'request' :{
+        'request' : {
             'method' : 'GET',
             'uri' : url,
             'timeout' : 10000,

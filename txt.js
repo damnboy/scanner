@@ -43,7 +43,6 @@ module.exports.handler = function(argvs){
     banner.timeout = argvs.timeout;
 
      generator.on('line', function(line){
-         console.log(line)
          if(argvs.type === 'url'){
             banner.url(line);
          }

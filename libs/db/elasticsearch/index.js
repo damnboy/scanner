@@ -121,6 +121,29 @@ module.exports = function(options){
         })
     }
 
+    DBApi.prototype.saveMixTask = function(taskInfo){
+        return db.connect()
+        .then(function(){
+            return new Promise(function(resolve, reject){   
+                request.post({
+                    'url' : server() + '/mixtask/doc',
+                    'body' : taskInfo,
+                    'json' : true
+                }, function(error, response){
+                    if(error){
+                        reject(error);
+                    }
+                    else if(response.statusCode === 201){
+                        resolve(response.body);
+                    }
+                    else{
+                        reject(response.body);
+                    }
+                });                        
+            });
+        });
+    };
+
     DBApi.prototype.saveDomainTask = function(taskInfo){
         return db.connect()
         .then(function(){
@@ -438,6 +461,7 @@ module.exports = function(options){
         }, 0);
     }
 
+    //使用聚合查询
     DBApi.prototype.getHosts = function(taskId){
         var self = this;
 
@@ -507,6 +531,27 @@ module.exports = function(options){
         });
     }
 
+    DBApi.prototype.getJoinedNetnames = function(taskId){
+        
+        return this.executeAggregation('whois',
+        {
+            "size" : 0,
+            "query" : {
+                "match" : { "taskId" : taskId }
+            },
+            "aggs" : {
+                "netname" : { "terms" : { "field" : "joinedNetname" ,"size": 3000} }
+            }
+        })
+        .then(function(results){
+            return results.netname.buckets.map(function(r){
+                return {'joinedNetnames' : r.key ,'count': r.doc_count}
+            }).sort()
+        })
+    }
+    /*
+
+    */
     DBApi.prototype.getNetnames = function(taskId){
         
         return this.executeAggregation('whois',
@@ -546,7 +591,7 @@ module.exports = function(options){
                     "query" : {
                         "bool" : {
                             "must" : [
-                            { "match" : {"detail.netname" : netName} }
+                            { "match" : {"detail.netblock" : netName} }
                             ]
                         }
                     }
@@ -555,19 +600,13 @@ module.exports = function(options){
                }
             },
             "aggs" : {
-                "detail" : {
-                    "nested" : {
-                        "path" : "detail"
-                    },
-                    "aggs" : {
-                        "hosts" : { "terms" : { "field" : "detail.netblock" } }
-                    }
-                }
+                "hosts" : { "terms" : { "field" : "ip" } }
             }
+           
         })
         .then(function(results){
-            return results.detail.hosts.buckets.map(function(i){
-                return {'netblock':i.key, 'count':i.doc_count}
+            return results.hosts.buckets.map(function(i){
+                return {'ip':i.key, 'count':i.doc_count}
             })
 
         })

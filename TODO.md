@@ -124,6 +124,87 @@ els不具备实时一致性，dns扫描任务结束后，在dnsrecord索引上�
 getHostsOnNetblock 联合查询dnsrecord索引，获取ip对应的域名记录
 whois信息重复问题，bulkinsert之后，用过调度执行查询
 
+
+## 2018-1-23
+    TODO：基于whois索引下detail字段的查询，存在重复的问题（detail字段中有多个解析结果导致的）
+    TODO：whois查询重定向与解析问题
+    TODO：whois查询结果中存在多个网络名
+
+    whois 信息入库之前，根据detail数组，创建一条join字段，可以用来唯一标示netblock。
+    "aggregations" : {
+        "hosts" : {
+        "doc_count_error_upper_bound" : 0,
+        "sum_other_doc_count" : 0,
+        "buckets" : [
+            {
+            "key" : "KORNET^KORNET-KR",
+            "doc_count" : 37
+            },
+            {
+            "key" : "broadNnet^broadNnet-KR",
+            "doc_count" : 8
+            },
+            {
+            "key" : "SHINBIRO^SHINBIRO-KR",
+            "doc_count" : 3
+            }
+        ]
+        }
+    }
+
+    基于该搜索结果，来构建树结构，再末级节点，允许netname－->netblock的查询
+
+    DNSScanResult消息，转发到whois与service进程进行处理。
+
+    ssl功能整合，
+    
+
+## 2018-01-24
+    dashboard高防节点与无开放端口的主机
+    TODO:whois信息合并，后续添加节点合并的拖拽操作
+
+## 2018-1-25
+    指纹识别流程：
+    主动端口／被动端口类型识别
+    ssl识别
+    http服务识别
+
+    剩下的未知服务提交到nmap进行扫描
+
+    高防节点存储到独立的索引
+
+    mongodb引入？elasticsearch真的太费劲了
+    
+## 2018-1-26
+    ssl识别，comm识别，nmap任务调度流程
+
+    dns -> services -> ssl -> web -> nmap
+
+
+    dns done ->
+
+    services one by one ->
+        ssl scanner -> 批量扫描，结果存储ssl index
+
+    ssl done ->
+        web scanner -> 批量扫描，识别http服务，结果存储http index
+                    -> 未知的ip & port pair 存储nmaptask中
+                    
+        由nmap执行调度
+
+## 2018-02-06
+端口扫描完毕，在banner索引下，创建taskid，ip，port为唯一索引的banner记录
+由一个统一的调度器负责从banner中调度尚未完成的任务，通过zmq＋protocolbuf的形式分发到各个扫描进程
+    step 1.ssl
+    step 2.web
+    step 3.nmap banner
+
+    ssl，web等仅做简单的扫描与识别，为了减轻nmap扫描的负担，以及nmap对web识别的误报。
+    没有在ssl与web中加入过于复杂的识别代码。
+
+
+mixtask 支持，自定义ip与域名（由223.5.5.5解析）
+
 # JavaScript
     https://molily.de/robust-javascript/#characteristics-of-javascript
     

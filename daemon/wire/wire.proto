@@ -1,13 +1,14 @@
 enum MessageType {
   Envelope = 1;
   ScanTaskInfo = 11;
-  CreateDomainScanTaskInfo = 12;
-  CreateHostScanTaskInfo = 13;
-  ClientReady = 14;
+  CreateScanTask = 12;
+  DomainTaskReady = 14;
+  MixTaskReady = 15;
   IPv4Infomation = 20;
-  ServiceInformation = 21;
-
-   
+  IPv4Infomations = 21;
+  ServiceInformation = 22;
+  
+  
   ScanResultDNSRecordA = 30;
   ScanResultDNSRecordCName = 31;
   WhoisInformationBlock = 32;
@@ -16,6 +17,9 @@ enum MessageType {
   ScanResultServiceBanner = 35;
   ScanResultDNS = 36;
   
+
+  SSLHost = 40;
+  NonSSLHost = 41;
   Debugging = 1000;
 }
 message Debugging{
@@ -30,36 +34,40 @@ message Envelope {
 
 message ScanTaskInfo {
   required string id = 1;
-  required double create_date = 2;
+  //required double create_date = 2;
 }
 
-message CreateDomainScanTaskInfo {
+message CreateScanTask {
   required string email = 1;
   required string description = 2;
-  required string targetDomain = 3;
-  required string dict = 4;
-  repeated string customNameservers = 5;
 }
 
-message CreateHostScanTaskInfo {
-  required string email = 1;
-  required string description = 2;
-  required string targetHost = 3;
-  required string portRange = 4;
+message DomainTaskReady {
+  required string id = 1;
+  required string targetDomain = 2;
+  required string dict = 3;
+  repeated string customNameservers = 4;
 }
 
-message ClientReady {
-  required string taskId = 1;
+message MixTaskReady {
+  required string id = 1;
+  repeated string domains = 2;
+  repeated string hosts = 3;
 }
 
 message IPv4Infomation {
   required string ip = 1;
+  required int32 port = 2;
+}
+
+message IPv4Infomations {
+  repeated IPv4Infomation infos = 1;
 }
 
 message ServiceInformation {
   required string ip = 1;
-  required string type = 2;
-  repeated int32 ports = 3;
+  repeated int32 tcpPorts = 2;
+  repeated int32 udpPorts = 3;
   required string taskId = 4;
 }
 
@@ -103,4 +111,14 @@ message ScanResultServiceBanner{
 
 message ScanResultDNS{
   
+}
+
+message SSLHost{
+  required string ip = 1;
+  required int32 port = 2;
+}
+
+message NonSSLHost{
+  required string ip = 1;
+  required int32 port = 2;
 }

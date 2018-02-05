@@ -33,8 +33,6 @@ module.exports.builder = function(yargs) {
 }
 
 module.exports.handler = function(argvs){
-
-    //var queue = new Queue(1); 
    
     var push = zmq.socket("push");
     push.connect(argvs.connectPull);
@@ -45,6 +43,7 @@ module.exports.handler = function(argvs){
     argvs.connectSub.forEach(function(endpoint){
         sub.connect(endpoint);
     })
+    
     
     NmapSchedule.on('tcp', function(taskId, ip, port){
         /*
@@ -67,6 +66,7 @@ module.exports.handler = function(argvs){
         })]);
         */
     });
+    
 
     NmapSchedule.on('host', function(taskId, ip, tcp, udp){
         //扫描结果入库存储，高仿节点返回大量开放端口，因此端口数量大于100的主机，跳过不执行扫描
@@ -79,26 +79,51 @@ module.exports.handler = function(argvs){
         else{
             push.send([taskId, wireutil.envelope(wire.ServiceInformation, {
                 "ip" : ip,
-                "type" : "tcp",
-                "ports" : tcp,
+                "tcpPorts" : tcp,
+                "udpPorts" : udp,
                 "taskId" :taskId
             })]);
         }
-        
-        if(udp.length >0 & udp.length < 60){
-
-            push.send([taskId, wireutil.envelope(wire.ServiceInformation, {
-                "ip" : ip,
-                "type" : "udp",
-                "ports" : udp,
-                "taskId" :taskId
-            })]);
-        }  
     });
 
     NmapSchedule.startNmap();
 
     sub.on("message", wirerouter()
+        .on(wire.ScanResultDNS, function(channel, message, data){
+            
+            var taskId = channel.toString('utf-8');
+            log.info('Bulking ip addresses of task(' + taskId + ') into service scanning...');
+
+            dbapi.getHosts(taskId)
+            .then(function(hosts){
+
+                return hosts.map(function(host){
+                    return {
+                        "createDate" : Date.now() ,
+                        "done" : false,
+                        "ip" : host,
+                        "taskId" : taskId
+                    }
+                });
+            })
+            .then(function(records){
+
+                var bulkBody = records.reduce(function(bulk, record){
+                    bulk.push(JSON.stringify({ "index":{ "_index": "services", "_type": "doc" } }));
+                    bulk.push(JSON.stringify(record));
+                    return bulk;
+                },[])
+
+                dbapi.executeBulk('services', bulkBody.join('\n') + '\n')
+                .then(function(result){
+                    console.log(result);
+                })
+            })
+            .catch(function(err){
+                console.log(err);
+            })
+
+        })
         .on(wire.IPv4Infomation, function(channel, message, data){
 
 

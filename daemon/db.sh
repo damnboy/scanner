@@ -2,9 +2,48 @@
 curl -XDELETE '127.0.0.1:9200/dnsrecord?pretty'
 curl -XDELETE '127.0.0.1:9200/whois?pretty'
 curl -XDELETE '127.0.0.1:9200/domaintask?pretty'
+curl -XDELETE '127.0.0.1:9200/mixtask?pretty'
 curl -XDELETE '127.0.0.1:9200/services?pretty'
 curl -XDELETE '127.0.0.1:9200/servicebanner?pretty'
 curl -XDELETE '127.0.0.1:9200/nmaptask?pretty'
+
+curl -XPUT 'localhost:9200/mixtask?pretty' -H 'Content-Type: application/json' -d'
+{
+  "mappings" : {
+        "doc" : {
+            "properties" : {
+                "id" : {
+                    "type" : "keyword"
+                },
+
+                "description" : {
+                    "type" : "text"
+                },
+
+                "remark" : {
+                    "type" : "text"
+                },
+
+                "createDate" : {
+                    "type" : "date"
+                },
+
+                "createdBy" :{
+                    "type" : "keyword"
+                },
+
+                "domains" : {
+                    "type" : "keyword"
+                },
+
+                "hosts" : {
+                    "type" : "keyword"
+                }
+            }
+        }
+    }
+}
+'
 
 curl -XPUT 'localhost:9200/domaintask?pretty' -H 'Content-Type: application/json' -d'
 {
@@ -134,16 +173,22 @@ curl -XPUT 'localhost:9200/whois?pretty' -H 'Content-Type: application/json' -d'
                     "type" : "nested",
                     "properties": {
                         "detail":  { "type": "text" },
-                        "netblock": { "type": "keyword" ,"fields" :{
-                        "text" : {
-                            "type" : "text"
+                        "netblock": { 
+                            "type": "keyword" ,
+                            "fields" :{
+                                "text" : {
+                                    "type" : "text"
+                                }
+                            } 
+                        },
+                        "netname": { 
+                            "type": "keyword" ,
+                            "fields" : {
+                                "text" : {
+                                    "type" : "text"
+                                }
+                            }  
                         }
-                    } },
-                        "netname": { "type": "keyword" ,"fields" :{
-                        "text" : {
-                            "type" : "text"
-                        }
-                    }  }
                     }
                 }
             }

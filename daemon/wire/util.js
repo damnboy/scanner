@@ -17,7 +17,7 @@ function createMessage (type, object){
 }
 
 module.exports = {
-    envelope: function(type, object, channel) {
+    envelope : function(type, object, channel) {
         return createMessage(wire.Envelope, {
             "type" : type.$code,
             "message" : createMessage(type, object),

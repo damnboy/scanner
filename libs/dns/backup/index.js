@@ -173,23 +173,151 @@ var getAuthorityAnswers = function(target, nameserver){
     })
 }
 
-/*
-    Zone Transfer
-    MX Records
-    Authority Nameservers
-    Wildcard record
-*/
+function DNSBatch(options) {//新建一个类
+    events.EventEmitter.call(this);
+    this.options = options;
+    this.options.nameservers = this.options.nameservers.map(function(ns){
+        return {"ip": [ns]};
+    })
+}
+
+util.inherits(DNSBatch, events.EventEmitter);//使这个类继承EventEmitter
+
+DNSBatch.prototype.batch = function(domains){
+
+}
 
 function DNSProber(options){
     events.EventEmitter.call(this);
+    this.options = options;
 }
 
 util.inherits(DNSProber, events.EventEmitter);//使这个类继承EventEmitter
 
-DNSProber.prototype.getAuthorityNameServers = function(target){
+DNSProber.prototype._probe = function(target, nameservers){
 
+}
+
+DNSProber.prototype.manualProbe = function(target, nameservers, dict){
+    var _self = this;
+    //统计解析成功率
+    //var failed = nameservers.reduce(function(ret, nameserver){
+    //    ret[nameserver] = [];
+    //    return ret; 
+    //},{});
+
+    function startBuster(){
+        if(nameservers.length > 0){
+            _self.emit('info', {
+                //nameservers
+                "message" : nameservers.reduce(function(message, ns){
+                    message += util.format('%s\r\n', ns);
+                    return message;
+                }, util.format('DNS probe ok, got %d nameserver from target domain\r\n', nameservers.length))
+            })  
+            _self.emit('info', {
+                "message": util.format('Start buster target domain: %s', target)
+            })  
+
+            var burster = new DNSBurster({
+                'target' : target,
+                'nameservers' : nameservers
+            }); 
+
+            burster.wildcard()
+            .then(function(wildcard_addresses){
+                var cname = [];
+                var private = [];
+                var public = [];    
+
+                burster.on('SERVFAIL', function(job, response){
+                    logger.warn('SERVFAIL:');
+                    console.log(job);
+                    console.log(response);
+                });
+
+                burster.on('NXDOMAIN', function(job, response){
+                    logger.warn('NXDOMAIN: ' + job.subdomain);
+                });
+
+                burster.on('NOERROR', function(job, response){
+                
+                    var valid_records = response.answers.filter(function(record){
+                        if(ip.isPrivate(record.data)){
+                            private.push({
+                                "domain" : job.subdomain,
+                                "data":record.data
+                            });
+                        }
+                        return wildcard_addresses.indexOf(record.data) < 0 && ip.isPublic(record.data);
+                    }); 
+                    if(valid_records.length > 0){
+                        var resp = valid_records.reduce(function(ret, record){
+                            if(record.type === 'CNAME'){
+                                ret.cname.push(record.data);
+                            }
+                            if(record.type ==='A'){
+                                ret.a.push(record.data);
+                            }
+                            return ret
+                        },{
+                            'domain' : job.subdomain,
+                            'cname' : [],
+                            'a' : [],
+                            "resolver" : job.nameserver
+                        });
+
+                        _self.emit('response', resp);
+
+                        valid_records.forEach(function(record){
+                            var r = {
+                                "domain" : job.subdomain,
+                                "data" : record.data
+                            };
+                            if(record.type === 'CNAME'){
+                                cname.push(r);
+                                _self.emit('record.cname', r);
+                            }
+                            if(record.type ==='A'){
+                                public.push(r);
+                                _self.emit('record.a', r);
+                            }
+                            logger.info(r);
+                            //_self.emit("response", r);
+                        });
+                    }
+                }); 
+
+                burster.on('error', function(job, err){
+                    if(err.message === 'Query timed out'){
+                        logger.error('Timeout while resolving ' + job.subdomain  + ' @ ' + job.nameserver);
+                        _self.emit('timeout', job);
+                    }
+                    else
+                    {
+                        _self.emit('error', err);
+                    }
+                });
+
+                burster.on('finish', function(response){
+                    _self.emit('finish', response, public, cname, private, wildcard_addresses);
+                }); 
+                
+                burster.burst(dict);
+            });
+        }
+        else{
+            logger.error('no ns records');
+            _self.emit('error', new Error('no ns records'));
+        }
+    }
+    
+    startBuster();
+}
+
+DNSProber.prototype.autoProbe = function(target, dict){
     var trace = [];
-    var self = this;
+    var _self = this;
     function *recursive(){
         var response;
         var nameservers = tld;
@@ -237,7 +365,7 @@ DNSProber.prototype.getAuthorityNameServers = function(target){
         while(true);
     }
 
-    return new Promise(function(resolve, reject){
+    //return new Promise(function(resolve, reject){
         var r = recursive();
         function step(nameservers){
             var p = r.next(nameservers);
@@ -247,7 +375,7 @@ DNSProber.prototype.getAuthorityNameServers = function(target){
                     step(response)
                 })
                 .catch(function(err){
-                    self.emit('error', new Error(err.message + ' while request authority records about target domain: ' + target));
+                    _self.emit('error', new Error(err.message + ' while request authority records about target domain: ' + target));
                 })
             }
             else{
@@ -295,7 +423,7 @@ DNSProber.prototype.getAuthorityNameServers = function(target){
                         logger.info('---------------------------------')
                         logger.info('----- Authority Nameservers -----')
                         nameservers.forEach(function(ns){
-                            logger.info(ns.name, ns.ip.join(', '))
+                            logger.info(ns);
                         })
                         logger.info('----- Authority Nameservers -----')
                         logger.info('---------------------------------')
@@ -307,28 +435,50 @@ DNSProber.prototype.getAuthorityNameServers = function(target){
                             })
                         }   
 
-                        self.emit('trace', trace);
+                        /*
+                        logger.info('---------------------------------')
+                        logger.info('----- DNS Trace Stack -----')
+                        trace.forEach(function(stack){
+                            logger.info(stack);
+                        })
+                        logger.info('----- DNS Trace Stack -----')
+                        logger.info('---------------------------------')
+                        */
 
-                        resolve(nameservers.reduce(function(curr, ns){
+                        //trace.push(nameservers);
+                        _self.emit('trace', trace);
+
+                        var ns = nameservers.reduce(function(curr, ns){
                             return curr.concat(ns.ip);
-                        },[]))
+                        },[]);
+
+                        _self.manualProbe(target, ns, dict);
                     })
                     .catch(function(err){
-                        reject(err)
+                        _self.emit('error', err);
                     });
                 }
                 else{
                     logger.warn('dns probe failed, try last dns trace stack records as authority nameservers');
-                    reject(err);
+                    _self.emit('failed', trace);
                 }
             }
         }
         step();
-    })
+    //})  
+};
+
+function DNSBurster(options) {//新建一个类
+    events.EventEmitter.call(this);
+    this.target = options.target;
+    this.nameservers = options.nameservers;
 }
 
+util.inherits(DNSBurster, events.EventEmitter);//使这个类继承EventEmitter
 
-DNSProber.prototype.wildcard = function(target, nameservers){
+DNSBurster.prototype.wildcard = function(){
+    var target = this.target;
+    var nameservers = this.nameservers;
     logger.info('Detecting wildcard record on target domain...');
     return bluebird.map(['7e420e12','a35517d','334948b'], function(prefix){
         return getAuthorityAnswers(util.format('%s.%s', prefix, target), randomItem(nameservers))
@@ -358,59 +508,14 @@ DNSProber.prototype.wildcard = function(target, nameservers){
         else{
             logger.info('wildcard addresses not found...');
         }
-        return {
-            nameservers: nameservers,
-            wildcards : wildcard_addresses
-        }
-    })
-    .catch(function(err){
-        logger.error('error while Detecting wildcard record on target domain...');
-    })
-}
-
-function DNSBurster() {//新建一个类
-    events.EventEmitter.call(this);
-}
-
-util.inherits(DNSBurster, events.EventEmitter);//使这个类继承EventEmitter
-
-DNSBurster.prototype.burstTargetDomain = function(target, dict, nameservers){
-    var self = this;
-    var prober = new DNSProber();
-    
-    prober.on('trace', function(trace){
-        self.emit('trace');
-    })
-
-    var step = Promise.resolve(nameservers);
-    if(!nameservers || nameservers.length === 0){
-        step = step
-        .then(function(){
-            return prober.getAuthorityNameServers(target);
-        });
-    }
-
-    return step
-    .then(function(nameservers){
-        self.emit('nameservers', nameservers);
-        return prober.wildcard(target, nameservers);
-    })
-    .then(function(options){
-        self.emit('wildcards', options.wildcards);
-        //register listener
-        self.burstDomains(dict.map(function(prefix){
-            return [prefix, target].join('.');
-        }), options.nameservers, options.wildcards);
-    })
-    .catch(function(err){
-        logger.error(err);
+        return wildcard_addresses;
     });
-    
-};
+}
 
-DNSBurster.prototype.burstDomains = function(domains, nameservers, wildcards){
-
-    var self = this;
+DNSBurster.prototype.burstDomains = function(dict){
+    var _self = this;
+    var target = this.target;
+    var nameservers = this.nameservers;
     var responses_summary = {
         'NOERROR':0,
         'FORMERR':0,
@@ -423,94 +528,65 @@ DNSBurster.prototype.burstDomains = function(domains, nameservers, wildcards){
         'NXRREST':0,
         'NOTAUTH':0,
         'NOTZONE':0,
-        'UNKNOWN':0,
-        'TIMEOUT':0,
+        'UNKNOWN':0
     };
 
-    //inner logger
-    self.on('SERVFAIL', function(job, response){
-        logger.warn('SERVFAIL:');
-        logger.warn(job);
-        logger.warn(response);
-    });
+    //return new Promise(function(resolve, reject){
+      var work = async.queue(function(job, done){
+        getAuthorityAnswers(job.subdomain, job.nameserver)
+        .then(function(response){
+            var response_code = Object.keys(RESPONSE_CODE)[response._flags.rcode];
+            responses_summary[response_code] += 1;
 
-    self.on('NXDOMAIN', function(job, response){
-        logger.warn('NXDOMAIN: ' + job.subdomain);
-    });
+            _self.emit(response_code, job, response);
 
-    self.on('NOERROR', function(job, response){
-        
-        var rep = response.answers.
-        filter(function(record){
-            return wildcards.indexOf(record.data) < 0;
+            done();
         })
-        .reduce(function(ret, record){
-            if(record.type === 'CNAME'){
-                ret.cname.push(record.data);
-                logger.info('%s(%s) %s', job.subdomain, 'CNAME', record.data);
-            }
-            if(record.type ==='A'){
-                ret.a.push(record.data);
-                logger.info('%s(%s) %s', job.subdomain, 'A', record.data);
-            }
-            return ret;
-        },{
-            'domain' : job.subdomain,
-            'cname' : [],
-            'a' : [],
-            "resolver" : job.nameserver
+        .catch(function(err){
+            responses_summary['UNKNOWN'] += 1;
+            _self.emit('error', job, err);
+
+            done();
         });
 
-        if(rep.a.length !== 0 || rep.cname.length !== 0){
-            self.emit('response', rep);
+      }, nameservers.length);
+
+      work.drain = function() {
+        setTimeout(function(){
+            var domains = dict.splice(0, nameservers.length) ;
+
+            domains.map(function(domain, index){
+                work.push({
+                    subdomain: domain,
+                    nameserver: nameservers[index]
+                  });
+            });
+        }, 0);
+
+        if(dict.length === 0){
+            Object.keys(responses_summary).forEach(function(key){
+                logger.info('%s : %s' ,key, responses_summary[key]);
+            });
+    
+            _self.emit('finish', responses_summary);
         }
-    });
+        
+      };
 
-    var work = async.queue(function(job, done){
-      getAuthorityAnswers(job.subdomain, job.nameserver)
-      .then(function(response){
-          var response_code = Object.keys(RESPONSE_CODE)[response._flags.rcode];
-          responses_summary[response_code] += 1;
-          self.emit(response_code, job, response);
-          done();
-      })
-      .catch(function(err){
-          if(err.message === 'Query timed out'){
-            responses_summary.TIMEOUT += 1;
-            logger.error('Timeout while resolving ' + job.subdomain  + ' @ ' + job.nameserver);
-            self.emit('timeout', job);
-          }else{
-            responses_summary.UNKNOWN += 1;
-            self.emit('error', job, err);
-          }
-          done();
-      });
-
-    }, nameservers.length);
-
-    work.drain = function() {
-      setTimeout(function(){
-          var nexts = domains.splice(0, nameservers.length) ;
-
-          nexts.map(function(domain, index){
-              work.push({
-                  subdomain: domain,
-                  nameserver: nameservers[index]
-                });
-          });
-      }, 0);
-
-      if(domains.length === 0){
-          Object.keys(responses_summary).forEach(function(key){
-              logger.info('%s : %s' ,key, responses_summary[key]);
-          });
-
-          self.emit('finish', responses_summary);
-      }
-      
-    };
-
-    work.drain();
+      work.drain();
+    //});
 };
 
-module.exports = DNSBurster;
+DNSBurster.prototype.burst = function(dict){
+    var target = this.target;
+    return this.burstDomains(dict.map(function(subdomain){
+        return [subdomain, target].join('.');
+    }));
+};
+
+module.exports = {
+    "DNSProber" :  DNSProber,
+    "DNSBurster" : DNSBurster
+};
+
+//v1.0.0

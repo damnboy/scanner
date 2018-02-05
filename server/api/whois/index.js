@@ -10,7 +10,7 @@ router.use(function timeLog (req, res, next) {
 
 // define the about route
 router.get('/:taskId', function (req, res) {
-    dbApi.getNetnames(req.params.taskId)
+    dbApi.getJoinedNetnames(req.params.taskId)
     .then(function(results){
         res.status(200)
         .json(utils.successJSONResponse(results))

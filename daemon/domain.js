@@ -1,6 +1,6 @@
 var log = require('../utils/logger').createLogger('[daemon:domain]')
 var EventEmitter = require("events").EventEmitter;
-var DNSProber = require('../libs/dns').DNSProber;
+var DNSBurster = require('../libs/dns');
 var dict = require('../utils/dict');
 var wire = require("./wire");
 var wirerouter = require("./wire/router.js")
@@ -41,75 +41,134 @@ module.exports.handler = function(argvs){
     });
     
     sub.on("message", wirerouter()
-        .on(wire.ClientReady, function(channel, message, data){
-            log.info("Got domain scan task(" + message.taskId + ")...");
-            dbapi.getDomainTask(message.taskId)
+        .on(wire.DomainTaskReady, function(channel, message, data){
+            log.info("Got domain scan task(" + message.id + ")...");
+            //dbapi.getDomainTask(message.taskId)
+            Promise.resolve(message)
             .then(function(taskInfo){
                 return registerDNSProbe(taskInfo.id, taskInfo.targetDomain, taskInfo.dict, taskInfo.customNameservers)
                 .then(function(summary){
                     log.info(taskInfo.targetDomain);
                     log.info(summary);
 
-                    push.send([message.taskId, wireutil.envelope(wire.ScanResultDNS,{})]);
+                    push.send([message.id, wireutil.envelope(wire.ScanResultDNS,{})]);
 
-                })
+                });
             })
             .catch(function(err){
-                log.error(err)
-            })
+                log.error(err);
+            });
+        })
+        .on(wire.MixTaskReady, function(channel, message, data){
+            
+            //message.hosts字段批量入service索引
+            var taskId = channel.toString('utf-8');
+            
+
+            var step = Promise.resolve(message.hosts);
+            if(message.hosts.length !== 0){
+                log.info('Bulking ('+ message.hosts.length + ') ip addresses of task(' + taskId + ') into service scanning...');
+                step = step.then(function(hosts){
+                    return hosts.map(function(host){
+                        return {
+                            "createDate" : Date.now(),
+                            "done" : false,
+                            "ip" : host,
+                            "taskId" : taskId
+                        }
+                    });
+                })
+                .then(function(records){
+                    var bulkBody = records.reduce(function(bulk, record){
+                        bulk.push(JSON.stringify({ "index":{ "_index": "services", "_type": "doc" } }));
+                        bulk.push(JSON.stringify(record));
+                        return bulk;
+                    },[])
+    
+                    return dbapi.executeBulk('services', bulkBody.join('\n') + '\n')
+                    .then(function(result){
+                        console.log(result);
+                    })
+                })
+                .catch(function(err){
+                    console.log(err);
+                })
+            }
+            
+            step
+            .then(function(){
+                //message.domain字段调用公共dns服务器进行解析
+                return registerPublicDNSProbe(message.id, message.domains)
+                .then(function(summary){
+                    log.info(summary);
+
+                    push.send([message.id, wireutil.envelope(wire.ScanResultDNS,{})]);
+                });
+            });
+
+            
         })
         .handler()
     );
 
     var router = new EventEmitter();
+    function registerPublicDNSProbe(taskId, domains){
+        return new Promise(function(resolve, reject){
+            var dns = new DNSBurster();
+            
+            dns.on('error', function(error){
+                reject(error);
+            });
+
+            dns.on('timeout', function(record){
+                router.emit('dns.timeout', taskId, record);
+            });
+
+            dns.on('response', function(response){
+                router.emit('dns.response', taskId, response);
+            });
+
+            dns.on('finish', function(summary){
+                resolve(summary);
+            });
+
+            dns.burstDomains(domains, ['223.5.5.5'], []);
+        });
+    }
     function registerDNSProbe(taskId, target, dict_name, customNameservers){
         return new Promise(function(resolve, reject){
             dict.getDNSDict(dict_name)
             .then(function(records){
                 log.info(util.format("Got %d records from dict: %s", records.length, dict_name));
-                var prober = new DNSProber();
-                prober.on('failed', function(trace){
-                
+                var dns = new DNSBurster();
+                dns.on('failed', function(trace){
                     var nameservers = trace[trace.length - 1].reduce(function(ret, record){
                         return ret.concat(record.ip);
                     }, []);
-                    prober.manualProbe(target, nameservers, records);
+                    prober.burstTargetDomain(target, records, nameservers);
                 });
 
-                prober.on('trace', function(trace){
+                dns.on('trace', function(trace){
                     router.emit('dns.trace', taskId, trace);
                 });
                 
-                prober.on('error', function(error){
+                dns.on('error', function(error){
                     reject(error);
                 });
 
-                prober.on('timeout', function(record){
+                dns.on('timeout', function(record){
                     router.emit('dns.timeout', taskId, record);
                 });
 
-                prober.on('response', function(response){
+                dns.on('response', function(response){
                     router.emit('dns.response', taskId, response);
                 });
 
-                prober.on('record.a', function(record){
-                    router.emit('dns.record.a', taskId, record);
-                });
-
-                prober.on('record.cname', function(record){
-                    router.emit('dns.record.cname', taskId, record);
-                });
-                
-                prober.on('finish', function(summary){
+                dns.on('finish', function(summary){
                     resolve(summary);
                 });
 
-                if(customNameservers !== undefined && customNameservers.length === 0){
-                    prober.autoProbe(target, records);
-                }
-                else{
-                    prober.manualProbe(target, customNameservers, records);
-                }
+                dns.burstTargetDomain(target, records, customNameservers);
             });
         });
     }
@@ -158,9 +217,11 @@ module.exports.handler = function(argvs){
     //pub到services与whois进行二阶扫描
     router.on('dns.record.a', function(taskId, record){
         //入库.then(push.send)
+        /*
         push.send([taskId, wireutil.envelope(wire.IPv4Infomation,{
             "ip" : record.data
         })]);
+        */
     });
 
     router.on('dns.record.cname', function(taskId, record){
@@ -187,6 +248,12 @@ module.exports.handler = function(argvs){
     process.on("SIGTERM", function(){
         closeSocket();
     });
+
+
+    process.on('unhandledRejection', function(err){
+        console.log('---');
+        console.log(err)
+    })
 };
 
 

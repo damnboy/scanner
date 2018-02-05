@@ -47,96 +47,76 @@ module.exports.handler = function(argvs){
 
     var sub = zmq.socket("sub");
     sub.subscribe("");
-    sub.bindSync(argvs.bindSub)
+    sub.bindSync(argvs.bindSub);
     log.info('SUB socket bound on', argvs.bindSub);
 
 
 
     pull.on("message", wirerouter()
-    .on(wire.CreateDomainScanTaskInfo, function(channel, message, data){
-
-        var taskInfo = _.assign({
-            "id" : uuid(),
-            "createDate" : Date.now(),
-            "description" : "",
-            "remark" : "",
-        }, message);
-
-        //入库
-        dbapi.saveDomainTask(taskInfo)
+    .on(wire.CreateScanTask, function(channel, message, data){
+        var id = uuid();
+        pub.send([id, wireutil.envelope(wire.ScanTaskInfo, {id : id})]);
+    })
+    .on(wire.DomainTaskReady, function(channel, message, data){
+         //入库
+         dbapi.saveDomainTask(message)
+         .then(function(){
+             log.info("Domain scan task(" + message.taskId + ") created...");
+             //返回客户端创建后的任务id
+             //各个daemon分别根据ClientReady中的id信息，到对应的index中获取任务细项进行扫描
+             pub.send([channel, wireutil.envelope(wire.DomainTaskReady, message)]);
+             
+         })
+         .catch(function(err){
+             log.error(err);
+         });
+    })
+    .on(wire.MixTaskReady, function(channel, message, data){
+        dbapi.saveMixTask(message)
         .then(function(){
-            log.info("Domain scan task("+taskInfo.id+") created...")
+            log.info("Mix scan task(" + message.id + ") created...");
             //返回客户端创建后的任务id
-            pub.send([taskInfo.id, wireutil.envelope(wire.ScanTaskInfo, {
-                "id" : taskInfo.id,
-                "createDate" : taskInfo.createDate
-            })]);
+            //各个daemon分别根据ClientReady中的id信息，到对应的index中获取任务细项进行扫描
+            pub.send([channel, wireutil.envelope(wire.MixTaskReady, message)]);
+            
         })
         .catch(function(err){
             log.error(err);
-        })
-    })
-    .on(wire.ClientReady, function(channel, message, data){
-        //各个daemon分别根据ClientReady中的id信息，到对应的index中获取任务细项进行扫描
-        pub.send([channel, wireutil.envelope(wire.ClientReady, message)]);
+        });
     })
     .on(wire.ScanResultDNS, function(channel, message, data){
         
+        //发送DNS扫描完成消息到whois与service进程
+        //两进程各自从dnsrecord索引读取ip地址，进行各自的查询。
+        
         setTimeout(function(){
-            var taskId = channel.toString('utf-8');
-            log.info('Bulking ip addresses of task(' + taskId + ') into service scanning...');
-
-            dbapi.getHosts(taskId)
-            .then(function(hosts){
-
-                return hosts.map(function(host){
-                    return {
-                        "createDate" : Date.now() ,
-                        "done" : false,
-                        "ip" : host,
-                        "taskId" : taskId
-                    }
-                });
-            })
-            .then(function(records){
-
-                var bulkBody = records.reduce(function(bulk, record){
-                    bulk.push(JSON.stringify({ "index":{ "_index": "services", "_type": "doc" } }));
-                    bulk.push(JSON.stringify(record));
-                    return bulk;
-                },[])
-
-                dbapi.executeBulk('services', bulkBody.join('\n') + '\n')
-                .then(function(result){
-                    console.log(result);
-                })
-            })
-            .catch(function(err){
-                console.log(err);
-            })
-
+            pub.send([channel, wireutil.envelope(wire.ScanResultDNS, {})]);
         }, 5000);
+        
     })
     .on(wire.IPv4Infomation, function(channel, message, data){
         //扫描任务入库，由nmap调度器负责读取尚未扫描的任务，并执行扫描
         pub.send([channel, wireutil.envelope(wire.IPv4Infomation,message)]);
-        /*
-        dbapi.scheduleNmapTask({
-            "taskId" : channel.toString("utf-8"),
-             "ip" : message.ip
-        }).then(function(response){
-            
-        })
-        */
     })
     .on(wire.ServiceInformation, function(channel, message, data){
         /*TODO 一次提交多个端口指纹扫描请求到nmap，扫描完毕之后bulk接口提交到elasticsearch中 */
+        /*
         message.ports.forEach(function(port){
             dbapi.scheduleBannerTask(message.ip, port, message.type, message.taskId)
             .then(function(response){
                 pub.send([channel, wireutil.envelope(wire.ServiceInformation, message)]);
             })
         })
+        */
+        //全端口扫描，该消息触发的频率不高，暂时简单实现
+        //优先转发到ssl进程进行ssl服务识别以及证书提取
+        //pub.send([channel, wireutil.envelope(wire.ServiceInformation, message)]);
+    })
+    .on(wire.SSLHost, function(channel, message, data){
+        pub.send([channel, wireutil.envelope(wire.SSLHost, message)]);
+    })
+    .on(wire.NonSSLHost, function(channel, message, data){
+        pub.send([channel, wireutil.envelope(wire.NonSSLHost, message)]);
     })
     .on(wire.ScanResultDNSRecordA, function(channel, message, data){
         //dns a记录

@@ -8,6 +8,7 @@ var _argv = yargs.usage('Usage: $0 <command> [options]')
   .command(require('./service'))
   .command(require('./banner'))
   .command(require('./local'))
+  .command(require('./ssl'))
   .demandCommand(1, 'Must provide a valid command.')
   .help('h', 'Show help.')
   .argv

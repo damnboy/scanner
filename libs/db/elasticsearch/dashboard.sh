@@ -1,5 +1,4 @@
 ## ip - domain 映射聚合查询
-
 curl -XGET 'http://127.0.0.1:9200/dnsrecord/_search?pretty' -H 'Content-Type: application/json' -d'
 {
     "from" : 0,
@@ -46,7 +45,22 @@ curl -XGET 'http://127.0.0.1:9200/dnsrecord/_search?pretty' -H 'Content-Type: ap
 '
 
 
+//
 
+## whois信息，netblock下的主机数量
+curl -XGET 'http://127.0.0.1:9200/whois/_search?pretty' -H 'Content-Type: application/json' -d'
+{
+    "size" : 0,
+    "query" : {
+        "match" : { "taskId" : "42918210-ffe7-11e7-addc-939bab6162c3" }
+    },
+    "aggs" : {
+        "netname" : { 
+            "terms" : { "field" : "joinedNetname"} 
+        }
+    }
+}
+'
 
 ## whois信息，netblock下的主机数量
 curl -XGET 'http://127.0.0.1:9200/whois/_search?pretty' -H 'Content-Type: application/json' -d'
@@ -97,17 +111,16 @@ curl -XGET 'http://127.0.0.1:9200/whois/_search?pretty' -H 'Content-Type: applic
 ## 某网段下的host信息
 curl -XGET 'http://127.0.0.1:9200/whois/_search?pretty' -H 'Content-Type: application/json' -d'
 {
-    "size" : 0,
     "query" : {   
        "bool" : {
          "must" : [
-           {"match" : {"taskId" : "13a4c710-fc62-11e7-a13b-2bbc7490144a"}},
+           {"match" : {"taskId" : "4de50740-ffdd-11e7-8976-1906e36f9b21"}},
            {"nested" : {
             "path" : "detail",
             "query" : {
                 "bool" : {
                     "must" : [
-                    { "match" : {"detail.netname" : "CHINANET-GD"} }
+                    { "match" : {"detail.netname" : "SHINBIRO-KR"} }
                     ]
                 }
             }
@@ -137,6 +150,25 @@ curl -XGET 'http://127.0.0.1:9200/whois/_search?pretty' -H 'Content-Type: applic
                 "bool" : {
                     "must" : [
                     { "match" : {"detail.netblock" : "ALISOFT"} }
+                    ]
+                }
+            }
+        }
+    },
+    "aggs": {
+      "ip": {"terms": { "field": "ip" }}
+    }
+}'
+
+curl -XGET 'http://127.0.0.1:9200/whois/_search?pretty' -H 'Content-Type: application/json' -d'
+{
+    "query": {
+        "nested" : {
+            "path" : "detail",
+            "query" : {
+                "bool" : {
+                    "must" : [
+                    { "match" : {"detail.netblock" : "219.87.145.128 - 219.87.145.255"} }
                     ]
                 }
             }
