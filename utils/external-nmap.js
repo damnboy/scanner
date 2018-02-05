@@ -54,7 +54,7 @@ NmapSchedule.prototype.startNmap = function(){
         //根据时间戳，从nmaptask索引中获取距离当前时间间隔最长的主机开放服务扫描任务
         return dbapi.getScheduledNmapTask()
         .then(function(doc){
-            return self.fastScan(doc._source)
+            return self.scan(doc._source)
             .then(function(hostInfo){
                 return dbapi.doneNmapTask(hostInfo, doc._id);
             })
