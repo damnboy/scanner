@@ -42,6 +42,12 @@ module.exports.handler = function(argvs){
     function schedule(){
         dbapi.getScheduledNmapBannerTasks()
         .then(function(tasks){
+            if(tasks.length === 0){
+                setTimeout(function(){
+                    schedule();
+                }, 5000); //等待els写入完成
+                return;
+            }
             return Promise.all(tasks.map(function(task){
                 return nmap.portBanner({
                     taskId : task.taskId,
@@ -73,7 +79,7 @@ module.exports.handler = function(argvs){
         });
     }
 
-    schedule()
+    schedule();
     sub.on("message", 
     wirerouter().on(wire.ServiceInformation, function(channel, message, data){
          //扫描任务入库，由nmap调度器负责读取尚未扫描的任务，并执行扫描
