@@ -97,7 +97,7 @@ module.exports.handler = function(argvs){
 
     sub.on("message", wirerouter()
         .on(wire.ScanResultDNS, function(channel, message, data){
-            var taskId = channel.toString('utf-8')
+            var taskId = channel.toString('utf-8');
             dbapi.getHosts(taskId)
             .then(function(hosts){
                 return dbapi.scheduleNmapServiceTasks(taskId, hosts);

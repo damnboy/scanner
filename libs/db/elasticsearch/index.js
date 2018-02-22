@@ -321,6 +321,10 @@ module.exports = function(options){
 
 
     DBApi.prototype.scheduleNmapServiceTasks = function(taskId, hosts){
+        if(hosts.length === 0){
+            log.warn('no valid hosts found on task(%s)', taskId);
+        }
+
         log.info('Bulking ip addresses of task(' + taskId + ') into service scanning...');
         var bulkBody = hosts
         .map(function(host){
@@ -521,6 +525,9 @@ module.exports = function(options){
     }
 
     DBApi.prototype.scheduleBannerTasks = function(ip, ports, type, taskId){
+        if(ports.length === 0){
+            log.warn('no valid ports found on %s', ip);
+        }
         log.info('Bulking banner tasks on ' + ip + ' into banner scanning...');
         var bulkBody = ports
         .map(function(port){
