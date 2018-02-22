@@ -5,64 +5,58 @@ var dbapi = require('../libs/db');
 var events = require('events');
 var util = require('util');
 var bluebird = require('bluebird');
+var settings = require('../settings');
+var _ = require('lodash');
+/*
+    open
+    syn,syn-ack,rst
 
+    close
+    syn,rst
+
+    filtered 
+    syn*n
+
+    unfiltered
+    ack扫描中出现的结果，需要使用window／syn／fin扫描来判断端口是否开放
+
+    open|filtered
+    udp，ip，FIN，NULL，Xmax扫描中主线
+
+
+    close|filtered
+    idle scan类型中出现
+*/
 function NmapSchedule(){
     events.EventEmitter.call(this);
     this.external_binary = 'nmap';
     this.chain = Promise.resolve('Nmap Schedule Started...');
-    this.chainBanner = Promise.resolve('Banner Schedule Started...');
+
 }
 
 util.inherits(NmapSchedule, events.EventEmitter);//使这个类继承EventEmitter
 
-NmapSchedule.prototype.startBanner = function(){
-    var self = this;
-    this.chain
-    .then(function(result){
-        //根据时间戳，从nmaptask索引中获取距离当前时间间隔最长的主机开放服务扫描任务
-        return dbapi.getScheduledBannerTask();
-    })
-    .then(function(doc){
-        var serviceInfo = doc._source;
-        return self.portBanner(serviceInfo)
-        .then(function(bannerInfo){
-            dbapi.doneBannerTask(bannerInfo, doc._id)
-            .then(function(){
-                setTimeout(function(){
-                    self.startBanner()
-                }, 5000) //nodejs消息队列有机会进行消息调度
-            })
-            .catch(function(err){
-                log.error('doneBannerTask ' , err);
-                self.startBanner();
-            })
-        })
-    })
-    .catch(function(err){
-        log.error('getScheduledBannerTask ' + err);
-        setTimeout(function(){
-            self.startBanner();
-        }, 5000);
-    })
-    
-}
-
 NmapSchedule.prototype.startNmap = function(){
     var self = this;
-    this.chain
+    this.chain = Promise.resolve(1)
     .then(function(result){
         //根据时间戳，从nmaptask索引中获取距离当前时间间隔最长的主机开放服务扫描任务
-        return dbapi.getScheduledNmapTask()
-        .then(function(doc){
-            return self.scan(doc._source)
-            .then(function(hostInfo){
-                return dbapi.doneNmapTask(hostInfo, doc._id);
-            })
+        return dbapi.getScheduledNmapTask(settings.nmap.concurrence)
+        .then(function(tasks){
+            return Promise.all(tasks.map(function(task){
+                self.webScan({
+                    ip : task.ip,
+                    taskId : task.taskId
+                })
+                .then(function(hostInfo){
+                    return dbapi.doneNmapTask(hostInfo);
+                });
+            }));
         })
         .then(function(doc){
             setTimeout(function(){
-                self.startNmap()
-            }, 5000) //nodejs消息队列有机会进行消息调度
+                self.startNmap();
+            }, 5000); //nodejs消息队列有机会进行消息调度
         })
         .catch(function(err){
             log.error('getScheduledNmapTask ' + err);
@@ -74,68 +68,54 @@ NmapSchedule.prototype.startNmap = function(){
 }
 
 NmapSchedule.prototype.wait = function(){
-     return Promise.all([this.chain, this.chainBanner]);
+     return Promise.all([this.chain]);
 }
 
-/*
--sV --version-trace --version-all
-
-Service scan match (Probe NULL matched with NULL line 3487): 198.177.122.30:22 is ssh.  Version: |OpenSSH|6.4|protocol 2.0|
-
-.match(/ is ([\w]*).\s*Version:\s([^\s]*)/)
-*/
-
-NmapSchedule.prototype.portBanner = function(serviceInfo){
-
+NmapSchedule.prototype.webScan = function(ti){
     var self = this;
     return new Promise(function(resolve, reject){
-
-        var bannerInfo = {
-            "service" : "UNKNOWN",
-            "version" : "UNKNOWN",
-            "sslSupport" : false,
-            "scannedBy" : "nmap",
-            "raw" : Buffer.from("", 'utf8').toString('base64')
-        }
+        var taskInfo = ti;
+        taskInfo.tcp = [];
+        taskInfo.udp = [];
 
         var proc = child_process.spawn('nmap',[
-            serviceInfo.ip,
+            taskInfo.ip,
             '-vv',
             '-n',
-            '-sV',
-            '--version-trace',
-            '--version-all',
             '-Pn',
-            '-p', serviceInfo.port,
-            '--min-rate','2000'
+            '-p 80,8080,8000',
+            '--min-rate', settings.nmap.rate
         ]);
-        
-        log.info(serviceInfo.ip, serviceInfo.port, serviceInfo.type);
-        
+
         proc.stdout.on('data', function(data){
-            var output = data.toString('utf-8').split('\n');
-            var reg = /\d*\/tcp]*\s*open\s*([a-z\/\-]*)\s*syn-ack*\s*(?:ttl)?\s?(?:\d*)?([\w\W]*)$/g;
-            output.forEach(function(line){
-                    var r = reg.exec(line, 'i');
-                    if(r){
-                        bannerInfo["service"] = r[1].split('/').reverse()[0];
-                        bannerInfo["sslSupport"] = r[1].split('/').length > 1;
-                        bannerInfo["version"] = r[2];
-                        bannerInfo["raw"] = Buffer.from(line, 'utf8').toString('base64');
-                    }
-            })
+            var output = data.toString('utf-8');
+            var reg = /open port (\d*)\/(\w*)/g;
+            var result = reg.exec(output, 'i');
+            if(result){
+                var port = parseInt(result[1]);
+                if(result[2] === 'tcp'){
+                    taskInfo.tcp.push(port);
+                    self.emit('tcp', taskInfo['taskId'], taskInfo.ip, port);
+                }
+                else if(result[2] === 'udp'){
+                    taskInfo.udp.push(port);
+                    self.emit('udp', taskInfo['taskId'], taskInfo.ip, port);
+                }
+                else{
+                    ;
+                }
+                log.info(taskInfo.ip + ' ' + port + '/' + result[2]);
+            }
         })
 
         proc.stderr.on('data', function(data){
-            var output = data.toString('utf-8');
-            if(!output.match(/NSOCK/)){
-                log.warn(output);
-            }
+            log.warn(data.toString('utf-8'));
         })
 
         proc.on('exit', function(code, signal){
             if(code === 0){
-                resolve(bannerInfo);
+                self.emit('host', taskInfo['taskId'], taskInfo.ip, taskInfo.tcp, taskInfo.udp);
+                resolve(taskInfo)
             }
             else{
                 log.warn('nmap exit unexcepted with code: ' + code)
@@ -143,10 +123,8 @@ NmapSchedule.prototype.portBanner = function(serviceInfo){
             }
         })
     })
-    .catch(function(err){
-        log.error('portBanner: ' + err);
-    })
 }
+
 
 NmapSchedule.prototype.fastScan = function(ti){
     var self = this;
@@ -162,7 +140,7 @@ NmapSchedule.prototype.fastScan = function(ti){
             '-n',
             '-Pn',
             '-F',
-            '--min-rate','2000'
+            '--min-rate', settings.nmap.rate
         ]);
 
         proc.stdout.on('data', function(data){
@@ -210,14 +188,13 @@ NmapSchedule.prototype.scan = function(ti){
         taskInfo.tcp = [];
         taskInfo.udp = [];
 
-
         var proc = child_process.spawn('nmap',[
             taskInfo.ip,
             '-vv',
             '-n',
             '-Pn',
             '-p-',
-            '--min-rate','2000'
+            '--min-rate', settings.nmap.rate
         ]);
 
         proc.stdout.on('data', function(data){
@@ -251,7 +228,7 @@ NmapSchedule.prototype.scan = function(ti){
                 resolve(taskInfo)
             }
             else{
-                log.warn('nmap exit unexcepted with code: ' + code)
+                log.warn('nmap exit unexcepted with code: ' + code);
                 reject(code);
             }
         })

@@ -20,7 +20,11 @@ enum MessageType {
 
   SSLHost = 40;
   NonSSLHost = 41;
+  
+  RuntimeError = 100;
+
   Debugging = 1000;
+  
 }
 message Debugging{
   required string message = 1;
@@ -104,7 +108,7 @@ message ScanResultServiceBanner{
   required string service = 4;
   required string version = 5;
   required bool sslSupport = 6;
-  required string scanedBy = 7;
+  required string scannedBy = 7;
   required bytes raw = 8;
 }
 
@@ -121,4 +125,8 @@ message SSLHost{
 message NonSSLHost{
   required string ip = 1;
   required int32 port = 2;
+}
+
+message RuntimeError{
+  required string error = 1;
 }

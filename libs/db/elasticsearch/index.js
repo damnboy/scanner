@@ -7,7 +7,7 @@ module.exports = function(options){
     var log = require('../../../utils/logger').createLogger('[db:elasticsearch]');
     var _ = require("lodash");
     function server(){
-        return util.format('http://%s:%d', options.host, options.port)
+        return util.format('http://%s:%d', options.host, options.port);
     }
 
     DBApi.prototype._executeDSLQuery = function(index, op, query){
@@ -20,8 +20,12 @@ module.exports = function(options){
                     "json" : true
                 }, function(error, response){
                     if(error){
+                        log.debug(JSON.stringify(query));
+                        log.error(error);
                         reject(error);
+                        return;
                     }
+
                     if(response.statusCode >= 200 && response.statusCode < 300){
                         resolve(response.body);
                     }
@@ -33,6 +37,29 @@ module.exports = function(options){
             });
         });
     }
+
+    DBApi.prototype.executeUpdate = function(index, id, doc){
+        return db.connect()
+        .then(function(){
+            return new Promise(function(resolve, reject){   
+                request.post({
+                    'url' : server() + index + id + '/_update',
+                    'body' : {"doc": doc},
+                    'json' : true
+                }, function(error, response){
+                    if(error){
+                        reject(error);
+                    }
+                    else if(response.statusCode === 200){
+                        resolve(response.body);
+                    }
+                    else{
+                        reject(response.body);
+                    }
+                });
+            });
+        });
+    };
 
     DBApi.prototype.executeAggregation = function(index, query){
         return this._executeDSLQuery(index, '_search', query)
@@ -56,7 +83,7 @@ module.exports = function(options){
                         reject(error);
                     }
                     if(response.statusCode >= 200 && response.statusCode < 300){
-                        resolve(response.body);
+                        resolve(JSON.parse(response.body));
                     }
                     else{
                         log.error(response.body);
@@ -168,67 +195,54 @@ module.exports = function(options){
     };
 
     DBApi.prototype.doneNmapTask = function(hostInfo, id){
-        return db.connect()
-        .then(function(){
-            return new Promise(function(resolve, reject){   
-                request.post({
-                    'url' : server() + '/services/doc/' + id + '/_update',
-                    'body' : 
-                        {
-                            "doc":
-                                _.assign(hostInfo , {
-                                'scannedDate' : Date.now() ,
-                                'done' : true})
-                            
-                        },
-                    'json' : true
-                }, function(error, response){
-                    if(error){
-                        reject(error)
-                    }
-                    else if(response.statusCode === 200){
-                        resolve(response.body)
-                    }
-                    else{
-                        reject(response.statusCode)
-                    }
-                })
-            })
+
+        var self = this;
+        return this._executeDSLQuery('services', '_search', {
+            "query" :{
+                "bool" :{
+                    "must" : [
+                        {"term" : {"ip" : hostInfo.ip}},
+                        {"term" : {"taskId" : hostInfo.taskId}}
+                    ]
+                }
+            },
+            "size" : 1
         })
-    }
+        .then(function(raw){
+            return raw.hits.hits[0]._id;
+        })
+        .then(function(id){
+            hostInfo.scannedDate = Date.now();
+            hostInfo.done = true;
+            return self.executeUpdate('/services/doc/', id, hostInfo);
+        })
+        .catch(function(err){
+            log.error(err);
+        });
+    };
     //els排序
-    DBApi.prototype.getScheduledNmapTask = function(){
-        //TODO 清空servicebanner中对应任务下的banner记录
+    DBApi.prototype.getScheduledNmapTask = function(size){
+        var self = this;
         return db.connect()
         .then(function(){
-            return new Promise(function(resolve, reject){
-                request.get({
-                    'url' : server() + '/services/_search?size=1',
-                    'body' : {
-                        "query" :{
-                            "bool" :{
-                                "filter" : [
-                                    { "term" :{"done" : false} }
-                                ]
-                            }
-                        },
-                        "sort": { "createDate": "asc"} 
-                    },
-                    'json' : true
-                }, function(error, response){
-                    if(error){
-                        reject(error)
+            var query = {
+                "query" :{
+                    "bool" :{
+                        "filter" : [
+                            { "term" :{"done" : false} }
+                        ]
                     }
-                    else if(response.statusCode === 200 && response.body.hits.hits.length === 1){
-                        resolve(response.body.hits.hits[0]);
-                    }
-                    else{
-                        reject(response.statusCode)
-                    }
-                })
-            })
+                },
+                "sort" : { "createDate": "asc"},
+                "size" : size
+            };
+            return self.executeDSLSearch('services', query);
+        })
+        .catch(function(err){
+            log.error('getScheduledNmapTask', err);
         })
     }
+
 
     DBApi.prototype.scheduleNmapTask = function(record){
         return db.connect()
@@ -305,6 +319,151 @@ module.exports = function(options){
         })
     };
 
+
+    DBApi.prototype.scheduleNmapServiceTasks = function(taskId, hosts){
+        log.info('Bulking ip addresses of task(' + taskId + ') into service scanning...');
+        var bulkBody = hosts
+        .map(function(host){
+            return {
+                "createDate" : Date.now() ,
+                "done" : false,
+                "ip" : host,
+                "taskId" : taskId
+            }
+        })
+        .reduce(function(bulk, record){
+            bulk.push(JSON.stringify({ "index":{ "_index": "services", "_type": "doc" } }));
+            bulk.push(JSON.stringify(record));
+            return bulk;
+        },[])
+
+        return this.executeBulk('services', bulkBody.join('\n') + '\n')
+        .then(function(result){
+            log.info('%d host service scan task created!' , result.items.length);
+        })
+    }
+
+    DBApi.prototype.getScheduledServiceBannerTask = function(type, size){
+        var query = {
+            "query" :{
+                "bool" :{
+                    "filter" : [
+                        { "term" :{"done" : false} }
+                    ]
+                }
+            },
+            "sort": { "createDate": "asc"} 
+        };
+        if(size){
+            query.size = size;
+        }
+        if(type){
+            query.query.bool.filter.push({"term" : {"scannedBy" : type}});
+        }
+        return this.executeDSLSearch('servicebanner', query);
+    }
+
+    DBApi.prototype.doneScheduledServiceBannerTask = function(taskInfo){
+        var self = this;
+        return this._executeDSLQuery('servicebanner', '_search', {
+            "query" :{
+                "bool" :{
+                    "must" : [
+                        {"term" : {"ip" : taskInfo.ip}},
+                        {"term" : {"taskId" : taskInfo.taskId}},
+                        {"term" : {"port" : taskInfo.port}}
+                    ]
+                }
+            },
+            "size" : 1
+        })
+        .then(function(raw){
+            return raw.hits.hits[0]._id;
+        })
+        .then(function(id){
+            return self.executeUpdate('/servicebanner/doc/', id, taskInfo);
+        })
+        .catch(function(err){
+            log.error(err);
+        })
+    };
+
+    DBApi.prototype.getScheduledSSLBannerTasks = function(){
+        return this.getScheduledServiceBannerTask('-', 16);
+    };
+
+    //cert批量入库
+    DBApi.prototype.saveSSLCert = function(sslHostInfo){
+        delete sslHostInfo.cert.raw;
+        return db.connect()
+        .then(function(){
+            return new Promise(function(resolve, reject){   
+                request.post({
+                    'url' : server() + '/sslcerts/doc',
+                    'body' : sslHostInfo,
+                    'json' : true
+                }, function(error, response){
+                    if(error){
+                        reject(error);
+                    }
+                    else if(response.statusCode === 201){
+                        resolve(response.body);
+                    }
+                    else{
+                        reject(response.body);
+                    }
+                });                        
+            });
+        });
+    };
+
+    DBApi.prototype.doneScheduledSSLBannerTask = function(taskInfo){
+        taskInfo.scannedBy = 'ssl';
+        return this.doneScheduledServiceBannerTask(taskInfo);
+    };
+
+
+    DBApi.prototype.saveWebInfo = function(webInfo){
+        return db.connect()
+        .then(function(){
+            return new Promise(function(resolve, reject){   
+                request.post({
+                    'url' : server() + '/web/doc',
+                    'body' : webInfo,
+                    'json' : true
+                }, function(error, response){
+                    if(error){
+                        reject(error);
+                    }
+                    else if(response.statusCode === 201){
+                        resolve(response.body);
+                    }
+                    else{
+                        reject(response.body);
+                    }
+                });                        
+            });
+        });
+    }
+    DBApi.prototype.getScheduledWebBannerTasks = function(){
+        return this.getScheduledServiceBannerTask('ssl', 16);
+    };
+
+    DBApi.prototype.doneScheduledWebBannerTask = function(taskInfo){
+        taskInfo.scannedBy = 'web';
+        return this.doneScheduledServiceBannerTask(taskInfo);
+    };
+
+    DBApi.prototype.getScheduledNmapBannerTasks = function(){
+        return this.getScheduledServiceBannerTask('web', 1);
+    };
+
+    DBApi.prototype.doneScheduledNmapBannerTask = function(taskInfo){
+        taskInfo.done = true;
+        taskInfo.scannedBy = 'nmap';
+        return this.doneScheduledServiceBannerTask(taskInfo);
+    };
+
     DBApi.prototype.saveBanner = function(banner){
         return db.connect()
         .then(function(){
@@ -326,12 +485,8 @@ module.exports = function(options){
                     ;//log.info(response.body);
                 }
             });
-        })
-    }
-
-    DBApi.prototype.updateBanner = function(options){
-
-    }
+        });
+    };
 
     DBApi.prototype.doneBannerTask = function(bannerInfo, id){
 
@@ -365,42 +520,39 @@ module.exports = function(options){
         })
     }
 
-    DBApi.prototype.scheduleBannerTask = function(ip, port, type, taskId){
-        return db.connect()
-        .then(function(){
-            request.post({
-                'url' : server() + '/servicebanner/doc/',
-                'body' : {
-                    "ip" : ip,
-                    "port" : port,
-                    "type" : type,
-                    "taskId" : taskId,
-                    "createDate" : Date.now(),
-                    "done" : false,
-                    "description" : 'description',
-                    "remark" : 'remark',
-                    "service" : 'UNKNOWN',
-                    "version" : 'UNKNOWN',
-                    "sslSupport" : false,
-                    "scannedBy" : 'UNKNOWN',
-                    "raw" : Buffer.from("", 'utf8').toString('base64')
-                },
-                'json' : true
-            }, function(error, response){
-                if(error){
-                    log.error(error);
-                }
-                else{
-                    if(response.statusCode === 201){
-                        ;//log.info(response.body._index, response.body._id);
-                    } 
-                    else{
-                        log.error(response.body);
-                    }
-                }
-            });
+    DBApi.prototype.scheduleBannerTasks = function(ip, ports, type, taskId){
+        log.info('Bulking banner tasks on ' + ip + ' into banner scanning...');
+        var bulkBody = ports
+        .map(function(port){
+            return {
+                "ip" : ip,
+                "port" : port,
+                "type" : type,
+                "taskId" : taskId,
+                "createDate" : Date.now(),
+                "done" : false,
+                "description" : 'description',
+                "remark" : 'remark',
+                "service" : '-',
+                "version" : '-',
+                "sslSupport" : false,
+                "scannedBy" : '-',
+                "raw" : Buffer.from("", 'utf8').toString('base64')
+            }
         })
+        .reduce(function(bulk, record){
+            bulk.push(JSON.stringify({ "index":{ "_index": "servicebanner", "_type": "doc" } }));
+            bulk.push(JSON.stringify(record));
+            return bulk;
+        },[])
+
+        return this.executeBulk('servicebanner', bulkBody.join('\n') + '\n')
+        .then(function(result){
+            log.info('%d banner scan task created!' , result.items.length);
+        })
+
     }
+
 
     DBApi.prototype.getScheduledBannerTask = function(){
         //TODO 清空servicebanner中对应任务下的banner记录

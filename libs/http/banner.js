@@ -6,129 +6,92 @@ var cheerio = require('cheerio');   //https://github.com/cheeriojs/cheerio
 var util = require('util');
 var events = require('events');
 var WebPage = require('./page.js');
-var Queue = require('../../utils/queue.js');
+var Queue = require('../../utils/q.js');
 var log = require('../../utils/logger.js');
 var logger = log.createLogger('[WEBAPP-BANNER]');
+var settings = require('../../settings');
 
-/*
-TODO 
-https支持，需要处理的https错误信息
-
-*/
 function WebApplicationBanner(){
 
     events.EventEmitter.call(this);
-    this.summary = [];
+
     var self = this;
-    this.timeout = 5000;
-    this.queue = new Queue(8);
+    this.queue = new Queue(8, [], function(options){
+        return function(){
+            return new Promise(function(resolve, reject){
+                options.url = options.ssl ? util.format('https://%s:%s', options.host, options.port) : util.format('http://%s:%s', options.host, options.port);
+                var page = new WebPage();
+                return page.request(options.url)
+                .then(function(response){
+                    var title = response.body;
+
+                    if(title.length > 50){
+                        const $ = cheerio.load(title);
+                        title = $('title').text();
+                    }
+
+                    if(title.length === 0  && response.statusCode.toString().startsWith('3')){
+                        title = response.headers.location;
+                    }
+                    
+                    options.encoding = page.encoding;
+                    options.title = title;
+                    options.statusCode = response.statusCode;
+                    options.headers = response.headers;
+                    resolve(options);
+                })
+                .catch(function(error){
+                    options.error = error;
+                    reject(options);
+                });
+            });
+        };
+    });
 
     this.queue.on('done', function(response){
         logger.info('[%s/%s] %s - %s', 
-            response.statusCode, response.encoding, response.url, response.title)
-        
-        self.summary.push(response)
-    })
+            response.statusCode, response.encoding, response.url, response.title);
+
+        self.emit('web', response);
+    });
 
     this.queue.on('error', function(error){
-        logger.error('%s - %s', error.url, error.message)
-    })  
+        logger.error('%s - %s', error.url, error.error.message);
 
-    this.queue.on('finish', function(){
-        self.emit('finish', self.summary)
-        //console.log('finished')
+        self.emit('nonWeb', error);
+    });  
+
+    this.queue.on('empty', function(){
+        self.emit('empty');
     })
 
 }
 
 util.inherits(WebApplicationBanner, events.EventEmitter);//使这个类继承EventEmitter
 
+WebApplicationBanner.prototype.scanHost = function(hostInfo){
+    this.scanHosts([options]);
+};
 
-WebApplicationBanner.prototype.host = function(host, port){
-    return this.url(util.format('http://%s:%s', host, port));
-}
+WebApplicationBanner.prototype.scanHosts = function(hostsInfo){
+    var self = this;
+    hostsInfo.forEach(function(hostInfo){
+        self.queue.addJob(hostInfo);
+    });
+};
 
 /*
-    unable to verify the first certificate
+WebApplicationBanner.prototype.host = function(host, port){
+    this.queue.addJob(util.format('http://%s:%s', host, port));
+}
 
-    Hostname/IP doesn't match certificate's altnames: "IP: 198.177.122.44 is not in the cert's list: 
 
-    certificate revoked
-
-    https://stackoverflow.com/questions/11091974/ssl-error-in-nodejs
-    https://stackoverflow.com/questions/20433287/node-js-request-cert-has-expired
-    https://stackoverflow.com/questions/10888610/ignore-invalid-self-signed-ssl-certificate-in-node-js-with-https-request
-
-*/
 WebApplicationBanner.prototype.sslhost = function(host, port){
-    return this.url(util.format('https://%s:%s', host, port));
+    this.queue.addJob(util.format('https://%s:%s', host, port));
 }
-
-WebApplicationBanner.prototype.url = function(url){
-    var self = this;
-    this.queue.enqueue(function(){
-        return new Promise(function(resolve, reject){
-            var page = new WebPage();
-            return page.request(url)
-            .then(function(response){
-                var body = response.body;
-                const $ = cheerio.load(response.body);
-
-                resolve( {
-                    'url' : url,
-                    'encoding' : page.encoding,
-                    'title' : $('title').text(),
-                    'statusCode' : response.statusCode
-                })
-            })
-            .catch(function(error){
-                error.url = url;
-                reject(error);
-            })
-        })
-
-    })
-}
+*/
 
 module.exports = WebApplicationBanner;
-
-/*
-banner.on('job.host', function(job){
-    if(job.hosts){
-        banner.hosts = banner.hosts.concat(job.hosts);
-        
-        job.hosts.forEach(function(host){
-            job.ports.forEach(function(port){
-                var url = util.format('http://%s:%s',host, port); 
-                banner.emit('job.url', url);
-            })
-        })
-        
-    }
-})
-
-banner.on('job.url', function(url){
-
-    this.hosts.push(url);
-
-    banner.works.push({
-        'id' : this.hosts.length,
-        'description' : url,
-        'request' :{
-            'method' : 'GET',
-            'uri' : url,
-            'timeout' : banner.timeout
-            ,  'encoding' : null
-        }
-    });
-});
-*/
-
-
-
-/*
-Request is designed to be the simplest way possible to make http calls. It supports HTTPS and follows redirects by default.
-*/
 
 /*
 TODO

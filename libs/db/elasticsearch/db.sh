@@ -6,6 +6,8 @@ curl -XDELETE '127.0.0.1:9200/mixtask?pretty'
 curl -XDELETE '127.0.0.1:9200/services?pretty'
 curl -XDELETE '127.0.0.1:9200/servicebanner?pretty'
 curl -XDELETE '127.0.0.1:9200/nmaptask?pretty'
+curl -XDELETE 'localhost:9200/sslcerts?pretty'
+curl -XDELETE 'localhost:9200/web?pretty'
 
 curl -XPUT 'localhost:9200/mixtask?pretty' -H 'Content-Type: application/json' -d'
 {
@@ -197,6 +199,58 @@ curl -XPUT 'localhost:9200/whois?pretty' -H 'Content-Type: application/json' -d'
 }
 '
 
+#!/usr/bin/env bash
+#https://www.elastic.co/blog/changing-mapping-with-zero-downtime
+curl -XPUT 'localhost:9200/whois/_mappings/doc?pretty' -H 'Content-Type: application/json' -d'
+{
+
+            "properties" : {
+                "ip" : {
+                    "type" : "ip"
+                },
+                "server" : {
+                    "type" : "keyword"
+                },
+                "taskId" : {
+                    "type" : "keyword"
+                },
+                
+                "joinedNetname" : {
+                    "type" : "keyword"
+                },
+
+                "description" : {
+                    "type" : "text"
+                },
+
+                "remark" : {
+                    "type" : "text"
+                },
+
+                "createDate" : {
+                    "type" : "date"
+                },
+
+                "detail" :{
+                    "type" : "nested",
+                    "properties": {
+                        "detail":  { "type": "text" },
+                        "netblock": { "type": "keyword" ,"fields" :{
+                        "text" : {
+                            "type" : "text"
+                        }
+                    } },
+                        "netname": { "type": "keyword" ,"fields" :{
+                        "text" : {
+                            "type" : "text"
+                        }
+                    }  }
+                    }
+                }
+            }
+}
+'
+
 curl -XPUT 'localhost:9200/services?pretty' -H 'Content-Type: application/json' -d'
 {
   "mappings" : {
@@ -323,6 +377,30 @@ curl -XPUT 'localhost:9200/nmaptask?pretty' -H 'Content-Type: application/json' 
                     "type" : "boolean"
                 }
 
+            }
+        }
+    }
+}
+'
+
+curl -XPUT 'localhost:9200/sslcerts?pretty'
+curl -XPUT 'localhost:9200/web?pretty' -H 'Content-Type: application/json' -d'
+{
+  "mappings" : {
+        "doc" : {
+            "properties" : {
+                "host" : {
+                    "type" : "ip"
+                },
+                "taskId" : {
+                    "type" : "keyword"
+                },
+                "port" : {
+                    "type" : "integer"
+                },
+                "ssl" : {
+                    "type" : "boolean"
+                }
             }
         }
     }

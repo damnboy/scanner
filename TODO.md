@@ -205,6 +205,19 @@ whois信息重复问题，bulkinsert之后，用过调度执行查询
 
 mixtask 支持，自定义ip与域名（由223.5.5.5解析）
 
+！！dashboard下的service索引，手工导入banner库进行扫描，开发与xx任务同步完成
+
+服务视图（扫描完毕后可见）
+域名视图
+whois视图
+
+## 2018-02-07
+    bug: 无权威dns服务器，构造queue异常
+    bug: webpage处理https时的bug
+    TODO:whois请求队列化处理
+
+## 2018-02-08
+
 # JavaScript
     https://molily.de/robust-javascript/#characteristics-of-javascript
     

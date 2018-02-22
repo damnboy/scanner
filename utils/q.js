@@ -1,7 +1,14 @@
 var async = require('async');
 var events = require('events');
 var util = require('util');
+/*
+Usage:
 
+Events:
+    done
+    error
+    empty
+*/
 function Queue(paralles, paramsArray, promiseJobGenerator){
 
     this._paralles = paralles;

@@ -41,7 +41,17 @@ module.exports.handler = function(argvs){
             "--connect-pull", options.taskBindPull
         ]),
         fork(path.daemon("./index.js"), [
-            "banner" ,
+            "bannernmap" ,
+            "--connect-sub", options.taskBindPub,
+            "--connect-pull", options.taskBindPull
+        ]),
+        fork(path.daemon("./index.js"), [
+            "bannerssl" ,
+            "--connect-sub", options.taskBindPub,
+            "--connect-pull", options.taskBindPull
+        ]),
+        fork(path.daemon("./index.js"), [
+            "bannerweb" ,
             "--connect-sub", options.taskBindPub,
             "--connect-pull", options.taskBindPull
         ])

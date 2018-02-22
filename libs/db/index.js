@@ -1,5 +1,7 @@
+var settings = require('../../settings');
+var type = 'elasticsearch';
 module.exports = (function(options){
-    if(options.type === "elasticsearch"){
+    if(type === "elasticsearch"){
         var elasticSearch = require("./elasticsearch")({
             "host" : options.host,
             "port" : options.port
@@ -9,10 +11,6 @@ module.exports = (function(options){
     else{
         return new require('./api');
     }
-})({
-    "type" : "elasticsearch",
-    "host" : "127.0.0.1",
-    "port" : "9200"
-})
+})(settings.db[type])
 
 

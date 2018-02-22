@@ -1,3 +1,4 @@
+var dbApi = require('../../');
 /*
 curl -XPOST 'http://127.0.0.1:9200/test/test' -H 'Content-Type: application/json' -d'
 {

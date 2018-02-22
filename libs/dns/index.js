@@ -9,6 +9,7 @@ var _ = require('lodash');
 var ip = require('ip');
 var log = require('../../utils/logger.js');
 var logger = log.createLogger('[DNS]');
+var settings = require('../../settings');
 //https://technet.microsoft.com/en-us/library/dd197470%28v=ws.10%29.aspx
 
 function randomItem(array){
@@ -38,7 +39,7 @@ function dns_request(domain, type, nameserver, port){
   return new Promise(function(resolve, reject){
     var socket = dns({
         retries : 3,
-        timeout : 5000
+        timeout : settings.timeout.dns
     })
     socket.query({
       questions: [{

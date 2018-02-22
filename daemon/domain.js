@@ -63,32 +63,11 @@ module.exports.handler = function(argvs){
             
             //message.hosts字段批量入service索引
             var taskId = channel.toString('utf-8');
-            
-
+        
             var step = Promise.resolve(message.hosts);
             if(message.hosts.length !== 0){
-                log.info('Bulking ('+ message.hosts.length + ') ip addresses of task(' + taskId + ') into service scanning...');
                 step = step.then(function(hosts){
-                    return hosts.map(function(host){
-                        return {
-                            "createDate" : Date.now(),
-                            "done" : false,
-                            "ip" : host,
-                            "taskId" : taskId
-                        }
-                    });
-                })
-                .then(function(records){
-                    var bulkBody = records.reduce(function(bulk, record){
-                        bulk.push(JSON.stringify({ "index":{ "_index": "services", "_type": "doc" } }));
-                        bulk.push(JSON.stringify(record));
-                        return bulk;
-                    },[])
-    
-                    return dbapi.executeBulk('services', bulkBody.join('\n') + '\n')
-                    .then(function(result){
-                        console.log(result);
-                    })
+                    return dbapi.scheduleNmapServiceTasks(taskId, hosts);
                 })
                 .catch(function(err){
                     console.log(err);

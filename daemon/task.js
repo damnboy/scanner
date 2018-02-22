@@ -99,49 +99,15 @@ module.exports.handler = function(argvs){
         pub.send([channel, wireutil.envelope(wire.IPv4Infomation,message)]);
     })
     .on(wire.ServiceInformation, function(channel, message, data){
-        /*TODO 一次提交多个端口指纹扫描请求到nmap，扫描完毕之后bulk接口提交到elasticsearch中 */
-        /*
-        message.ports.forEach(function(port){
-            dbapi.scheduleBannerTask(message.ip, port, message.type, message.taskId)
-            .then(function(response){
-                pub.send([channel, wireutil.envelope(wire.ServiceInformation, message)]);
-            })
-        })
-        */
-        //全端口扫描，该消息触发的频率不高，暂时简单实现
-        //优先转发到ssl进程进行ssl服务识别以及证书提取
-        //pub.send([channel, wireutil.envelope(wire.ServiceInformation, message)]);
-    })
-    .on(wire.SSLHost, function(channel, message, data){
-        pub.send([channel, wireutil.envelope(wire.SSLHost, message)]);
-    })
-    .on(wire.NonSSLHost, function(channel, message, data){
-        pub.send([channel, wireutil.envelope(wire.NonSSLHost, message)]);
-    })
-    .on(wire.ScanResultDNSRecordA, function(channel, message, data){
-        //dns a记录
-        //log.info(message);
-        pub.send([channel, wireutil.envelope(wire.ScanResultDNSRecordA, message)]);
-    })
-    .on(wire.ScanResultDNSRecordCName, function(channel, message, data){
-        //dns cname记录
-        //log.info(message);
-        pub.send([channel, wireutil.envelope(wire.ScanResultDNSRecordCName, message)]);
-        
+        pub.send([channel, wireutil.envelope(wire.ServiceInformation, message)]);
     })
     .on(wire.ScanResultWhois, function(channel, message, data){
-        //ip whois信息
-        //log.info(message);
         pub.send([channel, wireutil.envelope(wire.ScanResultWhois, message)]);
     })
     .on(wire.ScanResultService, function(channel, message, data){
-        //主机开放端口
-        //log.info(message);
         pub.send([channel, wireutil.envelope(wire.ScanResultService, message)]);
     })
     .on(wire.ScanResultServiceBanner, function(channel, message, data){
-        //端口指纹
-        //log.info(message);
         message.taskId = channel.toString('utf-8');
 
         dbapi.saveBanner(message)
@@ -152,6 +118,20 @@ module.exports.handler = function(argvs){
             log.error(err);
         });
     }).handler());
+    /*
+    .on(wire.SSLHost, function(channel, message, data){
+        pub.send([channel, wireutil.envelope(wire.SSLHost, message)]);
+    })
+    .on(wire.NonSSLHost, function(channel, message, data){
+        pub.send([channel, wireutil.envelope(wire.NonSSLHost, message)]);
+    })
+    .on(wire.ScanResultDNSRecordA, function(channel, message, data){
+        pub.send([channel, wireutil.envelope(wire.ScanResultDNSRecordA, message)]);
+    })
+    .on(wire.ScanResultDNSRecordCName, function(channel, message, data){
+        pub.send([channel, wireutil.envelope(wire.ScanResultDNSRecordCName, message)]);
+    })
+    */
 
     var innerRouter = new EventEmitter();
     sub.on("message", function(source, data){

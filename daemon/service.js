@@ -77,12 +77,19 @@ module.exports.handler = function(argvs){
             log.warn('Too many open service on host %s, seems hosted on highly defence cloud service', ip);
         }
         else{
-            push.send([taskId, wireutil.envelope(wire.ServiceInformation, {
-                "ip" : ip,
-                "tcpPorts" : tcp,
-                "udpPorts" : udp,
-                "taskId" :taskId
-            })]);
+            
+            dbapi.scheduleBannerTasks(ip, tcp, 'tcp', taskId)
+            .then(function(){
+                push.send([taskId, wireutil.envelope(wire.ServiceInformation, {
+                    "ip" : ip,
+                    "tcpPorts" : tcp,
+                    "udpPorts" : udp,
+                    "taskId" :taskId
+                })]);
+            })
+            .catch(function(err){
+                log.error(err);
+            });
         }
     });
 
@@ -90,39 +97,14 @@ module.exports.handler = function(argvs){
 
     sub.on("message", wirerouter()
         .on(wire.ScanResultDNS, function(channel, message, data){
-            
-            var taskId = channel.toString('utf-8');
-            log.info('Bulking ip addresses of task(' + taskId + ') into service scanning...');
-
+            var taskId = channel.toString('utf-8')
             dbapi.getHosts(taskId)
             .then(function(hosts){
-
-                return hosts.map(function(host){
-                    return {
-                        "createDate" : Date.now() ,
-                        "done" : false,
-                        "ip" : host,
-                        "taskId" : taskId
-                    }
-                });
-            })
-            .then(function(records){
-
-                var bulkBody = records.reduce(function(bulk, record){
-                    bulk.push(JSON.stringify({ "index":{ "_index": "services", "_type": "doc" } }));
-                    bulk.push(JSON.stringify(record));
-                    return bulk;
-                },[])
-
-                dbapi.executeBulk('services', bulkBody.join('\n') + '\n')
-                .then(function(result){
-                    console.log(result);
-                })
+                return dbapi.scheduleNmapServiceTasks(taskId, hosts);
             })
             .catch(function(err){
                 console.log(err);
-            })
-
+            });
         })
         .on(wire.IPv4Infomation, function(channel, message, data){
 

@@ -28,10 +28,10 @@ var net = require('net');
 var tls = require('tls');
 var fs = require('fs');
 var log = require('../../../utils/logger').createLogger('[SSL]');
-var Q = require('../../../utils/q.js')
+var Q = require('../../../utils/q.js');
 var util = require('util');
-var events = require('events')
-var timeout = 5000;
+var events = require('events');
+var settings = require('../../../settings');
 
 function generatorSSLConnection (options){
     return function (){
@@ -57,11 +57,11 @@ function generatorSSLConnection (options){
                 
                 socket.destroy();
                 resolve(options);
-            })
+            });
 
             tlsSocket.on('connect', function(){
                 _handle = tlsSocket._handle;
-            })
+            });
 
             tlsSocket.on('error', function(err){
                 tlsSocket.destroy();
@@ -79,29 +79,23 @@ function generatorSSLConnection (options){
                     }
                 }
                 else{
-                    reject({
-                        host:options.host,
-                        port:options.port,
-                        err : err.message
-                    });
+                    options.err = err.message
+                    reject(options);
                 }
-            })
+            });
 
             tlsSocket.on('OCSPResponse', function(buffer){
                 console.log(buffer);
-            })
+            });
 
-            socket.setTimeout(timeout, function(){
+            socket.setTimeout(settings.timeout.ssl, function(){
                 if(connected){
     
                 }
                 else{
                     socket.destroy();
-                    reject({
-                        host:options.host,
-                        port:options.port,
-                        err : 'connecting timeout'
-                    });
+                    options.err = 'connecting timeout';
+                    reject(options);
                 }
             });
 
@@ -109,12 +103,9 @@ function generatorSSLConnection (options){
                 connected = true;
                 setTimeout(function(){
                     socket.destroy();
-                    reject({
-                        host:options.host,
-                        port:options.port,
-                        err : 'handshake timeout'
-                    });        
-                }, timeout);
+                    options.err = 'handshake timeout';
+                    reject(options);        
+                }, settings.timeout.ssl);
             });
         });
     };
@@ -129,53 +120,77 @@ util.inherits(SSLScanner, events.EventEmitter);//使这个类继承EventEmitter
 //'./host.txt'
 
 SSLScanner.prototype.scanHosts = function(hosts){
+    this.start();
+
     var self = this;
     hosts.forEach(function(host){
         self.q.addJob(host);
     });
-}
+};
 
 SSLScanner.prototype.scanHost = function(host){
     return this.scanHosts([host]);
-}
+};
 
 SSLScanner.prototype.start = function(){
 
-    var self = this;
-    this.q = new Q(8, [], generatorSSLConnection);
-    this.q.on('done', function(banner){
-        if(banner.warning){
-            log.error(banner.warning.toUpperCase(), banner.host + ':' + banner.port + ' ' + banner.cert.subject.split('\n').join(' '))
-        }
-        else{
-            log.info(banner.host, banner.port, banner.cert.subject.CN);
-        }
+    if(!this.q){
+        var self = this;
+        this.q = new Q(8, [], generatorSSLConnection);
+        this.q.on('done', function(sslHostInfo){
+            if(sslHostInfo.warning){
+                sslHostInfo.cert.subject = sslHostInfo.cert.subject.split('\n')
+                .reduce(function(subject, pair){
+                  var kv = pair.split('=');
+                  subject[kv[0]] = kv[1];
+                  return subject;
+                },{});
 
+                sslHostInfo.cert.issuer = sslHostInfo.cert.issuer.split('\n')
+                .reduce(function(subject, pair){
+                  var kv = pair.split('=');
+                  subject[kv[0]] = kv[1];
+                  return subject;
+                },{});
 
-        self.emit('ssl', banner.host, banner.port, banner.cert);
-    });
-
-    this.q.on('error', function(error){
-        //console.log(error);
-        var c = ['ECONNRESET', 'unknown protocol', 'socket hang up', 'handshake timeout', 'connecting timeout'].reduce(function(cnt, errMsg){
-            var r = error.err.search(errMsg);
-            if( r >= 0){
-                cnt = cnt + 1;
+                //'OCSP - URI:http://ss.symcd.com\nCA Issuers - URI:http://ss.symcb.com/ss.crt\n',
+                sslHostInfo.cert.infoAccess = {
+                    "text" : sslHostInfo.cert.infoAccess
+                };
+                
+                //log.error(sslHostInfo.warning.toUpperCase(), sslHostInfo.host + ':' + sslHostInfo.port + ' ' + sslHostInfo.cert.subject.split('\n').join(' '))
             }
-            return cnt;
-        }, 0);
-
-        if(c === 0){
-            log.warn(error.host, error.port, error.err);
-        }
-
-        self.emit('nonssl', error.host, error.port);
-    })
-
-    this.q.on('empty', function(){
-        self.emit('done')
-    })
-
-}
+            
+            log.info(sslHostInfo.host, sslHostInfo.port, sslHostInfo.cert.subject.CN);
+            
+    
+    
+            self.emit('ssl', sslHostInfo);
+        });
+    
+        this.q.on('error', function(error){
+            if(!error.err){
+                log.error(error);
+            }
+            var c = ['ECONNRESET', 'unknown protocol', 'socket hang up', 'handshake timeout', 'connecting timeout'].reduce(function(cnt, errMsg){
+                var r = error.err.search(errMsg);
+                if( r >= 0){
+                    cnt = cnt + 1;
+                }
+                return cnt;
+            }, 0);
+    
+            if(c === 0){
+                log.warn(error.host, error.port, error.err);
+            }
+    
+            self.emit('nonssl', error);
+        });
+    
+        this.q.on('empty', function(){
+            self.emit('empty');
+        });
+    }
+};
 
 module.exports = SSLScanner;
