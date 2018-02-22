@@ -44,7 +44,7 @@ NmapSchedule.prototype.startNmap = function(){
         return dbapi.getScheduledNmapTask(settings.nmap.concurrence)
         .then(function(tasks){
             return Promise.all(tasks.map(function(task){
-                self.scan({
+                return self.scan({
                     ip : task.ip,
                     taskId : task.taskId
                 })
@@ -197,6 +197,7 @@ NmapSchedule.prototype.scan = function(ti){
             '--min-rate', settings.nmap.rate
         ]);
 
+        log.info('start nmap task on host %s', taskInfo.ip);
         proc.stdout.on('data', function(data){
             var output = data.toString('utf-8');
             var reg = /open port (\d*)\/(\w*)/g;
