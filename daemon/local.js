@@ -3,13 +3,13 @@ var fork = require("../utils/procutil.js").fork;
 var log = require('../utils/logger').createLogger('[daemon:local]');
 var path = require("../utils/path.js");
 
-module.exports.command = 'local'
+module.exports.command = 'local';
 
-module.exports.describe = 'local'
+module.exports.describe = 'local';
 
 module.exports.builder = function(yargs) {
   return yargs
-    .strict()
+    .strict();
 }
 
 module.exports.handler = function(argvs){
@@ -17,7 +17,8 @@ module.exports.handler = function(argvs){
         "taskBindPub" : 'tcp://127.0.0.1:7110',
         "taskBindPull" : 'tcp://127.0.0.1:7111',
         "taskBindSub" : 'tcp://127.0.0.1:7112'
-    }
+    };
+    
     var procs = [
         fork(path.daemon("./index.js"), [
             "task",

@@ -58,7 +58,7 @@ module.exports.handler = function(argvs){
             */
         })
         .on(wire.IPv4Infomation, function(channel, message, data){
-            
+            console.log(message)
             //whois实现为promise对象，进程退出之前，使用promise.all控制所有whois请求执行完毕之后，方可结束。
             //whois扫描后入库
             pendingWhois.then(function(){

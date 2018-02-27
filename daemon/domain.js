@@ -164,18 +164,7 @@ module.exports.handler = function(argvs){
     router.on('dns.timeout', function(taskId, record){
         log.warn('timeout', record);
     });
-    /*
-        { 
-            domain: 'mail.189.cn',
-            cname: [ 'webmail.189.cn', '189.webmail.21cn.com' ],
-            a: [],
-            resolver: '118.85.203.178',
-            taskId: '833f3b90-ec69-11e7-8ff5-fd62b8b82915',
-            create_date: 1514532360820,
-            description: 'description',
-            remark: 'remark' 
-        }
-    */
+
     router.on('dns.response', function(taskId, response){
         response.taskId = taskId;
         
@@ -191,23 +180,15 @@ module.exports.handler = function(argvs){
                 "domain" : response.domain,
                 "data" : response.a
             })]);
+
+            response.a.forEach(function(a){
+                console.log(a);
+                push.send([taskId, wireutil.envelope(wire.IPv4Infomation,{
+                    "ip" : a
+                })]);
+            });
         }
     });
-
-    //pub到services与whois进行二阶扫描
-    router.on('dns.record.a', function(taskId, record){
-        //入库.then(push.send)
-        
-        push.send([taskId, wireutil.envelope(wire.IPv4Infomation,{
-            "ip" : record.data
-        })]);
-        
-    });
-
-    router.on('dns.record.cname', function(taskId, record){
-        //log.info(taskId, record)
-    });
-
 
     function closeSocket(){
         log.info("Closing sockets...");
