@@ -182,7 +182,6 @@ module.exports.handler = function(argvs){
             })]);
 
             response.a.forEach(function(a){
-                console.log(a);
                 push.send([taskId, wireutil.envelope(wire.IPv4Infomation,{
                     "ip" : a
                 })]);

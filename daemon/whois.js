@@ -40,7 +40,7 @@ module.exports.handler = function(argvs){
         sub.connect(endpoint);
     })
     
-    var pendingWhois = Promise.resolve('mask');
+    var pendingWhois = Promise.resolve('whois');
     var whois = new IPWhois();
     
     sub.on("message", wirerouter()
@@ -58,10 +58,9 @@ module.exports.handler = function(argvs){
             */
         })
         .on(wire.IPv4Infomation, function(channel, message, data){
-            console.log(message)
             //whois实现为promise对象，进程退出之前，使用promise.all控制所有whois请求执行完毕之后，方可结束。
             //whois扫描后入库
-            pendingWhois.then(function(){
+            pendingWhois = pendingWhois.then(function(){
                 return whois.whois(message.ip)
                 .then(function(detail){
                     
@@ -103,14 +102,14 @@ module.exports.handler = function(argvs){
 
             }
             
-        })
+        });
     }
 
     process.on("SIGINT", function(){
         log.info('waiting for pending whois request')
         pendingWhois.then(function(){
             closeSocket();
-            process.exit(0)
+            process.exit(0);
         })
         
     })
@@ -119,7 +118,7 @@ module.exports.handler = function(argvs){
         log.info('waiting for pending whois request')
         pendingWhois.then(function(){
             closeSocket();
-            process.exit(0)
+            process.exit(0);
         })
     })
 }

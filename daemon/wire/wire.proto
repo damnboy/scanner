@@ -61,7 +61,6 @@ message MixTaskReady {
 
 message IPv4Infomation {
   required string ip = 1;
-  required int32 port = 2;
 }
 
 message IPv4Infomations {

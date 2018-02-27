@@ -93,7 +93,6 @@ module.exports.handler = function(argvs){
         
     })
     .on(wire.IPv4Infomation, function(channel, message, data){
-        //扫描任务入库，由nmap调度器负责读取尚未扫描的任务，并执行扫描
         pub.send([channel, wireutil.envelope(wire.IPv4Infomation,message)]);
     })
     .on(wire.ServiceInformation, function(channel, message, data){
