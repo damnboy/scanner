@@ -8,7 +8,7 @@ module.exports = {
     nmap : {
         rate : 2000,
         concurrence : 1,
-        type : 'webScan'
+        type : 'scan'
     },
     
     db :{
@@ -20,7 +20,7 @@ module.exports = {
         },
 
         mongodb : {
-            uri : "mongodb://10.211.55.13:27017/vector"
+            uri : "mongodb://127.0.0.1:27017/vector"
         }
     }
 }

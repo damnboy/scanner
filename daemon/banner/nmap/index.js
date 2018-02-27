@@ -38,7 +38,11 @@ module.exports.handler = function(argvs){
         sub.connect(endpoint);
     })
     
-
+//TODO
+/*
+    一组nmap banner请求过后，会触发多个setTimeout定时器。
+    导致下次组请求出现重复
+*/
     function schedule(){
         dbapi.getScheduledNmapBannerTasks()
         .then(function(tasks){
