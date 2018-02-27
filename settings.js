@@ -1,12 +1,12 @@
 module.exports = {
     timeout : {
-        dns : 5000,
-        ssl : 5000,
-        web : 5000
+        dns : 10000,
+        ssl : 10000,
+        web : 10000
     },
 
     nmap : {
-        rate : 500,
+        rate : 2000,
         concurrence : 1
     },
     
@@ -14,12 +14,12 @@ module.exports = {
         type : "mongodb",
 
         elasticsearch : {
-            host : "218.85.154.137",
+            host : "127.0.0.1",
             port : "9200"
         },
 
         mongodb : {
-            uri : "mongodb://10.211.55.13:27017/vector"
+            uri : "mongodb://127.0.0.1:27017/vector"
         }
     }
 }
