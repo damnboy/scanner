@@ -168,7 +168,8 @@ module.exports = function(options){
             return new Promise(function(resolve, reject){
                 d.db('vector').collection('banners')
                 .find({
-                    scannedBy : type
+                    scannedBy : type,
+                    done : false
                 })
                 .limit(size)
                 .toArray(function(err, records){
@@ -192,11 +193,7 @@ module.exports = function(options){
             port : taskInfo.port,
             taskId : taskInfo.taskId
         };
-        var data = {
-            scannedBy : taskInfo.scannedBy,
-            done : taskInfo.done
-        };
-        console.log(data)
+        
         return db.connect().then(function(d){
             return d.db('vector').collection('banners')
             .updateOne(
