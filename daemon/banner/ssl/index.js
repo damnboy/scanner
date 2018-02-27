@@ -47,10 +47,12 @@ module.exports.handler = function(argvs){
         .then(function(){
             //update banner库信息
             return dbapi.doneScheduledSSLBannerTask({
-                "sslSupport" : true,
-                "taskId" : sslHostInfo.taskId,
-                "ip" : sslHostInfo.host,
-                "port" : sslHostInfo.port
+                done : false,
+                scannedBy : "ssl",
+                sslSupport : true,
+                taskId : sslHostInfo.taskId,
+                ip : sslHostInfo.host,
+                port : sslHostInfo.port
             });
         })
         .catch(function(err){
@@ -61,6 +63,8 @@ module.exports.handler = function(argvs){
 
     ssl.on('nonssl', function(nonSSLHostInfo){
         dbapi.doneScheduledSSLBannerTask({
+            "done" : false,
+            "scannedBy" : "ssl",
             "sslSupport" : false,
             "taskId" : nonSSLHostInfo.taskId,
             "ip" : nonSSLHostInfo.host,

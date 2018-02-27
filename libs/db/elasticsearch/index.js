@@ -389,7 +389,7 @@ module.exports = function(options){
         })
         .catch(function(err){
             log.error(err);
-        })
+        });
     };
 
     DBApi.prototype.getScheduledSSLBannerTasks = function(){
@@ -422,7 +422,6 @@ module.exports = function(options){
     };
 
     DBApi.prototype.doneScheduledSSLBannerTask = function(taskInfo){
-        taskInfo.scannedBy = 'ssl';
         return this.doneScheduledServiceBannerTask(taskInfo);
     };
 
@@ -449,12 +448,12 @@ module.exports = function(options){
             });
         });
     }
+
     DBApi.prototype.getScheduledWebBannerTasks = function(){
         return this.getScheduledServiceBannerTask('ssl', 16);
     };
 
     DBApi.prototype.doneScheduledWebBannerTask = function(taskInfo){
-        taskInfo.scannedBy = 'web';
         return this.doneScheduledServiceBannerTask(taskInfo);
     };
 

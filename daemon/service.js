@@ -105,11 +105,7 @@ module.exports.handler = function(argvs){
             .catch(function(err){
                 console.log(err);
             });
-        })
-        .on(wire.IPv4Infomation, function(channel, message, data){
-
-
-        }).handler())
+        }).handler());
 
 
 
@@ -130,7 +126,7 @@ module.exports.handler = function(argvs){
         NmapSchedule.wait()
         .then(function(){
             closeSocket();
-            process.exit(0)
+            process.exit(0);
         })
         
     })
@@ -139,7 +135,7 @@ module.exports.handler = function(argvs){
         NmapSchedule.wait()
         .then(function(){
             closeSocket();
-            process.exit(0)
+            process.exit(0);
         })
     })
 }

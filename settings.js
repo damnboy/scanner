@@ -11,13 +11,15 @@ module.exports = {
     },
     
     db :{
+        type : "mongodb",
+
         elasticsearch : {
-            "host" : "218.85.154.137",
-            "port" : "9200"
+            host : "218.85.154.137",
+            port : "9200"
         },
 
         mongodb : {
-
+            uri : "mongodb://10.211.55.13:27017/vector"
         }
     }
 }

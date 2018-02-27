@@ -56,6 +56,8 @@ module.exports.handler = function(argvs){
                     type : task.type
                 })
                 .then(function(bannerInfo){
+                    bannerInfo.scannedBy = 'nmap';
+                    bannerInfo.done = true;
                     dbapi.doneScheduledNmapBannerTask(bannerInfo)
                     .then(function(){
                         setTimeout(function(){

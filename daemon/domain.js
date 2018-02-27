@@ -178,6 +178,7 @@ module.exports.handler = function(argvs){
     */
     router.on('dns.response', function(taskId, response){
         response.taskId = taskId;
+        
         dbapi.saveDNSRecord(response);
         if(response.cname.length > 0){
             push.send([taskId, wireutil.envelope(wire.ScanResultDNSRecordCName,{
@@ -196,11 +197,11 @@ module.exports.handler = function(argvs){
     //pub到services与whois进行二阶扫描
     router.on('dns.record.a', function(taskId, record){
         //入库.then(push.send)
-        /*
+        
         push.send([taskId, wireutil.envelope(wire.IPv4Infomation,{
             "ip" : record.data
         })]);
-        */
+        
     });
 
     router.on('dns.record.cname', function(taskId, record){
@@ -222,10 +223,12 @@ module.exports.handler = function(argvs){
 
     process.on("SIGINT", function(){
         closeSocket();
+        process.exit(0);
     });
 
     process.on("SIGTERM", function(){
         closeSocket();
+        process.exit(0);
     });
 
 

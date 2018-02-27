@@ -68,6 +68,7 @@ module.exports.handler = function(argvs){
         dbapi.saveWebInfo(webInfo)
         .then(function(){
             return dbapi.doneScheduledWebBannerTask({
+                scannedBy : 'web',
                 ip : options.host,
                 port : options.port,
                 taskId : options.taskId,
@@ -83,6 +84,8 @@ module.exports.handler = function(argvs){
 
     web.on('nonWeb', function(options){
         dbapi.doneScheduledWebBannerTask({
+            scannedBy : 'web',
+            done : false,
             ip : options.host,
             port : options.port,
             taskId : options.taskId
@@ -96,9 +99,10 @@ module.exports.handler = function(argvs){
         schedule(5000);
     });
 
+    var timer;
     function schedule(timeout){
         //timer释放问题
-        var timer = setTimeout(function(){
+        timer = setTimeout(function(){
             dbapi.getScheduledWebBannerTasks()
             .then(function(tasks){
                 if(tasks.length === 0){
@@ -149,6 +153,7 @@ module.exports.handler = function(argvs){
     process.on("SIGINT", function(){
         Promise.resolve()
         .then(function(){
+            clearTimeout(timer);
             closeSocket();
             process.exit(0);
         })
@@ -158,6 +163,7 @@ module.exports.handler = function(argvs){
     process.on("SIGTERM", function(){
         Promise.resolve()
         .then(function(){
+            clearTimeout(timer);
             closeSocket();
             process.exit(0);
         })

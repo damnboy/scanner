@@ -43,7 +43,6 @@ module.exports.handler = function(argvs){
     var pendingWhois = Promise.resolve('mask');
     var whois = new IPWhois();
     
-
     sub.on("message", wirerouter()
         .on(wire.ScanResultDNS, function(channel, message, data){
             /*TODO
@@ -89,11 +88,10 @@ module.exports.handler = function(argvs){
                     push.send([channel, wireutil.envelope(wire.ScanResultWhois,result)]);
                 })
                 .catch(function(err){
-                    log.error(err)
-                })
-            })
-            
-    }).handler())
+                    log.error(err);
+                });
+            });
+    }).handler());
         
     function closeSocket(){
         log.info("Closing sockets...");

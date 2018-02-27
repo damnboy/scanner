@@ -50,8 +50,6 @@ module.exports.handler = function(argvs){
     sub.bindSync(argvs.bindSub);
     log.info('SUB socket bound on', argvs.bindSub);
 
-
-
     pull.on("message", wirerouter()
     .on(wire.CreateScanTask, function(channel, message, data){
         var id = uuid();
@@ -173,9 +171,11 @@ module.exports.handler = function(argvs){
 
     process.on("SIGINT", function(){
         closeSocket();
+        process.exit(0);
     })
 
     process.on("SIGTERM", function(){
         closeSocket();
+        process.exit(0);
     })
 }
