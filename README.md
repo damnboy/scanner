@@ -27,12 +27,13 @@ https://nmap.org/dist/nmap-7.60.tar.bz2
 
 ## zeromq
 sudo yum install -y epel-release
+
 sudo yum install -y zeromq-devel
 
 ## mongodb 3.6.2
 https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-rhel70-3.6.3.tgz
  
-#安装&运行
+# 安装&运行
 下载以上依赖后，执行npm install & node ./deamon local
 
 
