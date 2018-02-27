@@ -29,7 +29,10 @@ module.exports = function(options){
     };
 
     DBApi.prototype.saveWhoisRecord = function(record){
-
+        return db.connect()
+        .then(function(d){
+            d.db('vector').collection('whois').insertOne(record);
+        });
     };
 
     DBApi.prototype.saveDNSRecord =  function (dnsRecord){
@@ -197,7 +200,7 @@ module.exports = function(options){
         return db.connect().then(function(d){
             return d.db('vector').collection('banners')
             .updateOne(
-                query, {"$set" : data}
+                query, {"$set" : taskInfo}
             );
         });
     };

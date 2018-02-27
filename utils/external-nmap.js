@@ -44,7 +44,9 @@ NmapSchedule.prototype.startNmap = function(){
         return dbapi.getScheduledNmapTask(settings.nmap.concurrence)
         .then(function(tasks){
             return Promise.all(tasks.map(function(task){
-                return self.scan({
+                var raw = eval(util.format('NmapSchedule.prototype.%s', settings.nmap.type));
+                var scan = raw.bind(self);
+                return scan({
                     ip : task.ip,
                     taskId : task.taskId
                 })
