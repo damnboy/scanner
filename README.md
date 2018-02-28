@@ -1,24 +1,50 @@
 # 说明
 前期踩点常用toolkits，功能陆续添加中 :)
+
 ## 模块
-### 子域名爆破 
-./daemon/domain.js
 
-### 全端口扫描 
-./daemon/service.js
+### 扫描任务 (./daemin/task.js)
 
-### whois信息收集 
-./daemon/whois.js
+域名任务
+混合任务（ip＋域名）
 
-### ssl信息收集 
-./daemon/banner/ssl/index.js
+TODO 
+c段任务
+特定端口任务
+
+### 子域名爆破 (./daemon/domain.js)
+
+TODO
+超时问题
+无权威dns服务器可用时的bug
+
+### 全端口扫描 (./daemon/service.js)
+
+依赖nmap -p-实现
+
+TODO 
+masscan，zmap整合
+
+### whois (./daemon/whois.js)
+
+TODO
+中心整理whois信息的格式，用于还原目标网络名称的树型结构
+
+### 服务指纹收集
+ssl -> web -> nmap
+TODO
+流程优化
+现有的调度方式存在的bug
+
+#### ssl (./daemon/banner/ssl/index.js)
+
+#### web (./daemon/banner/web/index.js)
+
+#### nmap (./daemon/banner/nmap/index.js)
 
 
-### http信息收集 
-./daemon/banner/web/index.js
+### dashboard
 
-### nmap端口指纹识别 
-./daemon/banner/nmap/index.js
 
 # 依赖
 
