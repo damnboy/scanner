@@ -9,12 +9,14 @@
 混合任务（ip＋域名）
 
 TODO 
+
 c段任务
 特定端口任务
 
 ### 子域名爆破 (./daemon/domain.js)
 
 TODO
+
 超时问题
 无权威dns服务器可用时的bug
 
@@ -23,16 +25,20 @@ TODO
 依赖nmap -p-实现
 
 TODO 
+
 masscan，zmap整合
 
 ### whois (./daemon/whois.js)
 
 TODO
+
 中心整理whois信息的格式，用于还原目标网络名称的树型结构
 
 ### 服务指纹收集
 ssl -> web -> nmap
+
 TODO
+
 流程优化
 现有的调度方式存在的bug
 
