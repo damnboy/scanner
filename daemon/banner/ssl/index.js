@@ -146,7 +146,7 @@ module.exports.handler = function(argvs){
     })
 
     process.on('unhandledRejection', function(e){
-        console.log(e)
+        console.log(e);
     })
 }
 

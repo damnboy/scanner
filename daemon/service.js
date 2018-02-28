@@ -1,10 +1,10 @@
-var log = require('../utils/logger').createLogger('[daemon:service]')
+var log = require('../utils/logger').createLogger('[daemon:service]');
 var util = require("util");
 var zmq = require("zmq");
 var wire = require("./wire");
-var wirerouter = require("./wire/router.js")
-var wireutil = require("./wire/util.js")
-var Queue = require("../utils/queue.js")
+var wirerouter = require("./wire/router.js");
+var wireutil = require("./wire/util.js");
+var Queue = require("../utils/queue.js");
 var NmapSchedule = require('../utils/external-nmap.js');
 var dbapi = require('../libs/db');
 
@@ -21,16 +21,16 @@ module.exports.builder = function(yargs) {
   return yargs
     .strict()
     .option('connect-sub', {
-      describe: 'ZeroMQ SUB endpoint to connect to.'
-    , array: true
-    , demand: true
+      describe: 'ZeroMQ SUB endpoint to connect to.', 
+      array: true, 
+      demand: true
     })
     .option('connect-pull', {
-        describe: 'The address to bind the ZeroMQ PULL endpoint to.'
-        , type: 'string'
-        , demand: true
-    })
-}
+        describe: 'The address to bind the ZeroMQ PULL endpoint to.', 
+        type: 'string', 
+        demand: true
+    });
+};
 
 module.exports.handler = function(argvs){
    
@@ -42,7 +42,7 @@ module.exports.handler = function(argvs){
     sub.subscribe("");
     argvs.connectSub.forEach(function(endpoint){
         sub.connect(endpoint);
-    })
+    });
     
     
     NmapSchedule.on('tcp', function(taskId, ip, port){
@@ -96,6 +96,16 @@ module.exports.handler = function(argvs){
     NmapSchedule.startNmap();
 
     sub.on("message", wirerouter()
+        .on(wire.MixTaskReady, function(channel, message, data){
+            if(message.hosts.length !== 0){
+                step = step.then(function(hosts){
+                    return dbapi.scheduleNmapServiceTasks(taskId, hosts);
+                })
+                .catch(function(err){
+                    log.error(err);
+                });
+            }
+        })
         .on(wire.ScanResultDNS, function(channel, message, data){
             var taskId = channel.toString('utf-8');
             dbapi.getHosts(taskId)
@@ -103,11 +113,9 @@ module.exports.handler = function(argvs){
                 return dbapi.scheduleNmapServiceTasks(taskId, hosts);
             })
             .catch(function(err){
-                console.log(err);
+                log.error(err);
             });
         }).handler());
-
-
 
     function closeSocket(){
         log.info("Closing sockets...");
@@ -118,8 +126,7 @@ module.exports.handler = function(argvs){
             catch(err){
 
             }
-            
-        })
+        });
     }
 
     process.on("SIGINT", function(){
@@ -127,18 +134,17 @@ module.exports.handler = function(argvs){
         .then(function(){
             closeSocket();
             process.exit(0);
-        })
-        
-    })
+        });
+    });
 
     process.on("SIGTERM", function(){
         NmapSchedule.wait()
         .then(function(){
             closeSocket();
             process.exit(0);
-        })
-    })
-}
+        });
+    });
+};
 
 ///////////////////////
 //DEBUG
