@@ -97,6 +97,7 @@ module.exports.handler = function(argvs){
 
     sub.on("message", wirerouter()
         .on(wire.MixTaskReady, function(channel, message, data){
+            var taskId = channel.toString('utf-8');
             if(message.hosts.length !== 0){
                 dbapi.scheduleNmapServiceTasks(taskId, hosts)
                 .catch(function(err){
