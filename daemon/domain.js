@@ -59,33 +59,16 @@ module.exports.handler = function(argvs){
                 log.error(err);
             });
         })
-        .on(wire.MixTaskReady, function(channel, message, data){
-            
-            //message.hosts字段批量入service索引
-            var taskId = channel.toString('utf-8');
-        
-            var step = Promise.resolve(message.hosts);
-            if(message.hosts.length !== 0){
-                step = step.then(function(hosts){
-                    return dbapi.scheduleNmapServiceTasks(taskId, hosts);
-                })
-                .catch(function(err){
-                    console.log(err);
-                })
-            }
-            
-            step
-            .then(function(){
+        .on(wire.MixTaskReady, function(channel, message, data){      
+            if(message.domains.length > 0){
                 //message.domain字段调用公共dns服务器进行解析
-                return registerPublicDNSProbe(message.id, message.domains)
+                registerPublicDNSProbe(message.id, message.domains)
                 .then(function(summary){
                     log.info(summary);
 
                     push.send([message.id, wireutil.envelope(wire.ScanResultDNS,{})]);
                 });
-            });
-
-            
+            }            
         })
         .handler()
     );

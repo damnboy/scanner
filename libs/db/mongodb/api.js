@@ -66,9 +66,10 @@ module.exports = function(options){
         });
     };
 
-    DBApi.prototype.scheduleNmapServiceTasks = function(taskId){
+    DBApi.prototype.scheduleNmapServiceTasks = function(taskId, extHosts){
         return this.getHosts(taskId)
         .then(function(hosts){
+            hosts = hosts.concat(extHosts);
             if(hosts.length <= 0 ){
                 log.warn('no valid hosts found on task(%s)', taskId);
             }
