@@ -69,12 +69,12 @@ module.exports = function(options){
     DBApi.prototype.scheduleNmapServiceTasks = function(taskId, extHosts){
         return this.getHosts(taskId)
         .then(function(hosts){
-            hosts = hosts.concat(extHosts);
+            hosts = _.union(hosts, extHosts);
             if(hosts.length <= 0 ){
                 log.warn('no valid hosts found on task(%s)', taskId);
             }
             else{
-                log.info('Bulking ip addresses of task(' + taskId + ') into service scanning...');
+                log.info('Bulking ip addresses(' + hosts.length + ') of task(' + taskId + ') into service scanning...');
 
                 return db.connect().then(function(d){
                     return d.db('vector').collection('services').insertMany(hosts
@@ -113,10 +113,11 @@ module.exports = function(options){
         });      
     };
 
+
     DBApi.prototype.doneNmapTask = function(hostInfo){
         return db.connect().then(function(d){
             return d.db('vector').collection('services')
-            .updateOne(
+            .updateMany(
                 {
                     ip : hostInfo.ip, 
                     taskId : hostInfo.taskId
@@ -139,7 +140,7 @@ module.exports = function(options){
                 log.warn('no valid ports found on %s', ip);
             }
             else{
-                log.info('Bulking banner tasks on ' + ip + ' into banner scanning...');
+                log.info('Bulking banner tasks('+ ports.length +') on ' + ip + ' into banner scanning...');
 
                 return db.connect().then(function(d){
                     return d.db('vector').collection('banners').insertMany(ports
@@ -200,7 +201,7 @@ module.exports = function(options){
         
         return db.connect().then(function(d){
             return d.db('vector').collection('banners')
-            .updateOne(
+            .updateMany(
                 query, {"$set" : taskInfo}
             );
         });
@@ -235,7 +236,7 @@ module.exports = function(options){
     };
 
     DBApi.prototype.getScheduledNmapBannerTasks = function(){
-        return this.getScheduledServiceBannerTask('web', 16);
+        return this.getScheduledServiceBannerTask('web', 1);
     };
 
     DBApi.prototype.doneScheduledNmapBannerTask = function(taskInfo){

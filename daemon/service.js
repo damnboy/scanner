@@ -97,6 +97,7 @@ module.exports.handler = function(argvs){
 
     sub.on("message", wirerouter()
         .on(wire.MixTaskReady, function(channel, message, data){
+            /*
             var taskId = channel.toString('utf-8');
             if(message.hosts.length !== 0){
                 dbapi.scheduleNmapServiceTasks(taskId, message.hosts)
@@ -104,8 +105,10 @@ module.exports.handler = function(argvs){
                     log.error(err);
                 });
             }
+            */
         })
         .on(wire.ScanResultDNS, function(channel, message, data){
+            /*
             var taskId = channel.toString('utf-8');
             dbapi.getHosts(taskId)
             .then(function(hosts){
@@ -114,6 +117,7 @@ module.exports.handler = function(argvs){
             .catch(function(err){
                 log.error(err);
             });
+            */
         }).handler());
 
     function closeSocket(){

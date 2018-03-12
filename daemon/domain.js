@@ -8,6 +8,7 @@ var wireutil = require("./wire/util.js")
 var util = require("util");
 var zmq = require("zmq");
 var dbapi = require('../libs/db');
+var _ = require('lodash');
 
 module.exports.command = 'domain';
 
@@ -43,7 +44,6 @@ module.exports.handler = function(argvs){
     sub.on("message", wirerouter()
         .on(wire.DomainTaskReady, function(channel, message, data){
             log.info("Got domain scan task(" + message.id + ")...");
-            //dbapi.getDomainTask(message.taskId)
             Promise.resolve(message)
             .then(function(taskInfo){
                 return registerDNSProbe(taskInfo.id, taskInfo.targetDomain, taskInfo.dict, taskInfo.customNameservers)
@@ -51,7 +51,7 @@ module.exports.handler = function(argvs){
                     log.info(taskInfo.targetDomain);
                     log.info(summary);
 
-                    push.send([message.id, wireutil.envelope(wire.ScanResultDNS,{})]);
+                    return dbapi.scheduleNmapServiceTasks(taskInfo.id, hosts);
 
                 });
             })
@@ -66,7 +66,8 @@ module.exports.handler = function(argvs){
                 .then(function(summary){
                     log.info(summary);
 
-                    push.send([message.id, wireutil.envelope(wire.ScanResultDNS,{})]);
+                    return dbapi.scheduleNmapServiceTasks(message.id, message.hosts);
+
                 });
             }            
         })

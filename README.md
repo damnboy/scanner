@@ -34,6 +34,9 @@ TODO
 
 重新整理whois信息的格式，用于还原目标网络名称的树型结构
 
+BUG
+超时的whois请求会导致后续的任务被丢弃
+
 ### 服务指纹收集
 ssl -> web -> nmap
 
@@ -41,6 +44,7 @@ TODO
 
 调度方式流程优化
 现有的调度方式存在的bug(schedule内部并发n个setTimeout，指数级递增)
+调用引用mongodb queue完成
 
 #### ssl (./daemon/banner/ssl/index.js)
 
@@ -92,6 +96,10 @@ https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-rhel70-3.6.3.tgz
 一个轻量级的消息队列，用于从mongodb中获取任务，执行分发调度。
 替换目前banner以及全端口扫描任务中的垃圾代码。
 参考gryffin中的实现
+
+参考实现 
+https://github.com/chilts/mongodb-queue
+https://stackoverflow.com/questions/9274777/mongodb-as-a-queue-service
 
 # remark
 http://www.alolo.co/blog/2013/10/11/10-books-on-javascript
