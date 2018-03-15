@@ -103,3 +103,7 @@ https://stackoverflow.com/questions/9274777/mongodb-as-a-queue-service
 
 # remark
 http://www.alolo.co/blog/2013/10/11/10-books-on-javascript
+
+# sec
+https://snyk.io/blog/
+https://blog.websecurify.com/2014/08/hacking-nodejs-and-mongodb.html

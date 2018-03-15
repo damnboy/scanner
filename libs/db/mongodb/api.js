@@ -243,5 +243,18 @@ module.exports = function(options){
         return this.doneScheduledServiceBannerTask(taskInfo, 'nmap');
     };
 
+
+    //dashboard part
+    /*
+    db.services.aggregate([
+    { "$match": { "taskId" : "00b8fe60-2754-11e8-ac07-27d04a0ff43d" } },
+    {
+        $project : { ip:1,tcp:1,port:1,tcp_count: {$size: { "$ifNull": [ "$tcp", [] ] } } }
+    }, 
+    {   
+        $sort: {"tcp_count":-1} 
+    }
+    ])
+    */
     return DBApi;
 };

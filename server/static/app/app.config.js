@@ -13,8 +13,8 @@ angular.
         when('/phones/:phoneId', {
           template: '<phone-detail></phone-detail>'
         }).
-        when('/phones/:phoneId/:ip', {
-          template: '<phone-detail></phone-detail>'
+        when('/host/:taskId/:ip', {
+          template: '<host-detail></host-detail>'
         }).
         when('/whois/:taskId', {
           template: '<whois-list></whois-list>'

@@ -8,18 +8,20 @@ angular.
     controller: ['$routeParams', '$http',
       function HostDetailController($routeParams, $http) {
         var self = this;
-        this.banners;
+        self.ip = $routeParams.ip;
+        self.taskId = $routeParams.taskId;
+        self.ports = []
 
-        //this.onHostDetail = function(ip){
-          var data = {
-            'taskId' : $routeParams.phoneId,
-            'ip' : $routeParams.ip
-          }
-          $http.post('/service/detail/',data)
-          .then(function(response){
-            self.banners = response.data.data;
-          })
-        //}
+        self.onPortBanner = function(port){
+          var url = '/banner/'+ $routeParams.taskId + '/' + $routeParams.ip + '/' + port
+          $http.get(url).then(function(response) {
+            self.banner = response.data.data[0];
+          });
+        }
+        $http.get('/services/'+ $routeParams.taskId + '/' + $routeParams.ip).then(function(response) {
+          self.ports = response.data.data[0].tcp.sort(function(a,b){return a>b?1:-1})
+
+        });
       }
     ]
   });

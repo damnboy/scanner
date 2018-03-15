@@ -10,7 +10,7 @@
     "angular-ui-router": "^1.0.0-alpha.3"
   },
   "scripts": { 
-    "prestart" : "webpack ./app/index.js ./app/dist/bundle.js",
+    "prestart" : "webpack ./static/app/index.js ./static/app/dist/bundle.js",
     "start" : "http-server ./app/" 
   }
 }

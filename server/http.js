@@ -14,11 +14,9 @@ app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x
 
 app.use('/static', express.static('./server/static/app'));
 app.use('/task', require('./api/task'));
-app.use('/service', require('./api/service'));
-app.use('/dnsrecord', require('./api/dnsrecord'));
+app.use('/hosts', require('./api/hosts'));
+app.use('/services', require('./api/services'));
 app.use('/banner', require('./api/banner'));
-app.use('/whois', require('./api/whois'));
-app.use('/debug', require('./debug'));
 
 app.use(function(err, req, res, next){
   console.log(err);

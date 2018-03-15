@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-var dbApi = require('../../../libs/db')
+var dashboard = require('../../../libs/db/mongodb/dashboard')
 var utils = require('../../utils')
 // middleware that is specific to this router
 router.use(function timeLog (req, res, next) {
@@ -9,6 +9,22 @@ router.use(function timeLog (req, res, next) {
 })
 
 // define the about route
+router.get('/:taskId/:ip', function (req, res) {
+    dashboard.getServices(req.params.taskId, req.params.ip)
+    .then(function(records){
+        res.status(200)
+        .json(utils.successJSONResponse(records))
+        .end()
+    })
+    .catch(function(err){
+        res.status(500)
+        .json(utils.failedJSONResponse(err))
+        .end()
+    })
+})
+
+module.exports = router;
+/*
 router.get('/:taskId/:offset', function (req, res) {
     dbApi.getServices({"taskId":req.params.taskId}, req.params.offset)
     .then(function(records){
@@ -47,6 +63,5 @@ router.post('/detail', function (req, res) {
         .end()
     })
 })
+*/
 
-
-module.exports = router;

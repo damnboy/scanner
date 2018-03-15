@@ -1,33 +1,77 @@
-<div class="container-fluid">
-        <div class="row">
-                  <div class="col-md-4">
-                  </div>
-                  <div class="col-md-4">
-                  </div>
-                  <div class="col-md-4">
-                  </div>
-              </div>
-      
-          <div class="row" >
-              <div class="col-md-6">
-                  <table class="table table-hover table-striped">
-                    <thead>
-                      <tr>
-                        <th>port</th>
-                        <th>ssl</th>
-                        <th>service</th>
-                        <th>version</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                    <tr ng-repeat="banner in $ctrl.banners"> 
-                        <td>{{banner.port}}</td>
-                        <td>{{banner.sslSupport}}</td>
-                        <td>{{banner.service}}</td>
-                        <td>{{banner.version}}</td>
-                    </tr>
-                    </tbody>
-                  </table>
-                  </div>
-          </div>
-      </div>
+<div class="container-fluid">  
+	  <div class="row">
+		  <div class="col-md-6">
+				<h3>{{$ctrl.ip}}</h3>
+			  <table class="table table-hover table-striped">
+				<thead>
+				  <tr>
+					<th>index</th>
+					<th>开放端口</th>
+				  </tr>
+				</thead>
+				<tbody>
+				<tr ng-repeat="port in $ctrl.ports"> 
+					<td>{{$index + 1}}</td>
+					<td>
+						<a  ng-click=$ctrl.onPortBanner(port)>{{port}}</a>
+					</td>
+				</tr>
+				</tbody>
+			  </table>
+			  </div>
+		<div class="col-md-6">
+				<h3>端口详情</h3>
+				<table class="table">
+						<thead>
+							<tr></tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>
+									服务
+								</td>
+								<td>
+									{{$ctrl.banner.service}}
+								</td>
+
+							</tr>
+							<tr class="success">
+								<td>
+									版本
+								</td>
+								<td>
+									{{$ctrl.banner.version}}
+								</td>
+
+							</tr>
+							<tr class="error">
+								<td>
+									SSL
+								</td>
+								<td>
+									{{$ctrl.banner.sslSupport}}
+								</td>
+
+							</tr>
+							<tr class="warning">
+									<td>
+										扫描器
+									</td>
+									<td>
+									{{$ctrl.banner.scannedBy}}
+									</td>
+								</tr>
+							<tr class="warning">
+								<td>
+									备注
+								</td>
+								<td>
+										{{$ctrl.banner.remark}}
+								</td>
+							</tr>
+
+						</tbody>
+					</table>
+	  	</div>
+  </div>
+  

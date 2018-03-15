@@ -1,0 +1,73 @@
+<div class="container-fluid">
+  <div class="row">
+            <div class="col-md-4">
+            </div>
+            <div class="col-md-4">
+            </div>
+            <div class="col-md-4">
+            </div>
+        </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <table class="table table-hover table-striped">
+              <thead>
+                <tr>
+                  <th>index</th>
+                  <th>domain</th>
+                  <th>ip</th>
+                </tr>
+              </thead>
+              <tbody>
+              <tr ng-repeat="record in $ctrl.phones"> 
+                  <td>{{$index + 1}}</td>
+                  <td>{{record.domain}}</td>
+                  <td ng-repeat="ip in $ctrl.phones[$index].data">
+                    <a href="#!/phones/{{$ctrl.taskId}}" ng-click=$ctrl.onHostDetail(ip)>{{ip}}</a>
+                  </td>
+              </tr>
+              </tbody>
+            </table>
+            </div>
+          <div class="col-md-6">
+                  <table class="table table-hover table-striped">
+                    <thead>
+                      <tr>
+                        <th>port</th>
+                        <th>ssl</th>
+                        <th>service</th>
+                        <th>version</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                    <tr ng-repeat="banner in $ctrl.banners"> 
+                        <td><a href="http://{{banner.ip}}:{{banner.port}}/">{{banner.port}}</a></td>
+                        <td>{{banner.sslSupport}}</td>
+                        <td>{{banner.service}}</td>
+                        <td>{{banner.version}}</td>
+                    </tr>
+                    </tbody>
+                  </table>
+                  </div>
+    </div>
+</div>
+
+<a ng-click=$ctrl.onPrevPage(ip)>prev</a>
+<a ng-click=$ctrl.onNextPage(ip)>{{$ctrl.page}}</a>
+<a ng-click=$ctrl.onNextPage(ip)>next</a>
+   
+
+<div class="container-fluid">
+        <div class="row">
+                  <div class="col-md-4">
+                  </div>
+                  <div class="col-md-4">
+                  </div>
+                  <div class="col-md-4">
+                  </div>
+              </div>
+      
+          <div class="row" >
+              
+          </div>
+      </div>

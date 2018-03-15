@@ -1,6 +1,5 @@
 var express = require('express');
 var router = express.Router();
-var settings = require('../../../settings')
 var dashboard = require('../../../libs/db/mongodb/dashboard')
 var utils = require('../../utils')
 // middleware that is specific to this router
@@ -10,8 +9,8 @@ router.use(function timeLog (req, res, next) {
 })
 
 // define the about route
-router.get('/', function (req, res) {
-  dashboard.getTasks()
+router.get('/:taskId', function (req, res) {
+  dashboard.getHosts(req.params.taskId)
   .then(function(tasks){
     res.status(200)
     .json(utils.successJSONResponse(tasks))
