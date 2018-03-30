@@ -11,7 +11,7 @@ module.exports = function(options){
         //var uri = util.format("mongodb://%s:%s@%s:%d/test?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin",username, password, host, port)
         MongoClient.connect(uri, function(err, client) {
             if(err){
-                log.error('Unable to connect to mongdb %s:%d', host, port);
+                log.error('Unable to connect to mongdb %s:', uri);
                 log.error(err);
                 queuedConn.forEach(function(promise){
                     promise.reject('connection is down');

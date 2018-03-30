@@ -18,3 +18,10 @@ dbapi接口集中的doneScheduledServiceBannerTask同样存在此问题
 ## fix
 将dbapi接口集中的scheduleNmapServiceTasks移动到domain.js中执行，将域名解析后的ip地址，以及提交扫描的ip地址合并之后，再进行入库处理
 将dbapi接口集中的doneNmaptask，doneScheduledServiceBannerTask中的updateOne替换为updateMany
+
+
+
+# 2018-03-16
+
+MixedTask增加扫描任务name字段
+数据库连接失败增加错误提示

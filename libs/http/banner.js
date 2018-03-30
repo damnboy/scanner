@@ -70,7 +70,7 @@ function WebApplicationBanner(){
 util.inherits(WebApplicationBanner, events.EventEmitter);//使这个类继承EventEmitter
 
 WebApplicationBanner.prototype.scanHost = function(hostInfo){
-    this.scanHosts([options]);
+    this.scanHosts([hostInfo]);
 };
 
 WebApplicationBanner.prototype.scanHosts = function(hostsInfo){

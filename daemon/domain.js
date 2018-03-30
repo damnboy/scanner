@@ -51,7 +51,7 @@ module.exports.handler = function(argvs){
                     log.info(taskInfo.targetDomain);
                     log.info(summary);
 
-                    return dbapi.scheduleNmapServiceTasks(taskInfo.id, hosts);
+                    return dbapi.scheduleNmapServiceTasks(taskInfo.id, []);
 
                 });
             })

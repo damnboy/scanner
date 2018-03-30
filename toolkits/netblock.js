@@ -1,5 +1,5 @@
-var generator = require('./utils/import/netblock.js');
-var WebBanner = require('./libs/http/banner');
+var generator = require('../utils/import/netblock.js');
+var WebBanner = require('../libs/http/banner');
 var util = require('util');
 var _ = require('lodash');
 
@@ -46,18 +46,17 @@ module.exports.handler = function(argvs){
         var ports = argvs.ports ? argvs.ports.split(',') : ['80'];
         ports.forEach(function(port){
             hosts.forEach(function(host){
-                banner.host(host, port)
+                banner.scanHost({host : host, port : port, ssl : false})
             })
         })
 
         var sslports = argvs.sslports ? argvs.sslports.split(',') : ['443'];
         sslports.forEach(function(port){
             hosts.forEach(function(host){
-                banner.sslhost(host, port)
+                banner.scanHost({host : host, port : port, ssl : true})
             })
         })
     })
-
 
     generator.parse(argvs.netblock);
 }
