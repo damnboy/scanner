@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "./db.sh && node ./daemon local",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "repository": {
     "type": "git",
@@ -51,6 +53,8 @@
     "xlsx": "^0.11.0",
     "xml2js": "^0.4.17",
     "yargs": "^8.0.2",
-    "zmq": "^2.15.3"
-  }
+    "zmq": "^2.15.3",
+    "snyk": "^1.189.0"
+  },
+  "snyk": true
 }
