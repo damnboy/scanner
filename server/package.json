@@ -7,10 +7,14 @@
     "jquery": "^3.2.1",
     "lodash": "^4.17.4",
     "socket.io": "^2.0.3",
-    "angular-ui-router": "^1.0.0-alpha.3"
+    "angular-ui-router": "^1.0.0-alpha.3",
+    "snyk": "^1.316.1"
   },
-  "scripts": { 
-    "prestart" : "webpack ./static/app/index.js ./static/app/dist/bundle.js",
-    "start" : "http-server ./app/" 
-  }
+  "scripts": {
+    "prestart": "webpack ./static/app/index.js ./static/app/dist/bundle.js",
+    "start": "http-server ./app/",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
+  },
+  "snyk": true
 }
