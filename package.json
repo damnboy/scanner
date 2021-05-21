@@ -31,7 +31,7 @@
     "co": "^4.6.0",
     "dns-packet": "git://github.com/damnboy/dns-packet.git",
     "mongodb-queue": "git://github.com/damnboy/mongodb-queue.git",
-    "dns-socket": "^1.6.2",
+    "dns-socket": "^4.0.0",
     "elasticsearch": "^13.3.1",
     "express": "^4.15.4",
     "grabber": "https://github.com/ChiChou/grab.js.git",
