@@ -40,7 +40,7 @@
     "lodash": "^4.17.4",
     "mongodb": "^3.0.3",
     "node-soap": "^1.0.0",
-    "nodemailer": "^4.6.2",
+    "nodemailer": "^6.6.1",
     "protobufjs": "^6.8.3",
     "request": "^2.81.0",
     "requests": "^0.2.2",
