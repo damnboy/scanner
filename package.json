@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/damnboy/scanner#readme",
   "dependencies": {
-    "async": "^2.5.0",
+    "async": "^3.2.2",
     "bluebird": "^3.5.0",
     "body-parser": "^1.18.2",
     "chalk": "^2.1.0",
